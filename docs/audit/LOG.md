@@ -19,3 +19,4 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 [2026-11-10 17:05] Phase 3 · Fixed so far: B-15 (d2d433d), B-07 (bebe9db), B-10+B-08 (8a0d2b9), B-02 (e61c88f) · next: B-04/B-03/B-11/B-17/B-22
 [2026-11-10 17:30] Phase 2 · Round-2 mutation verifier: 5/5 mutations detected (incl. the 3 previous survivors and 2 new). Remark: red-by-design suite needs baseline comparison — handled by D5 (failing set only shrinks; full green required at end of phase 3) → Phase 2 closed
 [2026-11-10 17:30] Phase 3 · Fixed B-04 (f26e5e8), B-03 (bd761e3), B-11/B-17/B-22/B-16 (e528431), B-12/B-05/B-20 (8ec5812). Sync-failure test adjusted to pin real behaviour ("Empty Response", Q14). Added red e2e tests for B-18/B-09 (5 failing) · next: B-01 CSRF, B-19, B-09, B-18
+[2026-11-10 18:05] Phase 3 · Fixed B-01+B-19 (cd993b9), B-09+B-18 (ae5d8c8). Full suite: 190 passed, 0 failed. BUGS.md completed (18 FIXED, 1 OPEN B-14, 3 QUESTION) · next: independent diff reviewer
