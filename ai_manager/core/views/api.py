@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 
 from ..models import Task, ChatMessage, get_user_settings
 from .. import rag_engine
@@ -54,18 +55,32 @@ def api_save_settings(request):
         data = parse_json_body(request)
         if data is None:
             return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
-        username = data.get('username', data.get('display_name', request.user.username))
-        email = data.get('email', request.user.email)
+        # A JSON null means "not provided" and keeps the stored value (B-03).
+        def field(key, current):
+            value = data.get(key)
+            return current if value is None else value
 
-        request.user.username = str(username).strip()
-        request.user.email = str(email).strip()
+        username = str(field('username', field('display_name', request.user.username))).strip()
+        email = str(field('email', request.user.email)).strip()
+
+        # The login username must stay non-empty and unique; previously an empty
+        # value locked the user out and a taken one raised IntegrityError (B-03).
+        if not username:
+            return JsonResponse({'status': 'error', 'msg': 'Display name / username cannot be empty.'}, status=400)
+        if len(username) > User._meta.get_field('username').max_length:
+            return JsonResponse({'status': 'error', 'msg': 'Username is too long.'}, status=400)
+        if User.objects.filter(username=username).exclude(pk=request.user.pk).exists():
+            return JsonResponse({'status': 'error', 'msg': 'This username is already taken.'}, status=400)
+
+        request.user.username = username
+        request.user.email = email
         request.user.save()
 
         settings = get_user_settings(request.user)
         
-        settings.display_name = data.get('display_name', settings.display_name)
-        settings.theme = data.get('theme', settings.theme)
-        settings.accent_color = data.get('accent_color', settings.accent_color)
+        settings.display_name = field('display_name', settings.display_name)
+        settings.theme = field('theme', settings.theme)
+        settings.accent_color = field('accent_color', settings.accent_color)
         ai_strategy = data.get('ai_strategy', settings.ai_strategy)
         if ai_strategy in {'auto', 'local_only', 'cloud_only'}:
             settings.ai_strategy = ai_strategy
@@ -76,8 +91,8 @@ def api_save_settings(request):
         except (TypeError, ValueError):
             temperature = 0.7
         settings.temperature = max(0.0, min(1.0, temperature))
-        settings.github_repo_url = data.get('github_repo_url', settings.github_repo_url).strip()
-        settings.github_token = data.get('github_token', settings.github_token).strip()
+        settings.github_repo_url = str(field('github_repo_url', settings.github_repo_url)).strip()
+        settings.github_token = str(field('github_token', settings.github_token)).strip()
         settings.save()
         logger.info(
             "User settings updated: AI Strategy -> %s; Temperature -> %.1f.",
