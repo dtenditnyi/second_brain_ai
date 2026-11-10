@@ -133,7 +133,8 @@ def test_save_settings_full(auth_client, user, post_json):
     reset.assert_called_once_with(user.id)
     user.refresh_from_db()
     s = UserSettings.objects.get(user=user)
-    assert (user.username, user.email) == ("alice2", "a2@example.com")
+    # Q6: display name changes, the login does not.
+    assert (user.username, user.email) == ("alice", "a2@example.com")
     assert (s.display_name, s.theme, s.accent_color, s.ai_strategy) == ("alice2", "light", "purple", "cloud_only")
     assert s.temperature == pytest.approx(0.4)
     assert s.github_repo_url == "https://github.com/u/v.git" and s.github_token == "tok"
@@ -157,26 +158,77 @@ def test_save_settings_partial_keeps_other_values(auth_client, user, post_json):
     assert user.settings.theme == "light"
 
 
-@pytest.mark.characterization
-def test_save_settings_display_name_renames_login_username(auth_client, user, post_json):
-    """Q6: the settings 'Display Name' field is sent as `username` and renames the login."""
-    post_json(auth_client, "/api/save-settings/", {"username": "Neo", "display_name": "Neo"})
-    user.refresh_from_db()
-    assert user.username == "Neo"
-
-
-def test_save_settings_empty_username_rejected(no_raise_client, user, post_json):
-    r = post_json(no_raise_client, "/api/save-settings/", {"username": "", "display_name": ""})
-    assert r.status_code == 400
+def test_save_settings_display_name_does_not_rename_login(auth_client, user, post_json):
+    """Q6: Display Name is separate from the login; a sent "username" is ignored."""
+    r = post_json(auth_client, "/api/save-settings/", {"username": "Neo", "display_name": "  Neo Anderson "})
+    assert r.json()["status"] == "ok"
     user.refresh_from_db()
     assert user.username == "alice"
+    assert UserSettings.objects.get(user=user).display_name == "Neo Anderson"
 
 
-def test_save_settings_taken_username_rejected(no_raise_client, user, other_user, post_json):
-    r = post_json(no_raise_client, "/api/save-settings/", {"username": "bob", "display_name": "bob"})
+def test_display_name_may_equal_another_users_login(auth_client, user, other_user, post_json):
+    assert post_json(auth_client, "/api/save-settings/", {"display_name": "bob"}).status_code == 200
+    assert UserSettings.objects.get(user=user).display_name == "bob"
+
+
+@pytest.mark.parametrize("value", ["", "   ", 5, ["x"]])
+def test_save_settings_invalid_display_name_rejected(no_raise_client, user, post_json, value):
+    r = post_json(no_raise_client, "/api/save-settings/", {"display_name": value, "theme": "light"})
+    assert r.status_code == 400
+    s = UserSettings.objects.get(user=user)
+    assert s.display_name == "alice" and s.theme == "cyberpunk"
+
+
+def test_save_settings_display_name_max_length(no_raise_client, user, post_json):
+    assert post_json(no_raise_client, "/api/save-settings/", {"display_name": "n" * 100}).status_code == 200
+    assert post_json(no_raise_client, "/api/save-settings/", {"display_name": "n" * 101}).status_code == 400
+
+
+# --- GitHub token (Q7, B-14) --------------------------------------------------
+
+def _set_token(user, token):
+    s = user.settings
+    s.github_token = token
+    s.save()
+
+
+def test_empty_token_field_keeps_saved_token(auth_client, user, post_json):
+    _set_token(user, "ghp_old")
+    post_json(auth_client, "/api/save-settings/", {"github_token": "", "theme": "light"})
+    assert UserSettings.objects.get(user=user).github_token == "ghp_old"
+
+
+def test_new_token_replaces_saved_token(auth_client, user, post_json):
+    _set_token(user, "ghp_old")
+    post_json(auth_client, "/api/save-settings/", {"github_token": " ghp_new "})
+    assert UserSettings.objects.get(user=user).github_token == "ghp_new"
+
+
+def test_clear_token_checkbox_removes_token(auth_client, user, post_json):
+    _set_token(user, "ghp_old")
+    post_json(auth_client, "/api/save-settings/", {"github_token": "", "clear_github_token": True})
+    assert UserSettings.objects.get(user=user).github_token == ""
+
+
+def test_long_token_is_stored_and_read_back(auth_client, user, post_json):
+    """B-14: a 200-char token encrypts to > 255 chars; the column is now 500."""
+    token = "github_pat_" + "A" * 189
+    assert post_json(auth_client, "/api/save-settings/", {"github_token": token}).status_code == 200
+    s = UserSettings.objects.get(user=user)
+    assert s.github_token == token
+    from django.db import connection
+    with connection.cursor() as cur:
+        cur.execute("SELECT github_token FROM core_usersettings WHERE id=%s", [s.pk])
+        stored = cur.fetchone()[0]
+    assert 255 < len(stored) <= UserSettings._meta.get_field("github_token").max_length == 500
+
+
+def test_overlong_token_rejected_without_partial_save(no_raise_client, user, post_json):
+    r = post_json(no_raise_client, "/api/save-settings/", {"github_token": "x" * 256, "email": "new@example.com"})
     assert r.status_code == 400
     user.refresh_from_db()
-    assert user.username == "alice"
+    assert user.email == "alice@example.com"
 
 
 def test_save_settings_null_values_do_not_crash(no_raise_client, user, post_json):
@@ -191,8 +243,10 @@ def test_save_settings_null_values_do_not_crash(no_raise_client, user, post_json
 
 def test_save_settings_name_longer_than_display_name_field_rejected(no_raise_client, user, post_json):
     """display_name is max 100 chars (Postgres would raise DataError); user row must stay unchanged."""
-    r = post_json(no_raise_client, "/api/save-settings/", {"username": "n" * 120, "display_name": "n" * 120})
+    r = post_json(no_raise_client, "/api/save-settings/", {"display_name": "n" * 120, "email": "x@example.com"})
     assert r.status_code == 400
+    user.refresh_from_db()
+    assert user.email == "alice@example.com"
     user.refresh_from_db()
     assert user.username == "alice"
 
@@ -210,10 +264,11 @@ def test_save_settings_get_400(auth_client):
 def test_send_message_persists_both_turns(auth_client, user, post_json):
     with mock.patch("core.rag_engine.ask_second_brain", return_value="AI says hi") as ask:
         r = post_json(auth_client, "/api/send-message/", {"message": "hello", "selected_files": ["a", 3, "b"]})
-    assert r.json() == {"status": "ok", "reply": "AI says hi"}
+    assert r.json() == {"status": "ok", "reply": "AI says hi", "model": ""}
     ask.assert_called_once()
     assert ask.call_args[0][0] == "hello" and ask.call_args[0][1] == user
     assert ask.call_args[0][2] == ["a", "b"]
+    assert ask.call_args.kwargs["smart"] is False
     assert list(ChatMessage.objects.values_list("role", "content")) == [("user", "hello"), ("ai", "AI says hi")]
 
 
@@ -223,6 +278,43 @@ def test_send_message_legacy_key_and_bad_type(auth_client, post_json):
         assert ask.call_args[0][2] == ["x"]
         post_json(auth_client, "/api/send-message/", {"message": "m", "selected_files": "x"})
         assert ask.call_args[0][2] == []
+
+
+def test_send_message_passes_previous_turns_as_memory(auth_client, user, other_user, post_json):
+    """Q2: the last messages of THIS user (not the new one, not other users') are sent."""
+    ChatMessage.objects.create(user=other_user, role="user", content="bob secret")
+    ChatMessage.objects.create(user=user, role="user", content="my name is Alice")
+    ChatMessage.objects.create(user=user, role="ai", content="Nice to meet you")
+    with mock.patch("core.rag_engine.ask_second_brain", return_value="Alice") as ask:
+        post_json(auth_client, "/api/send-message/", {"message": "what is my name?"})
+    assert ask.call_args.kwargs["history"] == [("user", "my name is Alice"), ("ai", "Nice to meet you")]
+
+
+def test_status_report_is_not_stored_and_uses_smart_model(auth_client, user, post_json):
+    """Q3: the Home status report is not saved in chat history and gets no memory."""
+    ChatMessage.objects.create(user=user, role="user", content="earlier")
+    ChatMessage.objects.create(user=user, role="ai", content="earlier answer")
+    with mock.patch("core.rag_engine.ask_second_brain", return_value="Briefing") as ask:
+        r = post_json(auth_client, "/api/send-message/", {"message": "brief me", "mode": "report"})
+    assert r.json()["reply"] == "Briefing"
+    assert ask.call_args.kwargs["history"] == [] and ask.call_args.kwargs["smart"] is True
+    assert ChatMessage.objects.filter(user=user).count() == 2
+    assert not ChatMessage.objects.filter(content__in=["brief me", "Briefing"]).exists()
+
+
+def test_smart_toggle_is_passed_to_engine(auth_client, post_json):
+    with mock.patch("core.rag_engine.ask_second_brain", return_value="x") as ask:
+        post_json(auth_client, "/api/send-message/", {"message": "m", "smart": True})
+    assert ask.call_args.kwargs["smart"] is True
+
+
+def test_send_message_returns_last_model(auth_client, user, post_json):
+    s = user.settings
+    s.last_model_used = "Gemini 3.5 Flash Lite"
+    s.save()
+    with mock.patch("core.rag_engine.ask_second_brain", return_value="x"):
+        r = post_json(auth_client, "/api/send-message/", {"message": "m"})
+    assert r.json()["model"] == "Gemini 3.5 Flash Lite"
 
 
 def test_send_message_empty_is_400(auth_client, post_json):

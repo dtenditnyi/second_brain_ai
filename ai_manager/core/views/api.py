@@ -23,26 +23,38 @@ def _task_error(message):
 
 @login_required(login_url='login')
 def api_chat_message(request):
-    # Validate a chat POST, persist both turns, and pass optional file filters to RAG.
-    # Parameters: request contains JSON with a message and selected file names.
-    # Returns: a JSON reply on success, or HTTP 400 when the request is unusable.
+    # Validate a chat POST, pass memory + optional file filters to RAG, persist the turns.
+    # JSON: message, selected_files (empty = whole vault), smart (bool: SMART model),
+    # mode ("chat" default | "report": Home status report — SMART model, no memory,
+    # nothing stored in the chat history, Q3).
+    # Returns: {status, reply, model} or HTTP 400 when the request is unusable.
     if request.method == "POST":
         data = parse_json_body(request)
         if data is None:
             return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
         user_message = data.get('message', '')
+        if not isinstance(user_message, str):
+            user_message = ''
         # Accept both current and legacy browser key spellings, then discard
         # malformed entries before the filenames reach the retrieval layer.
         selected_files = data.get('selected_files', data.get('selectedFiles', []))
         if not isinstance(selected_files, list):
             selected_files = []
         selected_files = [file_name for file_name in selected_files if isinstance(file_name, str)]
-        
-        if user_message:
-            ChatMessage.objects.create(user=request.user, role='user', content=user_message)
-            ai_response = rag_engine.ask_second_brain(user_message, request.user, selected_files)
-            ChatMessage.objects.create(user=request.user, role='ai', content=ai_response)
-            return JsonResponse({'status': 'ok', 'reply': ai_response})
+        is_report = data.get('mode') == 'report'
+        smart = is_report or data.get('smart') is True
+
+        if user_message.strip():
+            # Memory is read BEFORE the new message is stored (it is the query itself).
+            history = [] if is_report else rag_engine.load_chat_history(request.user)
+            if not is_report:
+                ChatMessage.objects.create(user=request.user, role='user', content=user_message)
+            ai_response = rag_engine.ask_second_brain(
+                user_message, request.user, selected_files, history=history, smart=smart)
+            if not is_report:
+                ChatMessage.objects.create(user=request.user, role='ai', content=ai_response)
+            model = UserSettings.objects.filter(user=request.user).values_list('last_model_used', flat=True).first()
+            return JsonResponse({'status': 'ok', 'reply': ai_response, 'model': model or ''})
     return JsonResponse({'status': 'error'}, status=400)
 
 @login_required(login_url='login')
@@ -60,33 +72,40 @@ def api_save_settings(request):
             value = data.get(key)
             return current if value is None else value
 
-        username = str(field('username', field('display_name', request.user.username))).strip()
-        email = str(field('email', request.user.email)).strip()
-
-        # The login username must stay non-empty and unique; previously an empty
-        # value locked the user out and a taken one raised IntegrityError (B-03).
-        if not username:
-            return JsonResponse({'status': 'error', 'msg': 'Display name / username cannot be empty.'}, status=400)
-        # The same value is stored in UserSettings.display_name (max 100 chars).
-        if len(username) > min(User._meta.get_field('username').max_length,
-                               UserSettings._meta.get_field('display_name').max_length):
-            return JsonResponse({'status': 'error', 'msg': 'Username is too long.'}, status=400)
-        if User.objects.filter(username=username).exclude(pk=request.user.pk).exists():
-            return JsonResponse({'status': 'error', 'msg': 'This username is already taken.'}, status=400)
+        # Q6: the display name is NOT the login. A "username" key is ignored;
+        # the login can only be changed by an administrator (Core Matrix).
+        display_name = data.get('display_name')
+        if display_name is not None:
+            if not isinstance(display_name, str):
+                return JsonResponse({'status': 'error', 'msg': 'Invalid value for display_name.'}, status=400)
+            display_name = display_name.strip()
+            if not display_name:
+                return JsonResponse({'status': 'error', 'msg': 'Display name cannot be empty.'}, status=400)
+            if len(display_name) > UserSettings._meta.get_field('display_name').max_length:
+                return JsonResponse({'status': 'error', 'msg': 'Display name is too long (max 100 characters).'}, status=400)
         # Free-text preferences must be strings that fit their columns (Postgres enforces lengths).
-        for key in ('display_name', 'theme', 'accent_color'):
+        for key in ('theme', 'accent_color'):
             value = data.get(key)
             if value is not None and (not isinstance(value, str)
                                       or len(value) > UserSettings._meta.get_field(key).max_length):
                 return JsonResponse({'status': 'error', 'msg': f'Invalid value for {key}.'}, status=400)
+        email = str(field('email', request.user.email)).strip()
+        if len(email) > User._meta.get_field('email').max_length:
+            return JsonResponse({'status': 'error', 'msg': 'Email is too long.'}, status=400)
 
-        request.user.username = username
-        request.user.email = email
-        request.user.save()
+        new_token = data.get('github_token')
+        # 255 plain characters still fit the 500-char encrypted column (B-14).
+        if isinstance(new_token, str) and len(new_token.strip()) > 255:
+            return JsonResponse({'status': 'error', 'msg': 'GitHub token is too long.'}, status=400)
+
+        if email != request.user.email:
+            request.user.email = email
+            request.user.save(update_fields=['email'])
 
         settings = get_user_settings(request.user)
         
-        settings.display_name = field('display_name', settings.display_name)
+        if display_name is not None:
+            settings.display_name = display_name
         settings.theme = field('theme', settings.theme)
         settings.accent_color = field('accent_color', settings.accent_color)
         ai_strategy = data.get('ai_strategy', settings.ai_strategy)
@@ -100,7 +119,14 @@ def api_save_settings(request):
             temperature = 0.7
         settings.temperature = max(0.0, min(1.0, temperature))
         settings.github_repo_url = str(field('github_repo_url', settings.github_repo_url)).strip()
-        settings.github_token = str(field('github_token', settings.github_token)).strip()
+        # Q7: the token is never sent back to the browser. An empty/missing value
+        # keeps the stored token; only an explicit clear_github_token removes it.
+        if data.get('clear_github_token') is True:
+            settings.github_token = ''
+        else:
+            new_token = data.get('github_token')
+            if isinstance(new_token, str) and new_token.strip():
+                settings.github_token = new_token.strip()
         settings.save()
         logger.info(
             "User settings updated: AI Strategy -> %s; Temperature -> %.1f.",

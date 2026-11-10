@@ -64,7 +64,12 @@ class UserSettings(models.Model):
     temperature = models.FloatField(default=0.7)
 
     github_repo_url = models.URLField(max_length=500, blank=True, default="")
-    github_token = EncryptedCharField(max_length=255, blank=True, default="")
+    # 500: a Fernet-encrypted 128+ character token is longer than 255 (B-14).
+    github_token = EncryptedCharField(max_length=500, blank=True, default="")
+
+    # Which model answered last (Round 2 indicator on Home/Settings).
+    last_model_used = models.CharField(max_length=100, blank=True, default="")
+    last_model_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         # Provide a concise identifier for Django admin and diagnostic output.
