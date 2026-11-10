@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Send a silent background prompt to the AI API
                 const response = await fetch('/api/send-message/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: window.jsonHeaders(),
                     body: JSON.stringify({ 
                         message: "Based on my vault, write a very short, 2-sentence motivational daily briefing." 
                     })

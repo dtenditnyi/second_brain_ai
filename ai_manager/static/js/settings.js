@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/api/save-settings/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: window.jsonHeaders(),
                 body: JSON.stringify(config)
             });
             

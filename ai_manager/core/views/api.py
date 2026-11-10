@@ -7,7 +7,6 @@ import markdown
 from html import escape
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
@@ -21,7 +20,6 @@ logger = logging.getLogger(__name__)
 def _task_error(message):
     return JsonResponse({'status': 'error', 'msg': message}, status=400)
 
-@csrf_exempt
 @login_required(login_url='login')
 def api_chat_message(request):
     # Validate a chat POST, persist both turns, and pass optional file filters to RAG.
@@ -46,7 +44,6 @@ def api_chat_message(request):
             return JsonResponse({'status': 'ok', 'reply': ai_response})
     return JsonResponse({'status': 'error'}, status=400)
 
-@csrf_exempt
 @login_required(login_url='login')
 def api_save_settings(request):
     # Persist account identity separately from per-user application preferences.
@@ -105,7 +102,6 @@ def api_save_settings(request):
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error'}, status=400)
 
-@csrf_exempt
 @login_required(login_url='login')
 def api_add_task(request):
     # Create a task owned by the authenticated account from the submitted JSON fields.
@@ -145,7 +141,6 @@ def api_add_task(request):
         return JsonResponse({'status': 'ok', 'task_id': task.id})
     return JsonResponse({'status': 'error'}, status=400)
 
-@csrf_exempt
 @login_required(login_url='login')
 def api_update_task_status(request):
     # Update only a task belonging to the caller, preventing cross-account task edits.

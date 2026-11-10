@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/api/send-message/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: window.jsonHeaders(),
                 body: JSON.stringify({ message: message, selected_files: selectedFiles })
             });
 

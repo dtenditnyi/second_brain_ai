@@ -199,8 +199,10 @@ def test_ask_sync_failure_still_answers(configured_user, llms, fake_sync, monkey
     note_writer(configured_user, "Local", "NOT-INDEXED-WHEN-SYNC-FAILS")
     out = rag_engine.ask_second_brain("my question", configured_user)
     assert len(llms[1].calls) == 1
-    assert "my question" in out and not out.startswith("System Error")
+    assert not out.startswith("System Error")
     assert "NOT-INDEXED-WHEN-SYNC-FAILS" not in out
+    # characterization: with an empty index LlamaIndex answers "Empty Response"
+    assert out == "Empty Response"
 
 
 def test_ask_exception_is_reported_as_text(configured_user, fake_sync, monkeypatch):

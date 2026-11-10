@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch('/api/admin/update-row/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: window.jsonHeaders(),
                     body: JSON.stringify({
                         table: tableModelName,
                         id: rowId,
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch('/api/admin/delete-row/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: window.jsonHeaders(),
                     body: JSON.stringify({
                         table: tableModelName,
                         id: rowId

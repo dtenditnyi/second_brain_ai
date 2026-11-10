@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch('/api/update-task/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: window.jsonHeaders(),
                     body: JSON.stringify({ task_id: taskId, status: newStatus })
                 });
                 
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch('/api/add-task/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: window.jsonHeaders(),
                     body: JSON.stringify(payload)
                 });
                 

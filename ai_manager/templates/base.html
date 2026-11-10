@@ -6,7 +6,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Second Brain{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <!-- CSRF + HTML-escaping helpers used by every page controller. -->
+    <script src="{% static 'js/csrf.js' %}"></script>
 </head>
 <body class="bg-[var(--bg-base)] text-[var(--text-secondary)] font-sans h-screen overflow-hidden transition-colors duration-300">
     <!-- Application shell: persistent sidebar plus the active page content region. -->
@@ -27,7 +30,7 @@
             {% block content %}
             {% endblock %}
         </div>
-    </body>
+    </div>
     <!-- Shared responsive navigation behavior for the base shell. -->
     <script src="{% static 'js/layout.js' %}"></script>
     <script>
@@ -46,4 +49,5 @@
             }
         });
     </script>
+</body>
 </html>

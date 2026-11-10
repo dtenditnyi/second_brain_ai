@@ -3,7 +3,6 @@ import json
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 
@@ -23,7 +22,6 @@ def admin_dashboard_view(request):
     }
     return render(request, 'admin_dashboard.html', context)
 
-@csrf_exempt
 @user_passes_test(lambda u: u.is_superuser, login_url='login')
 def api_admin_update_row(request):
     # Dispatch a table-row update to the appropriate Django model using posted fields.
@@ -70,7 +68,6 @@ def api_admin_update_row(request):
             return JsonResponse({'status': 'error', 'msg': str(e)}, status=500)
     return JsonResponse({'status': 'error'}, status=400)
 
-@csrf_exempt
 @user_passes_test(lambda u: u.is_superuser, login_url='login')
 def api_admin_delete_row(request):
     # Delete a selected row from an explicit allowlist of administrative models.
