@@ -8,12 +8,12 @@ Details: `docs/SITE_MAP.md`, `docs/TEST_PLAN.md`, `docs/BUGS.md`, `docs/audit/RE
 - Pages: login, register, home dashboard, AI chat (RAG over your Obsidian vault: LlamaIndex + Chroma + HuggingFace embeddings; Ollama locally or Gemini in the cloud), notes viewer (wiki links + backlinks), tasks, settings, superuser "Core Matrix" admin, Django admin. 8 JSON APIs. Models: UserSettings (encrypted GitHub token), Task, ChatMessage.
 
 ## 2. Tests (none existed before)
-- **278 tests** (pytest + pytest-django + pytest-playwright in installed MS Edge): unit/integration for models, auth, every page, every API, admin, RAG engine (real LlamaIndex + Chroma in a temp folder, fake LLMs), git sync; 31 E2E user flows/error/XSS cases; 74 responsive tests (11 page states × 5 widths).
+- **278 tests** (pytest + pytest-django + pytest-playwright in installed MS Edge): unit/integration for models, auth, every page, every API, admin, RAG engine (real LlamaIndex + Chroma in a temp folder, fake LLMs), git sync; 28 E2E user flows/error/XSS cases; 74 responsive tests (176 unit/integration + 28 E2E + 74 responsive) (11 page states × 5 widths).
 - All external services are mocked (HuggingFace, Ollama, Gemini, GitHub). No real data is touched: tests use in-memory SQLite and temp folders.
 - Quality checked by an independent agent using mutation testing: round 1 caught 6/9 mutations (missing tests were added), round 2 caught 5/5.
 - Final run: see `docs/audit/test-run-final.txt`.
 
-## 3. What was found and fixed (25 bugs, 15 responsive issues)
+## 3. What was found and fixed (25 bugs found: 21 fixed, 1 open, 3 kept as questions; 15 responsive issues fixed)
 Most important:
 - **Privacy (B-10):** the LLM was process-global, so a "Strictly Local" user could be answered by **another user's Gemini**, which means their notes were sent to the cloud. Each user now gets their own LLM.
 - **Security:** all JSON APIs, including admin delete, had CSRF disabled (B-01). This is now enforced, and the JS sends the token. HTML/JS injection through AI replies, note names, backlinks and wiki links has been escaped (B-09, B-20, B-25).
@@ -30,7 +30,7 @@ Most important:
   - After the fixes, 0 of 55 page × width states overflow, down from 8. Desktop layout is unchanged apart from the intended colour fix.
 
 ## 4. Not solved / left for you
-- **B-14 (OPEN):** an encrypted GitHub token longer than about 140 characters would exceed `max_length=255` on Postgres. Current GitHub tokens fit. The fix needs a schema migration (`max_length=500`), so it is your decision.
+- **B-14 (OPEN):** a GitHub token of 128+ characters (encrypts to > 255 chars) would exceed `max_length=255` on Postgres. Current GitHub tokens fit. The fix needs a schema migration (`max_length=500`), so it is your decision.
 - Responsive leftovers:
   - Core Matrix tables scroll sideways on small screens, with no "scroll" hint.
   - Native checkboxes are 24 px.
@@ -68,7 +68,7 @@ Dev dependencies are in `requirements-dev.txt` (pytest-django, pytest-playwright
 - The production DB (Postgres volume) was never touched; Docker was not even running. `ai_manager/db.sqlite3` is byte-identical (sha256 5ea89448…). Work ran on `audit_copy_db.sqlite3` and on in-memory test DBs.
 - `.env` was never read or committed. Only key names were listed, once, to confirm that the settings exist.
 - `main` is unchanged. All work is in `feature/audit`, which is pushed to origin. No force pushes.
-- One leftover: a locked, empty git worktree that the agent tooling created at `.claude/worktrees/agent-a75bfa6f39eb5319d` (branch `worktree-agent-a75bfa6f39eb5319d` at the `main` commit). It is harmless. Remove it with `git worktree remove --force .claude/worktrees/agent-a75bfa6f39eb5319d && git branch -D worktree-agent-a75bfa6f39eb5319d`.
+- One leftover: a locked git worktree (checked out at `main` 6a1d8ee, no changes) that the agent tooling created at `.claude/worktrees/agent-a75bfa6f39eb5319d` (branch `worktree-agent-a75bfa6f39eb5319d` at the `main` commit). It is harmless. Remove it with `git worktree remove --force .claude/worktrees/agent-a75bfa6f39eb5319d && git branch -D worktree-agent-a75bfa6f39eb5319d`.
 
 ## 8. Commits (feature/audit, oldest → newest)
-b31dff8 phase-0 setup · 3a7faec site map + questions · 6992209 site map corrections · 1f27a36 unit/integration tests · 0899869 e2e + test plan + baseline · d2d433d B-15 · bebe9db B-07 · 8a0d2b9 B-10/B-08 · e61c88f B-02 · 04f1c45 tests from mutation review · f26e5e8 B-04 · bd761e3 B-03 · e528431 B-11/B-17/B-22/B-16 · 8ec5812 B-12/B-05/B-20 · cd993b9 B-01/B-19 · ae5d8c8 B-09/B-18 · 788b4e4 BUGS docs · 2fc5f6c B-23/B-24/B-25 · f0bf76c docs · faf211a B-24 round 2 + screenshot tooling · fc09c1f responsive R1–R11 · 8183112 docs · 9fb9437 responsive R12–R15 · (final docs commit)
+b31dff8 phase-0 setup · 3a7faec site map + questions · 6992209 site map corrections · 1f27a36 unit/integration tests · 0899869 e2e + test plan + baseline · d2d433d B-15 · bebe9db B-07 · 8a0d2b9 B-10/B-08 · e61c88f B-02 · 04f1c45 tests from mutation review · f26e5e8 B-04 · bd761e3 B-03 · e528431 B-11/B-17/B-22/B-16 · 8ec5812 B-12/B-05/B-20 · cd993b9 B-01/B-19 · ae5d8c8 B-09/B-18 · 788b4e4 BUGS docs · 2fc5f6c B-23/B-24/B-25 · f0bf76c docs · faf211a B-24 round 2 + screenshot tooling · fc09c1f responsive R1–R11 · 8183112 docs · 9fb9437 responsive R12–R15 · f7ca375 final run + report · (last commit: audit remarks)
