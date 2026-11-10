@@ -13,6 +13,9 @@ import os
 from .settings import *  # noqa: F401,F403
 from .settings import BASE_DIR
 
+# Local development always runs with DEBUG on (production reads it from env).
+DEBUG = True
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
