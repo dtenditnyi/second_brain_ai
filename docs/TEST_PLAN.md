@@ -36,10 +36,16 @@ Known gap: production uses PostgreSQL; tests run on SQLite (NULL ordering in `or
 | RAG engine | `test_rag_engine.py` | paths, Ollama probe (200/429/500/404/offline/timeout), cache reset per-user / for uncached user / all, no-repo notice, local-only offline, provider routing table (5 cases) incl. temperature & model, retrieved context injected, index built once & cached, provider switch, refresh picks up edits, selected-files filter, sync failure, exception text, bad temperature fallback, new engine per message (characterization Q2), no eager model load at import | unit/integration (real Chroma) |
 | Git sync | `test_git_sync.py` | no URL, clone with token injection & parent creation, without token, stale dir removal, pull existing, error → False and token not logged | unit |
 | E2E | `e2e/test_e2e_flows.py` | register → home; failed login message; each page without console/JS/HTTP errors and sidebar stats loaded; add task via modal → complete via checkbox → sidebar 100%; settings save + live theme + persisted accent; chat send (AI mocked); home search → chat auto-submit; context modal select/apply/Esc; notes open → wiki link → backlink; `?file=` deep link; logout; Core Matrix edit + drop; mobile menu open/close | E2E (Edge) |
-| Responsive | `e2e/test_responsive.py` (phase 4) | no horizontal overflow at 360/390/768/1024/1440, key elements visible, menu works | E2E |
+| E2E errors / XSS | `e2e/test_e2e_errors.py` | settings/add-task/chat error messages shown, checkbox reverted on server error, AI reply / user text / note names / backlinks rendered as text | E2E |
+| Responsive | `e2e/test_responsive.py` (71 tests) | 11 page states × 5 widths: no horizontal overflow, nothing sticking out of viewport, key elements visible inside viewport; mobile menu (360/390/768) and desktop sidebar; chat feed ≥ 60 % viewport height; admin table actions reachable; auth pages scroll on 360×480; translucent badges compiled | E2E |
+| Screenshots | `e2e/test_screenshots.py` | only with `SCREENSHOT_DIR` set: PNG + metrics.json per page/width | tool |
 
 ## Characterization tests (`-m characterization`)
 Pin current behaviour whose intent is unclear (see `docs/audit/QUESTIONS.md`): PAT echoed in settings HTML (Q7), display name renames username (Q6), new chat engine per message (Q2), first-10 notes preselected (Q12).
 
 ## Phase-2 baseline
 `docs/audit/test-run-phase2.txt`: **177 tests, 142 passed, 35 failed**. All 35 failures are real defects (input for phase 3, see `docs/BUGS.md`); none were adjusted to pass.
+
+## Final state
+After phases 3–4: **275 passed, 1 skipped** (the skipped one is the screenshot tool). See `docs/audit/test-run-final.txt`.
+Two rounds of mutation testing by an independent agent: 9 + 5 mutations, final round 5/5 detected.

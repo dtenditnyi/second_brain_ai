@@ -1,6 +1,6 @@
 # SITE MAP — Second Brain AI
 
-Snapshot of `main` @ 6a1d8ee (analysed on branch `feature/audit`). Status legend:
+Snapshot of `main` @ 6a1d8ee (analysed on branch `feature/audit`). **Statuses below describe the code BEFORE the audit fixes**; every BROKEN/PARTIAL item with a B-id is FIXED on `feature/audit` unless `docs/BUGS.md` says OPEN/QUESTION. Status legend:
 **OK** works · **BROKEN** demonstrably wrong · **PARTIAL** works with defects · **UNCLEAR** purpose not clear from code/history (kept as-is, pinned by a characterization test, question in `docs/audit/QUESTIONS.md`).
 Bug ids (B-xx) refer to `docs/BUGS.md`.
 

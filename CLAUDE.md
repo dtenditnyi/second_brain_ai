@@ -13,7 +13,9 @@ AI: `core/rag_engine.py` (LlamaIndex + Chroma + HuggingFace embeddings; Ollama l
   (first import of `core.rag_engine` loads the HF embedding model — slow, needs network once)
 - Tailwind (in `ai_manager/`, where package.json is; styles.css is committed so not needed to start): `npm run build` (one-off) / `npm run dev` (watch)
 - Tests (all, incl. Playwright E2E via installed MS Edge): `../venv/Scripts/python.exe -m pytest`
-  - only unit/integration: `-m "not e2e and not responsive"`
+  - only unit/integration: `-m "not e2e and not responsive"`; responsive only: `-m responsive`
+  - screenshots: `SCREENSHOT_DIR=../docs/audit/responsive/after ../venv/Scripts/python.exe -m pytest tests/e2e/test_screenshots.py`
+  - after editing templates/CSS: `npx @tailwindcss/cli -i ./static/css/input.css -o ./static/css/styles.css --minify` (Tailwind v4: use `bg-x/20`, not `bg-opacity-20`)
   - settings: `ai_manager/settings_test.py` (in-memory SQLite, logs to null)
 - Docker/prod: `docker compose up` (gunicorn, Postgres, cloudflared).
 
