@@ -1,6 +1,6 @@
 # BUGS
 
-Order: whole-site breakers → functional → security → minor. Each fix: red test → code → green → full suite (no new failures, D5) → commit. End of phase 3: **190 passed, 0 failed**.
+Order: whole-site breakers → functional → security → minor. Each fix: red test → code → green → full suite (no new failures, D5) → commit. End of phase 3 (after review round 1): **201 passed, 0 failed** (+1 skipped screenshot helper).
 Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION** (behaviour kept, see `docs/audit/QUESTIONS.md`).
 
 | ID | Severity | Title | Test(s) | Status |
@@ -23,6 +23,9 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 | B-19 | minor | `base.html` `#app-wrapper` unclosed, scripts after `</body>` | `test_pages::test_base_layout_html_is_well_formed` | FIXED cd993b9 |
 | B-09 | security | AI replies / user text inserted with `innerHTML` (chat, home report) | e2e `test_e2e_errors::test_chat_reply_is_rendered_as_text`, `..._home_report_is_rendered_as_text` | FIXED ae5d8c8 |
 | B-18 | functional (UX) | JS ignores API errors (add task, settings, chat, checkbox) | e2e `test_e2e_errors::test_settings_save_error_is_shown`, `..._add_task_error_is_reported`, `..._chat_api_error_message_is_shown` | FIXED ae5d8c8 |
+| B-23 | functional (regression of B-12 fix, found by reviewer) | `POST /login/?next=foo` → 500 (`redirect()` tried `reverse('foo')`); `?next=logout` logged the user out right away | `test_auth::test_login_with_odd_next_values_is_safe[*]` | FIXED 2fc5f6c |
+| B-24 | functional (review) | Non-string `priority`/`status` (list/dict) → `TypeError` 500; dict/list title stored as repr; 101–150-char name → DataError on Postgres (`display_name` max 100); user+settings saves not atomic | `test_api::test_add_task_invalid_payload_returns_400[payload6-8]`, `test_update_task_rejects_non_string_status`, `test_save_settings_name_longer_than_display_name_field_rejected` | FIXED 2fc5f6c |
+| B-25 | security, low (review) | `notes.js` inserts note name, backlink title/snippet and error msg via `innerHTML` unescaped | e2e `test_e2e_errors::test_note_names_and_backlinks_are_rendered_as_text` | FIXED 2fc5f6c |
 | B-13 | security (design) | GitHub PAT rendered into settings page HTML | characterization `test_pages::test_settings_page_echoes_github_token_into_html` | QUESTION Q7 |
 | B-21 | security (design) | PAT stored in plain text in vault `.git/config` | — | QUESTION Q13 |
 | B-14 | latent | Encrypted token can exceed `max_length=255` | — | OPEN |
@@ -92,6 +95,11 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 
 ### B-18 — JS error handling
 - settings: shows `Error: <msg>` then resets; add-task: alert with server message, modal stays; task checkbox: reverted on HTTP error; chat: shows `⚠️ <msg>` instead of a misleading "connection failed".
+
+### B-23 / B-24 / B-25 — found by the independent phase-3 reviewer
+- B-23: `next` is accepted only if it starts with `/` and passes `url_has_allowed_host_and_scheme`, returned via `HttpResponseRedirect` (no `reverse()`); bare words go to home.
+- B-24: type checks for title/tags/priority/status; username limited to min(150, display_name 100); `api_save_settings` wrapped in `transaction.atomic`.
+- B-25: `window.escapeHtml` for the note name, backlink title/snippet and error message in `notes.js` (Markdown body still rendered as HTML — own notes).
 
 ### B-14 — OPEN: encrypted token length
 - Analysis: Fernet output ≈ `4/3·(57 + 16·ceil((n+1)/16))` chars. Classic `ghp_` (40) and fine-grained `github_pat_` (93) tokens → ~140–204 chars: fit. Tokens > ~140 chars would exceed 255 → `value too long` on PostgreSQL (SQLite does not enforce; not reproducible in the test DB).
