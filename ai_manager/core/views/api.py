@@ -73,6 +73,12 @@ def api_save_settings(request):
             return JsonResponse({'status': 'error', 'msg': 'Username is too long.'}, status=400)
         if User.objects.filter(username=username).exclude(pk=request.user.pk).exists():
             return JsonResponse({'status': 'error', 'msg': 'This username is already taken.'}, status=400)
+        # Free-text preferences must be strings that fit their columns (Postgres enforces lengths).
+        for key in ('display_name', 'theme', 'accent_color'):
+            value = data.get(key)
+            if value is not None and (not isinstance(value, str)
+                                      or len(value) > UserSettings._meta.get_field(key).max_length):
+                return JsonResponse({'status': 'error', 'msg': f'Invalid value for {key}.'}, status=400)
 
         request.user.username = username
         request.user.email = email

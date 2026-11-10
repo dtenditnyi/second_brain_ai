@@ -305,3 +305,15 @@ def test_state_changing_api_accepts_csrf_header(user):
     r = c.post("/api/add-task/", data={"title": "ok"}, content_type="application/json", HTTP_X_CSRFTOKEN=token)
     assert r.status_code == 200
     assert Task.objects.filter(title="ok").exists()
+
+
+@pytest.mark.parametrize("payload", [
+    {"display_name": "n" * 120},
+    {"theme": "t" * 30},
+    {"accent_color": ["x"]},
+])
+def test_save_settings_rejects_overlong_or_non_string_preferences(no_raise_client, user, post_json, payload):
+    r = post_json(no_raise_client, "/api/save-settings/", payload)
+    assert r.status_code == 400
+    user.refresh_from_db()
+    assert user.username == "alice" and UserSettings.objects.get(user=user).theme == "cyberpunk"
