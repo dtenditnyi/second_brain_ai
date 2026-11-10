@@ -1,7 +1,7 @@
 # RESPONSIVE — phase 4
 
 Method: `tests/e2e/test_screenshots.py` (run with `SCREENSHOT_DIR=...`) seeds realistic data (long task titles, 14 notes with long names, a Markdown note with a table and code, chat history, admin) and captures 11 page states × 5 widths (360, 390, 768, 1024, 1440) into `responsive/before/` and `responsive/after/`, plus `metrics.json` (document scroll width, elements sticking out of the viewport, tap targets < 44 px, text < 12 px, horizontal scrollers).
-Guard: `tests/e2e/test_responsive.py` (71 tests, marker `responsive`).
+Guard: `tests/e2e/test_responsive.py` (74 tests, marker `responsive`).
 
 ## Summary (metrics.json)
 
@@ -9,7 +9,7 @@ Guard: `tests/e2e/test_responsive.py` (71 tests, marker `responsive`).
 |---|---|---|
 | page states with horizontal overflow / clipped content | 8 of 55 | **0** |
 | text nodes < 12 px | 63 | 15 (remaining: uppercase mono micro-labels on desktop only, by design) |
-| tap targets < 44 px (all widths, incl. desktop & native checkboxes) | 653 | ~550 (phone/tablet: inputs & buttons now ≥ 44 px; remaining are native checkboxes 24 px inside clickable rows, inline text links, desktop-only controls) |
+| tap targets < 44 px (all widths, incl. desktop & native checkboxes) | 653 | 450 (phone/tablet: inputs & buttons now ≥ 44 px; remaining are native checkboxes 24 px, inline text links, desktop-only controls) |
 
 ## Issues found and fixes
 
@@ -25,11 +25,16 @@ Guard: `tests/e2e/test_responsive.py` (71 tests, marker `responsive`).
 | R8 | Home "Recent Tasks" checkbox shrank to 13 px next to long titles; chat modal checkboxes / close button squeezed | `home.html`, `ai-chat.html` | `shrink-0` | metrics |
 | R9 | Rendered Markdown: wide tables/code stretched the reading pane; images unbounded | notes | `.markdown-body table, pre {overflow-x:auto}`, `img {max-width:100%}`, `overflow-wrap:anywhere` | overflow tests |
 | R10 | 10 px labels (sidebar "Tasks completed", admin "Database Entities", register help) | various | `text-xs` (12 px) | metrics |
+| R12 | **Regression from R1, found by the independent verifier**: the now-`fixed` chat context modal (and the task modal) were painted *under* the z-40 mobile top bar because `<main>` had `z-10` (own stacking context) → modal close button not clickable on phones/tablets | `ai-chat.html`, `tasks.html`, < 1024 | `z-10` on `<main>` only from `lg` | `test_modals_are_above_mobile_header[360,768]` |
+| R13 | Chat at 1024 px: three columns left the conversation ~230 px wide | `ai-chat.html` | context column `lg:w-64 xl:w-80` | screenshot |
+| R14 | Markdown tables had no cell padding/borders ("Column AColumn B") | notes | `.markdown-body th, td` padding + border | screenshot |
+| R15 | Long unbroken words/URLs (task titles, chat) — guard added; no overflow at 360 px | home/tasks/chat | (already handled by layout) | `test_long_unbroken_words_do_not_overflow` |
 | R11 | `#app-wrapper` used `w-screen` (100vw incl. scrollbar → potential 1-scrollbar overflow on desktop) | base.html | `w-full` | overflow tests |
 
 Already fine before: `meta viewport` present on all pages; mobile off-canvas sidebar worked (`test_mobile_menu_opens_on_small_screens`); tasks/settings/home grids collapse to one column.
 
 ## Remaining / not changed
+- Core Matrix tables below 1024 px scroll horizontally; Commit/Drop sit at the right end with no visual "scroll" hint, and text inputs inside cells are narrow (admin-only page; converting rows to cards would be a redesign).
 - Native checkboxes are 24 px on phones (inside clickable rows/labels where available); enlarging further would change the look — left.
 - The mobile sidebar has no backdrop and does not close on outside tap (menu still works via ×) — left as is (behaviour change).
 - Uppercase mono micro-labels (`text-[10px]` in a few desktop-only places) kept for style.

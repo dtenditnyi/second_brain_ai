@@ -141,3 +141,10 @@ input[type="radio"], input[type="checkbox"] {
         height: 1.5rem;
     }
 }
+
+/* Readable Markdown tables in the note viewer. */
+.markdown-body th,
+.markdown-body td {
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--border-glass);
+}

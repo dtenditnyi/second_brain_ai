@@ -138,3 +138,37 @@ def test_translucent_badges_are_not_solid(browser, live_server, seeded):
         assert not bg.startswith("rgb(0, 240, 255)"), bg
     finally:
         ctx.close()
+
+
+@pytest.mark.parametrize("width", [360, 768])
+def test_modals_are_above_mobile_header(browser, live_server, seeded, width):
+    """Regression from R1: the fixed chat modal was painted under the z-40 mobile header."""
+    ctx, page = open_page(browser, live_server, "chat-modal", width)
+    try:
+        page.click("#close-context-modal", timeout=5000)
+        expect(page.locator("#context-modal")).to_be_hidden()
+    finally:
+        ctx.close()
+    ctx, page = open_page(browser, live_server, "tasks-modal", width)
+    try:
+        hit = page.evaluate("""() => { const r = document.querySelector('#task-modal h2').getBoundingClientRect();
+            return document.elementFromPoint(r.left + 5, r.top + 5).closest('#task-modal') !== null; }""")
+        assert hit, "task modal title covered by another element"
+        page.get_by_role("button", name="Cancel").click(timeout=5000)
+        expect(page.locator("#task-modal")).to_be_hidden()
+    finally:
+        ctx.close()
+
+
+def test_long_unbroken_words_do_not_overflow(browser, live_server, seeded):
+    from core.models import Task, ChatMessage
+    word = "https://example.com/" + "x" * 120
+    Task.objects.create(user=seeded, title=word, tags="t")
+    ChatMessage.objects.create(user=seeded, role="ai", content=word)
+    for name in ("home", "tasks", "chat"):
+        ctx, page = open_page(browser, live_server, name, 360)
+        try:
+            m = page.evaluate(METRICS_JS)
+            assert m["docScroll"] <= m["vw"] and m["overflowing"] == [], (name, m["overflowing"])
+        finally:
+            ctx.close()
