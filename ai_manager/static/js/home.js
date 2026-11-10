@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const data = await response.json();
                 if (data.status === 'ok') {
-                    reportOutput.innerHTML = data.reply.replace(/\n/g, '<br>');
+                    reportOutput.innerHTML = window.escapeHtml(data.reply).replace(/\n/g, '<br>');
                     reportBtn.textContent = 'Report Updated';
                 } else {
                     throw new Error('API Rejection');

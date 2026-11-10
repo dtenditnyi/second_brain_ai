@@ -156,7 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            updateMessage(loadingId, data.reply || data.message);
+            // Show the server's error text instead of throwing on a missing reply (B-18).
+            updateMessage(loadingId, data.reply || data.message || `⚠️ ${data.msg || 'The AI request was rejected.'}`);
 
         } catch (error) {
             updateMessage(loadingId, '❌ Connection to local AI core failed.');
@@ -180,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <article class="flex gap-4 w-full ${alignmentClass}" id="${id}">
                 <div class="text-2xl mt-1">${avatar}</div>
                 <div class="glass-card rounded-2xl p-4 max-w-[85%] ${bubbleStyle}">
-                    <p class="text-[var(--text-primary)] leading-relaxed">${text.replace(/\n/g, '<br>')}</p>
+                    <p class="text-[var(--text-primary)] leading-relaxed">${window.escapeHtml(text).replace(/\n/g, '<br>')}</p>
                 </div>
             </article>
         `;
@@ -194,7 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateMessage(id, text) {
         const msgEl = document.getElementById(id);
         if (msgEl) {
-            msgEl.querySelector('p').innerHTML = text.replace(/\n/g, '<br>');
+            // Escape before inserting: replies may contain HTML from notes or the LLM (B-09).
+            msgEl.querySelector('p').innerHTML = window.escapeHtml(text).replace(/\n/g, '<br>');
         }
     }
 

@@ -85,6 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     saveBtn.style.color = 'var(--active-accent)';
                     saveBtn.style.borderColor = 'var(--active-accent)';
                 }, 3000);
+            } else {
+                // Surface validation errors instead of leaving "Saving Cores..." (B-18).
+                saveBtn.textContent = `Error: ${data.msg || 'configuration rejected'}`;
+                setTimeout(() => { saveBtn.textContent = 'Save System Configuration'; }, 4000);
             }
         } catch (error) {
             saveBtn.textContent = 'Error Saving Configuration';

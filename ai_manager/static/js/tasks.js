@@ -22,7 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (response.ok) {
                     // Reload to reflect server-side grouping and status-dependent markup.
-                    window.location.reload(); 
+                    window.location.reload();
+                } else {
+                    // Restore the checkbox when the server rejects the change (B-18).
+                    e.target.checked = !e.target.checked;
+                    console.error('Task update rejected:', response.status);
                 }
             } catch (error) {
                 console.error('Error updating task:', error);
@@ -55,6 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Close modal and refresh to show new task
                     document.getElementById('task-modal').classList.add('hidden');
                     window.location.reload();
+                } else {
+                    // Report validation errors instead of silently keeping the modal open (B-18).
+                    const data = await response.json().catch(() => ({}));
+                    alert(`Failed to create task: ${data.msg || response.status}`);
                 }
             } catch (error) {
                 console.error('Error creating task:', error);
