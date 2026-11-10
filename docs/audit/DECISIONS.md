@@ -21,3 +21,11 @@ Each entry: context · options · chosen · why · how to roll back.
 
 ## D4. External services are always mocked in tests
 - HuggingFace embedding model (downloaded at import time), Ollama, Gemini, GitHub/Git are replaced with fakes in `tests/conftest.py`. No live calls.
+
+## D5. "Whole suite green" during phase 3
+- Context: phase 3 starts with 35 deliberately failing tests (one per known defect). After each fix the full suite cannot be fully green until the last fix lands.
+- Chosen: after every fix — target test(s) green AND full suite has no new failures (failing set only shrinks). Full green is required at the end of phase 3.
+
+## D6. B-15 lazy embedding model
+- Options: (a) lazy load on first chat request (`ensure_embed_model()`); (b) load in `AppConfig.ready()` (still at start); (c) env flag to skip.
+- Chosen (a): smallest change, same model, same vectors. Trade-off: first chat message per process pays the load (~1–5 s). Rollback: revert commit.

@@ -29,7 +29,19 @@ _user_indexes = {}
 LOCAL_OLLAMA_URL = os.getenv("OLLAMA_HOST", "http://192.168.1.128:11434")
 
 # Use the same 384-dimensional embedding model for indexing and query vectors.
-Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+# The model is loaded lazily on the first chat request (B-15): loading it at
+# import time made every process start (manage.py, gunicorn workers) slow and
+# required HuggingFace network access even for pages that never use the AI.
+EMBED_MODEL_NAME = "BAAI/bge-small-en-v1.5"
+_embed_model_loaded = False
+
+
+def ensure_embed_model():
+    """Install the shared embedding model into LlamaIndex Settings once per process."""
+    global _embed_model_loaded
+    if not _embed_model_loaded:
+        Settings.embed_model = HuggingFaceEmbedding(model_name=EMBED_MODEL_NAME)
+        _embed_model_loaded = True
 
 # Probe the configured local Ollama endpoint with a short timeout so offline
 # hardware does not stall normal cloud-backed requests.
@@ -105,6 +117,7 @@ def ask_second_brain(user_query, user, selected_files=None):
             or (ai_strategy == 'auto' and local_online)
         )
         logger.info("LLM strategy selected: %s.", "Ollama" if use_local_ai else "Gemini")
+        ensure_embed_model()
         
         # A cached engine is valid only for the provider mode it was created with;
         # reset it when connectivity or the configured strategy changes that mode.
