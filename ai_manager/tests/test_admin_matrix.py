@@ -118,3 +118,63 @@ def test_admin_delete_settings_row_then_user_pages_still_work(admin_client_, use
     c = Client()
     c.force_login(User.objects.get(id=user.id))
     assert c.get("/").status_code == 200
+
+
+# --- Q11: a superuser cannot lock themself out -------------------------------
+
+def test_superuser_cannot_remove_own_superuser_flag(admin_client_, superuser, post_json):
+    r = post_json(admin_client_, "/api/admin/update-row/",
+                  {"table": "users", "id": superuser.id, "fields": {"username": "root", "is_superuser": "false"}})
+    assert r.status_code == 400
+    superuser.refresh_from_db()
+    assert superuser.is_superuser
+
+
+def test_superuser_can_still_edit_own_row(admin_client_, superuser, post_json):
+    r = post_json(admin_client_, "/api/admin/update-row/",
+                  {"table": "users", "id": superuser.id,
+                   "fields": {"username": "root", "email": "new@x.io", "is_superuser": "true"}})
+    assert r.status_code == 200
+    superuser.refresh_from_db()
+    assert superuser.is_superuser and superuser.email == "new@x.io"
+
+
+def test_missing_superuser_key_does_not_demote(admin_client_, superuser, user, post_json):
+    user.is_superuser = True
+    user.save()
+    post_json(admin_client_, "/api/admin/update-row/", {"table": "users", "id": user.id, "fields": {"email": "e@x.io"}})
+    user.refresh_from_db()
+    assert user.is_superuser
+
+
+def test_superuser_can_demote_someone_else(admin_client_, user, post_json):
+    user.is_superuser = True
+    user.save()
+    post_json(admin_client_, "/api/admin/update-row/",
+              {"table": "users", "id": user.id, "fields": {"is_superuser": "false"}})
+    user.refresh_from_db()
+    assert not user.is_superuser
+
+
+@pytest.mark.parametrize("row_id", ["self_int", "self_str"])
+def test_superuser_cannot_delete_own_account(admin_client_, superuser, post_json, row_id):
+    rid = superuser.id if row_id == "self_int" else str(superuser.id)
+    r = post_json(admin_client_, "/api/admin/delete-row/", {"table": "users", "id": rid})
+    assert r.status_code == 400
+    assert User.objects.filter(id=superuser.id).exists()
+
+
+def test_own_row_controls_are_disabled_in_ui(admin_client_, superuser, user):
+    html = admin_client_.get("/system-matrix/").content.decode()
+    own = html.split(f'data-id="{superuser.id}" data-self="true"')[1].split("</tr>")[0]
+    assert 'name="is_superuser"' in own and "disabled" in own
+    assert own.count("disabled") >= 2  # superuser select + delete button
+    other = html.split(f'<tr data-id="{user.id}"')[1].split("</tr>")[0]
+    assert "disabled" not in other
+
+
+def test_back_to_dashboard_links_home(admin_client_):
+    """Q4: "Back to Dashboard" leads to the home page."""
+    html = admin_client_.get("/system-matrix/").content.decode()
+    link = html.split("Back to Dashboard")[0].rsplit("<a ", 1)[1]
+    assert 'href="/"' in link

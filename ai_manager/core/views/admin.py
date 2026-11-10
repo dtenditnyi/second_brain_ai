@@ -35,8 +35,13 @@ def api_admin_update_row(request):
 
             if target_table == 'users':
                 obj = User.objects.get(id=row_id)
+                # Q11: a superuser cannot demote themself (would lock them out).
+                if obj.pk == request.user.pk and fields.get('is_superuser', True) not in ['true', True]:
+                    return JsonResponse({'status': 'error',
+                                         'msg': 'You cannot remove your own superuser rights.'}, status=400)
                 obj.username, obj.email = fields.get('username', obj.username), fields.get('email', obj.email)
-                obj.is_superuser = fields.get('is_superuser') in ['true', True]
+                if 'is_superuser' in fields:  # a missing key no longer demotes the user
+                    obj.is_superuser = fields.get('is_superuser') in ['true', True]
                 obj.save()
             elif target_table == 'settings':
                 obj = UserSettings.objects.get(id=row_id)
@@ -79,6 +84,9 @@ def api_admin_delete_row(request):
                 return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
             models_map = {'users': User, 'settings': UserSettings, 'tasks': Task, 'messages': ChatMessage}
             if data.get('table') in models_map:
+                # Q11: deleting your own account from Core Matrix is refused.
+                if data.get('table') == 'users' and str(data.get('id')) == str(request.user.pk):
+                    return JsonResponse({'status': 'error', 'msg': 'You cannot delete your own account.'}, status=400)
                 models_map[data.get('table')].objects.filter(id=data.get('id')).delete()
                 return JsonResponse({'status': 'ok'})
             return JsonResponse({'status': 'error', 'msg': 'Invalid model context.'}, status=400)

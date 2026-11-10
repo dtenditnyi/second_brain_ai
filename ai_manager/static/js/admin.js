@@ -44,6 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const fieldsPayload = {};
             
             inputs.forEach(input => {
+                // Disabled controls (own superuser flag, Q11) are not sent.
+                if (input.disabled || !input.name) return;
                 fieldsPayload[input.name] = input.value;
             });
 
