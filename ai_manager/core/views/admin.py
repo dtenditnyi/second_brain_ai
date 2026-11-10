@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 
 from ..models import UserSettings, Task, ChatMessage
+from .utils import parse_json_body
 
 @user_passes_test(lambda u: u.is_superuser, login_url='login')
 def admin_dashboard_view(request):
@@ -28,7 +29,9 @@ def api_admin_update_row(request):
     # Returns: JSON status; lookup, validation, and persistence errors become HTTP 500.
     if request.method == "POST":
         try:
-            data = json.loads(request.body)
+            data = parse_json_body(request)
+            if data is None:
+                return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
             target_table, row_id, fields = data.get('table'), data.get('id'), data.get('fields', {})
 
             if target_table == 'users':
@@ -66,7 +69,9 @@ def api_admin_delete_row(request):
     # Returns: JSON status or a client/server error when the target cannot be deleted.
     if request.method == "POST":
         try:
-            data = json.loads(request.body)
+            data = parse_json_body(request)
+            if data is None:
+                return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
             models_map = {'users': User, 'settings': UserSettings, 'tasks': Task, 'messages': ChatMessage}
             if data.get('table') in models_map:
                 models_map[data.get('table')].objects.filter(id=data.get('id')).delete()

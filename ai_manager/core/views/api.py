@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 
 from ..models import Task, ChatMessage, get_user_settings
 from .. import rag_engine
+from .utils import parse_json_body
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,9 @@ def api_chat_message(request):
     # Parameters: request contains JSON with a message and selected file names.
     # Returns: a JSON reply on success, or HTTP 400 when the request is unusable.
     if request.method == "POST":
-        data = json.loads(request.body)
+        data = parse_json_body(request)
+        if data is None:
+            return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
         user_message = data.get('message', '')
         # Accept both current and legacy browser key spellings, then discard
         # malformed entries before the filenames reach the retrieval layer.
@@ -43,7 +46,9 @@ def api_save_settings(request):
     # Parameters: request.body is JSON produced by settings.js.
     # Returns: JSON status; the RAG cache is reset so subsequent turns use new settings.
     if request.method == "POST":
-        data = json.loads(request.body)
+        data = parse_json_body(request)
+        if data is None:
+            return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
         username = data.get('username', data.get('display_name', request.user.username))
         email = data.get('email', request.user.email)
 
@@ -85,7 +90,9 @@ def api_add_task(request):
     # Create a task owned by the authenticated account from the submitted JSON fields.
     # Returns: JSON containing the new database primary key, or HTTP 400 for other methods.
     if request.method == "POST":
-        data = json.loads(request.body)
+        data = parse_json_body(request)
+        if data is None:
+            return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
         task = Task.objects.create(
             user=request.user,
             title=data.get('title'),
@@ -102,7 +109,9 @@ def api_update_task_status(request):
     # Update only a task belonging to the caller, preventing cross-account task edits.
     # Returns: JSON success, or a not-found error when the task is not owned by the user.
     if request.method == "POST":
-        data = json.loads(request.body)
+        data = parse_json_body(request)
+        if data is None:
+            return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
         try:
             task = Task.objects.get(id=data.get('task_id'), user=request.user)
             task.status = data.get('status')

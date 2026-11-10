@@ -15,3 +15,15 @@ def get_user_config(user):
         "ai_strategy": "auto",
         "temperature": "0.7"
     }
+
+def parse_json_body(request):
+    """Decode a JSON object request body; return None when it is malformed (B-02).
+
+    Views answer None with HTTP 400 instead of letting json.loads raise a 500.
+    """
+    import json
+    try:
+        data = json.loads(request.body or b'{}')
+    except (ValueError, UnicodeDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
