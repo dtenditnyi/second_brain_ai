@@ -23,8 +23,8 @@
                 <!-- Each item exposes its canonical note name to notes.js. -->
                 {% for note in user_notes %}
                     <li>
-                        <button type="button" class="file-item w-full text-left text-soft hover:text-fg px-2 py-2 min-h-11 rounded-md hover:bg-surface transition-colors flex items-center gap-2 border border-transparent" data-filename="{{ note }}">
-                            <span aria-hidden="true">📄</span> <span class="truncate text-sm">{{ note }}</span>
+                        <button type="button" class="file-item w-full text-left text-soft hover:text-fg px-2 py-2 min-h-11 rounded-md hover:bg-surface transition-colors flex items-start gap-2 border border-transparent" data-filename="{{ note }}" title="{{ note }}">
+                            <span aria-hidden="true">📄</span> <span class="line-clamp-2 break-words text-sm xl:text-[0.8125rem] leading-snug">{{ note }}</span>
                         </button>
                     </li>
                 {% empty %}

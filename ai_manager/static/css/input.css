@@ -583,6 +583,37 @@ input[type="radio"], input[type="checkbox"] {
     }
 }
 
+/* Accent colour names in Settings: readable in both themes. */
+.swatch-cyan { color: #00D4E0; }
+.swatch-purple { color: #C77DFF; }
+.swatch-green { color: #22C55E; }
+[data-theme="light"] .swatch-cyan { color: #0E7490; }
+[data-theme="light"] .swatch-purple { color: #7E22CE; }
+[data-theme="light"] .swatch-green { color: #15803D; }
+
+/* Light theme: tinted badges need darker text and a lighter tint for 4.5:1. */
+[data-theme="light"] .badge-accent  { color: color-mix(in srgb, var(--active-accent) 80%, #000); background: color-mix(in srgb, var(--active-accent) 7%, transparent); }
+[data-theme="light"] .badge-success { color: color-mix(in srgb, var(--success) 80%, #000);       background: color-mix(in srgb, var(--success) 7%, transparent); }
+[data-theme="light"] .badge-info    { color: color-mix(in srgb, var(--info) 85%, #000);          background: color-mix(in srgb, var(--info) 7%, transparent); }
+[data-theme="light"] .badge-danger  { background: color-mix(in srgb, var(--danger) 7%, transparent); }
+[data-theme="light"] .badge-warning { background: color-mix(in srgb, var(--warning) 7%, transparent); }
+
+/* Touch screens (e.g. iPad landscape at 1024px+): 44px controls regardless of width. */
+@media (pointer: coarse) {
+    .btn, .btn-sm, .input-field, .status-select, .icon-btn,
+    .save-row-btn, .delete-row-btn, .tab-btn, .touch-44 {
+        min-height: 44px;
+    }
+}
+
+/* Short landscape phones: slimmer top bar so the chat feed keeps its height. */
+@media (max-height: 480px) and (max-width: 1023.98px) {
+    .mobile-header {
+        padding-top: max(0.25rem, var(--safe-top)) !important;
+        padding-bottom: 0.25rem !important;
+    }
+}
+
 /* Off-canvas menu backdrop and body scroll lock. */
 .menu-backdrop {
     position: fixed;

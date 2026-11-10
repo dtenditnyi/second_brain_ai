@@ -197,3 +197,69 @@ def test_theme_background_painted_before_stylesheet(browser, live_server, seeded
             "light" if theme == "light" else "dark")
     finally:
         ctx.close()
+
+
+# --- added after the independent verifier (Round 2) ---------------------------
+
+@pytest.mark.parametrize("name", list(PAGES))
+def test_tap_targets_on_touch_tablet_landscape(browser, live_server, seeded, name):
+    """iPad landscape (1024 px, touch): (pointer: coarse) keeps every control >= 44 px."""
+    ctx, page = open_page(browser, live_server, name, 1024, 768, has_touch=True, is_mobile=False)
+    try:
+        assert page.evaluate("matchMedia('(pointer: coarse)').matches")
+        m = page.evaluate(METRICS_JS)
+        assert m["smallTargets"] == [], m["smallTargets"]
+    finally:
+        ctx.close()
+
+
+RENDERED_CONTRAST_JS = """
+() => {
+  // Any CSS colour (rgb, color(srgb …), oklab …) → rgba via a 1px canvas.
+  const cv = document.createElement('canvas'); cv.width = cv.height = 1;
+  const cx = cv.getContext('2d', {willReadFrequently: true});
+  const parse = c => { cx.clearRect(0, 0, 1, 1); cx.fillStyle = '#000'; cx.fillStyle = c; cx.fillRect(0, 0, 1, 1);
+    const d = cx.getImageData(0, 0, 1, 1).data; return {r: d[0], g: d[1], b: d[2], a: d[3] / 255}; };
+  const over = (top, bottom) => ({r: top.r * top.a + bottom.r * (1 - top.a), g: top.g * top.a + bottom.g * (1 - top.a),
+                                  b: top.b * top.a + bottom.b * (1 - top.a), a: 1});
+  const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  const background = el => {
+    const chain = [];
+    for (let e = el; e; e = e.parentElement) chain.push(e);
+    let bg = parse(getComputedStyle(document.documentElement).backgroundColor);
+    for (const e of chain.reverse()) { const c = parse(getComputedStyle(e).backgroundColor); if (c.a > 0) bg = over(c, bg); }
+    return bg;
+  };
+  const bad = [];
+  const sel = '.badge, .field-label, .field-hint, .text-muted, .text-accent, .text-soft, .empty-state, label span, h1, h2, h3, p, a, button';
+  for (const el of document.querySelectorAll(sel)) {
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height || el.closest('#main-sidebar.-translate-x-full') && window.innerWidth < 1024) continue;
+    if (![...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
+    const s = getComputedStyle(el);
+    if (s.visibility === 'hidden' || parseFloat(s.opacity) === 0) continue;
+    const size = parseFloat(s.fontSize), bold = parseInt(s.fontWeight) >= 700;
+    const need = (size >= 24 || (bold && size >= 18.66)) ? 3 : 4.5;
+    const fg = over(parse(s.color), background(el));
+    const value = ratio(fg, background(el));
+    if (value < need) bad.push(`${el.tagName.toLowerCase()}.${String(el.className).split(' ').slice(0, 2).join('.')} "${el.textContent.trim().slice(0, 20)}" ${value.toFixed(2)}`);
+  }
+  return bad.slice(0, 15);
+}
+"""
+
+
+@pytest.mark.parametrize("theme", ["light", "cyberpunk"])
+@pytest.mark.parametrize("accent", ["cyan", "purple", "green"])
+@pytest.mark.parametrize("name", ["home", "tasks", "settings", "chat", "notes"])
+def test_rendered_text_contrast_meets_aa(browser, live_server, seeded, theme, accent, name):
+    """Rendered text (incl. tinted badges, accent labels) against its composited background."""
+    UserSettings.objects.filter(user=seeded).update(theme=theme, accent_color=accent)
+    ctx, page = open_page(browser, live_server, name, 1280, 800)
+    try:
+        page.wait_for_timeout(300)
+        assert page.evaluate(RENDERED_CONTRAST_JS) == []
+    finally:
+        ctx.close()

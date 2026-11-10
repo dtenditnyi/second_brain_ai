@@ -27,7 +27,7 @@
           <button id="add-documents-button" type="button" class="btn btn-primary btn-sm">Choose notes</button>
           <button id="reset-context-button" type="button" class="btn btn-ghost btn-sm hidden">Reset</button>
         </div>
-        <label class="w-full sm:w-auto lg:w-full flex items-center gap-2 text-sm cursor-pointer min-h-11 lg:mt-2" title="{{ models.smart_label }}">
+        <label class="w-full sm:w-auto lg:w-full [@media(max-height:480px)]:w-auto flex items-center gap-2 text-sm cursor-pointer min-h-11 lg:mt-2" title="{{ models.smart_label }}">
           <span class="tap-zone"><input id="smart-answer-toggle" type="checkbox"></span>
           <span>Smart answer <span class="hidden lg:inline text-muted">({{ models.smart_label }})</span></span>
         </label>
