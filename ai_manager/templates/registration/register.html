@@ -3,19 +3,24 @@
 <head>
     <!-- Registration page shares the application's compiled visual theme. -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0D0D12">
+    <style>html{background:#0D0D12}</style>
     <title>Second Brain - Establish Operator Identity</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<body class="bg-[#0D0D12] min-h-screen w-full flex items-center justify-center relative font-sans overflow-x-hidden py-6">
+<body class="bg-[#0D0D12] min-h-screen min-h-dvh w-full flex items-center justify-center relative font-sans overflow-x-hidden py-6">
     
     <!-- Ambient accent layers frame the registration card without affecting form flow. -->
-    <div class="pointer-events-none absolute top-1/4 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-[#00F0FF] opacity-5 rounded-full blur-[120px]"></div>
-    <div class="pointer-events-none absolute bottom-1/4 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-[#B026FF] opacity-5 rounded-full blur-[120px]"></div>
+    <div class="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+    <div class="pointer-events-none absolute top-1/4 left-1/4 w-40 h-40 min-[400px]:w-64 min-[400px]:h-64 sm:w-96 sm:h-96 bg-[#00F0FF] opacity-5 rounded-full blur-[120px]"></div>
+    <div class="pointer-events-none absolute bottom-1/4 right-1/4 w-40 h-40 min-[400px]:w-64 min-[400px]:h-64 sm:w-96 sm:h-96 bg-[#B026FF] opacity-5 rounded-full blur-[120px]"></div>
+    </div>
 
     <!-- Django registration fields, validation feedback, and submit action. -->
-    <main class="w-full max-w-md p-4 relative z-10">
+    <main class="w-full max-w-md p-4 relative z-10" style="padding-left:max(1rem,var(--safe-left));padding-right:max(1rem,var(--safe-right))">
         <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10 ">
             <header class="text-center mb-8">
                 <h1 class="text-3xl font-extrabold text-white tracking-tight mb-2">Register Operator</h1>
@@ -23,7 +28,7 @@
             </header>
 
             {% if error %}
-                <div class="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium">
+                <div class="mb-6 alert alert-danger font-medium" role="alert">
                     ⚠️ {{ error }}
                 </div>
             {% endif %}
@@ -41,14 +46,15 @@
                                name="{{ field.html_name }}" 
                                id="{{ field.id_for_label }}" 
                                required
-                               class="input-field rounded-xl px-4 py-2.5 w-full bg-black/40 text-white border border-white/10 focus:border-[#00F0FF] outline-none transition-all text-sm">
+                               {% if field.html_name == "username" %}autocomplete="username" autocapitalize="none" spellcheck="false"{% else %}autocomplete="new-password"{% endif %}
+                               class="input-field rounded-xl px-4 py-2.5 w-full bg-black/40 text-white border border-white/10 transition-all text-sm">
                         {% if field.help_text %}
                             <div class="text-xs text-gray-400 leading-snug mt-0.5 [&_ul]:list-disc [&_ul]:pl-4 [&_li]:mt-0.5">{{ field.help_text }}</div>
                         {% endif %}
                     </div>
                 {% endfor %}
 
-                <button type="submit" class="btn-primary w-full py-3.5 mt-2 rounded-xl font-bold uppercase tracking-wider text-sm border border-[#00F0FF] text-[#00F0FF] hover:bg-[#00F0FF] hover:text-black transition-all shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                <button type="submit" class="btn btn-solid w-full py-3.5 mt-2 rounded-xl uppercase tracking-wider">
                     Build Core Node
                 </button>
             </form>
@@ -57,7 +63,7 @@
             <footer class="mt-6 text-center border-t border-white/5 pt-4">
                 <p class="text-sm text-gray-400">
                     Already registered? 
-                    <a href="{% url 'login' %}" class="text-[#00F0FF] font-semibold hover:underline ml-1">Access Terminal</a>
+                    <a href="{% url 'login' %}" class="text-[#00F0FF] font-semibold underline-offset-2 hover:underline ml-1 inline-flex items-center min-h-11">Access Terminal</a>
                 </p>
             </footer>
         </div>

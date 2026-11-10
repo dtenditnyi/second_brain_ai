@@ -4,109 +4,131 @@
 {% block title %}
   Second Brain - Settings
 {% endblock %}
+{% block mobile_title %}Settings{% endblock %}
 
 {% block content %}
 <!-- User preferences page; settings.js previews and submits these values. -->
-  <main class="p-8 lg:p-12 max-w-5xl mx-auto w-full">
-    <header class="mb-10">
-      <h1 class="text-3xl font-bold text-[var(--text-primary)] mb-2">Settings</h1>
-      <p class="text-[var(--text-secondary)]">Customize your global Second Brain experience.</p>
+  <main class="px-4 py-6 sm:p-8 lg:p-12 max-w-5xl mx-auto w-full">
+    <header class="mb-8 lg:mb-10">
+      <h1 class="text-2xl sm:text-3xl font-bold text-fg mb-2">Settings</h1>
+      <p class="text-soft">Customize your global Second Brain experience.</p>
     </header>
 
-    <div class="grid grid-cols-1 gap-8 settings-container">
-      
-      <!-- Profile identity fields map to the authenticated Django User. -->
-      <section class="glass-card rounded-xl p-6">
-        <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center gap-2">
-          <span>👤</span> Profile Configuration
+    <div class="grid grid-cols-1 gap-6 lg:gap-8 settings-container">
+
+      <!-- Profile: the display name is separate from the login (Q6). -->
+      <section class="glass-card card p-5 sm:p-6" aria-labelledby="profile-title">
+        <h2 id="profile-title" class="text-xl font-semibold text-fg mb-6 flex items-center gap-2">
+          <span aria-hidden="true">👤</span> Profile
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="flex flex-col gap-2">
-            <label for="display-name" class="text-sm font-medium">Display Name</label>
-            <input type="text" id="display-name" name="username" class="input-field rounded-lg px-4 py-2 w-full" value="{{ request.user.username }}" />
+          <div class="field">
+            <label for="display-name" class="field-label">Display name</label>
+            <input type="text" id="display-name" name="display_name" maxlength="100" autocomplete="nickname" class="input-field rounded-lg px-4 py-2 w-full" value="{{ config.display_name|default:request.user.username }}" />
+            <p class="field-hint">Shown in the app. Your login stays <strong class="text-soft">{{ request.user.username }}</strong>.</p>
           </div>
-          <div class="flex flex-col gap-2">
-            <label for="email-address" class="text-sm font-medium">Email Address</label>
-            <input type="email" id="email-address" name="email" class="input-field rounded-lg px-4 py-2 w-full" value="{{ request.user.email|default:'' }}">
+          <div class="field">
+            <label for="email-address" class="field-label">Email address</label>
+            <input type="email" id="email-address" name="email" autocomplete="email" class="input-field rounded-lg px-4 py-2 w-full" value="{{ request.user.email|default:'' }}">
           </div>
         </div>
       </section>
 
       <!-- Theme and accent controls update the appearance tokens. -->
-      <section class="glass-card rounded-xl p-6">
-        <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center gap-2">
-          <span>🎨</span> Appearance
+      <section class="glass-card card p-5 sm:p-6" aria-labelledby="appearance-title">
+        <h2 id="appearance-title" class="text-xl font-semibold text-fg mb-6 flex items-center gap-2">
+          <span aria-hidden="true">🎨</span> Appearance
         </h2>
-        
+
         <div class="flex flex-col gap-6">
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-medium">System Theme</label>
+          <div class="field">
+            <label for="theme-select" class="field-label">System theme</label>
             <select id="theme-select" class="input-field rounded-lg px-4 py-2 w-full md:w-1/2">
               <option value="cyberpunk" {% if config.theme == 'cyberpunk' %}selected{% endif %}>Cyberpunk Dark</option>
               <option value="light" {% if config.theme == 'light' %}selected{% endif %}>High-Contrast Light</option>
             </select>
           </div>
 
-          <div class="flex flex-col gap-3">
-            <label class="text-sm font-medium">Accent Color</label>
-            <div class="flex items-center gap-6">
-              <label class="flex items-center gap-2 cursor-pointer">
+          <fieldset class="field">
+            <legend class="field-label mb-2">Accent color</legend>
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-1">
+              <label class="flex items-center gap-2 cursor-pointer min-h-11">
                 <input type="radio" name="accent-color" value="cyan" {% if config.accent_color == 'cyan' or not config.accent_color %}checked{% endif %} />
-                <span class="text-[#00F0FF] font-semibold tracking-wide">Cyan</span>
+                <span class="font-semibold tracking-wide" style="color:#00B8C4">Cyan</span>
               </label>
-              <label class="flex items-center gap-2 cursor-pointer">
+              <label class="flex items-center gap-2 cursor-pointer min-h-11">
                 <input type="radio" name="accent-color" value="purple" {% if config.accent_color == 'purple' %}checked{% endif %} />
-                <span class="text-[#B026FF] font-semibold tracking-wide">Purple</span>
+                <span class="font-semibold tracking-wide" style="color:#B866FF">Purple</span>
               </label>
-              <label class="flex items-center gap-2 cursor-pointer">
+              <label class="flex items-center gap-2 cursor-pointer min-h-11">
                 <input type="radio" name="accent-color" value="green" {% if config.accent_color == 'green' %}checked{% endif %} />
-                <span class="text-[#00FF41] font-semibold tracking-wide">Green</span>
+                <span class="font-semibold tracking-wide" style="color:#22C55E">Green</span>
               </label>
             </div>
-          </div>
+          </fieldset>
         </div>
       </section>
 
       <!-- AI routing, sampling temperature, and Git repository configuration. -->
-      <section class="glass-card rounded-xl p-6">
-        <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center gap-2">
-          <span>✨</span> AI Assistant Core & Synchronization Matrix
+      <section class="glass-card card p-5 sm:p-6" aria-labelledby="ai-title">
+        <h2 id="ai-title" class="text-xl font-semibold text-fg mb-6 flex items-center gap-2">
+          <span aria-hidden="true">✨</span> AI Assistant &amp; Vault Sync
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div class="flex flex-col gap-2">
-            <label for="github-repo" class="text-sm font-medium">GitHub Repository URL (.git)</label>
-            <input type="url" id="github-repo" class="input-field rounded-lg px-4 py-2 w-full" value="{{ config.github_repo_url }}" placeholder="https://github.com/username/vault.git" />
+          <div class="field">
+            <label for="github-repo" class="field-label">GitHub repository URL (.git)</label>
+            <input type="url" id="github-repo" inputmode="url" class="input-field rounded-lg px-4 py-2 w-full" value="{{ config.github_repo_url }}" placeholder="https://github.com/username/vault.git" />
           </div>
-          <div class="flex flex-col gap-2">
-            <label for="github-token" class="text-sm font-medium">GitHub Personal Access Token (PAT)</label>
-            <input type="password" id="github-token" class="input-field rounded-lg px-4 py-2 w-full" value="{{ config.github_token }}" placeholder="ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" />
+          <!-- Q7: the saved token is never written into the page. -->
+          <div class="field">
+            <label for="github-token" class="field-label">GitHub personal access token (PAT)</label>
+            <input type="password" id="github-token" autocomplete="new-password" class="input-field rounded-lg px-4 py-2 w-full" value=""
+                   placeholder="{% if has_github_token %}Token saved — leave empty to keep it{% else %}ghp_… or github_pat_…{% endif %}" />
+            {% if has_github_token %}
+              <p class="field-hint" id="token-status">Token saved — leave the field empty to keep it.</p>
+              <label class="flex items-center gap-2 text-sm cursor-pointer min-h-11 text-danger">
+                <input type="checkbox" id="clear-github-token">
+                <span>Delete the saved token</span>
+              </label>
+            {% else %}
+              <p class="field-hint" id="token-status">Needed only for private repositories.</p>
+            {% endif %}
           </div>
         </div>
 
-        <div class="flex flex-col gap-6 border-t border-[var(--border-glass)] pt-6">
-          <div class="flex flex-col gap-2">
-            <label for="ai-strategy" class="text-sm font-medium">AI Strategy</label>
-            <select id="ai-strategy" name="ai_strategy" class="input-field rounded-lg px-4 py-2 w-full md:w-1/2 bg-[var(--bg-glass)] backdrop-blur-md border border-[var(--border-glass)] text-[var(--text-primary)] focus:border-[var(--active-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--active-accent)]">
-              <option value="auto" {% if config.ai_strategy == 'auto' or not config.ai_strategy %}selected{% endif %}>Auto-Hybrid (Ollama if local PC is ON, Gemini if OFF)</option>
-              <option value="local_only" {% if config.ai_strategy == 'local_only' %}selected{% endif %}>Strictly Local (Ollama Llama3, fail if PC is OFF)</option>
-              <option value="cloud_only" {% if config.ai_strategy == 'cloud_only' %}selected{% endif %}>Cloud Only (Gemini 2.5 Flash, fast but requires internet)</option>
+        <div class="flex flex-col gap-6 border-t border-line pt-6">
+          <div class="field">
+            <label for="ai-strategy" class="field-label">AI strategy</label>
+            <select id="ai-strategy" name="ai_strategy" class="input-field rounded-lg px-4 py-2 w-full md:w-3/4">
+              <option value="auto" {% if config.ai_strategy == 'auto' or not config.ai_strategy %}selected{% endif %}>Auto-Hybrid — {{ models.ollama_label }} if your PC is on, else Fast: {{ models.default_label }}</option>
+              <option value="local_only" {% if config.ai_strategy == 'local_only' %}selected{% endif %}>Strictly Local — {{ models.ollama_label }}, fails if the PC is off</option>
+              <option value="cloud_only" {% if config.ai_strategy == 'cloud_only' %}selected{% endif %}>Cloud Only — Fast: {{ models.default_label }}</option>
             </select>
+            <!-- Labels come from the same config the code uses (core/ai_models.py, Q8). -->
+            <ul class="field-hint list-disc pl-5 space-y-0.5" id="model-info">
+              <li>Fast (chat): <strong class="text-soft">{{ models.default_label }}</strong></li>
+              <li>Smart (status report, “Smart answer”): <strong class="text-soft">{{ models.smart_label }}</strong></li>
+              <li>Fallbacks when the daily limit is reached: {% for label in models.fallbacks %}<strong class="text-soft">{{ label }}</strong>{% if not forloop.last %} → {% endif %}{% empty %}none{% endfor %}{% if config.ai_strategy != 'cloud_only' %} → {{ models.ollama_label }} (Auto-Hybrid){% endif %}</li>
+              <li>Last answer by: <strong class="text-soft" data-last-model>{{ config.last_model_used|default:"—" }}</strong>{% if config.last_model_at %} <span>({{ config.last_model_at|timesince }} ago)</span>{% endif %}</li>
+            </ul>
           </div>
 
-          <div class="flex flex-col gap-2 w-full md:w-1/2">
-            <label for="ai-temperature" class="text-sm font-medium flex justify-between">
-              <span>Creativity Temperature</span>
-              <span id="temp-value" class="text-[var(--active-accent)] font-bold">{{ config.temperature }}</span>
+          <div class="field w-full md:w-1/2">
+            <label for="ai-temperature" class="field-label flex justify-between">
+              <span>Creativity temperature</span>
+              <span id="temp-value" class="text-accent font-bold">{{ config.temperature }}</span>
             </label>
-            <input type="range" id="ai-temperature" name="temperature" min="0.0" max="1.0" step="0.1" value="{{ config.temperature }}" class="w-full cursor-pointer accent-[var(--active-accent)]" />
+            <input type="range" id="ai-temperature" name="temperature" min="0.0" max="1.0" step="0.1" value="{{ config.temperature }}" class="w-full h-11 cursor-pointer accent-[var(--active-accent)]" />
           </div>
         </div>
       </section>
 
+      <p id="settings-status" class="alert hidden" role="status"></p>
+      <button type="button" id="save-settings-button" class="btn btn-primary w-full py-3 uppercase tracking-wider">Save System Configuration</button>
     </div>
   </main>
-  
+
   <!-- Collects settings and sends them to the authenticated save endpoint. -->
   <script src="{% static 'js/settings.js' %}"></script>
 {% endblock %}

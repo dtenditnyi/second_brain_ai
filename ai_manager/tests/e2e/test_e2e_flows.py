@@ -19,7 +19,7 @@ def test_register_then_land_on_home(page, live_server, transactional_db, browser
     page.fill("#id_password2", "Qwerty-Long-9876")
     page.click("button[type=submit]")
     page.wait_for_url(f"{live_server.url}/")
-    expect(page.locator("h2").first).to_contain_text("Welcome back, fresh")
+    expect(page.locator("h1").first).to_contain_text("Welcome back, fresh")
     assert browser_errors == []
 
 
@@ -187,11 +187,12 @@ def test_chat_sends_selected_context_files_to_api(logged_page, live_server, e2e_
     p = logged_page
     with mock.patch("core.rag_engine.ask_second_brain", return_value="ok-answer") as ask:
         p.goto(f"{live_server.url}/chat/")
-        # default: first 10 notes are pre-selected and sent (Q12)
+        # Q12: nothing is pre-selected → empty list = search the whole vault
+        expect(p.locator("#context-mode")).to_have_text("Searching the whole vault")
         p.fill("#chat-input", "first")
         p.keyboard.press("Enter")
         expect(p.get_by_text("ok-answer")).to_have_count(1)
-        assert ask.call_args[0][2] == ["Alpha", "Beta", "Gamma"]
+        assert ask.call_args[0][2] == []
         p.click("#add-documents-button")
         p.uncheck("#select-all-checkbox")
         p.check('.file-checkbox[value="Gamma"]')
@@ -200,6 +201,15 @@ def test_chat_sends_selected_context_files_to_api(logged_page, live_server, e2e_
         p.keyboard.press("Enter")
         expect(p.get_by_text("ok-answer")).to_have_count(2)
         assert ask.call_args[0][2] == ["Gamma"]
+        expect(p.locator("#context-mode")).to_have_text("Selected: 1 note")
+        # "Reset" returns to the whole vault
+        p.click("#reset-context-button")
+        expect(p.locator("#context-mode")).to_have_text("Searching the whole vault")
+        expect(p.locator("#reset-context-button")).to_be_hidden()
+        p.fill("#chat-input", "third")
+        p.keyboard.press("Enter")
+        expect(p.get_by_text("ok-answer")).to_have_count(3)
+        assert ask.call_args[0][2] == []
 
 
 def test_chat_shift_enter_inserts_newline(logged_page, live_server):

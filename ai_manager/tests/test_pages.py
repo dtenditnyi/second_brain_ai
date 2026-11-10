@@ -94,8 +94,8 @@ def test_home_without_tasks_and_notes(auth_client):
     r = auth_client.get("/")
     assert r.context["top_focus"] == "General Systems"
     assert r.context["total_notes_count"] == 0
-    assert b"No tasks in your database yet." in r.content
-    assert b"No notes found in matrix vault." in r.content
+    assert b"No tasks yet." in r.content  # Round 2 empty-state wording
+    assert b"No notes synced yet." in r.content
 
 
 def test_home_recent_tasks_limited_to_four(auth_client, user):
@@ -139,12 +139,16 @@ def test_chat_greeting_hidden_when_history_exists(auth_client, user):
     assert b"Hello! I'm your AI assistant" not in auth_client.get("/chat/").content
 
 
-def test_chat_page_context_preselects_first_ten(auth_client, user, note_writer):
+def test_chat_page_preselects_nothing_and_searches_whole_vault(auth_client, user, note_writer):
+    """Q12: no note is pre-checked; without a selection the whole vault is searched."""
     for i in range(12):
         note_writer(user, f"n{i:02d}", "x")
-    ctx = auth_client.get("/chat/").context
-    assert ctx["context_files"] == [f"n{i:02d}" for i in range(10)]
-    assert len(ctx["all_files"]) == 12
+    r = auth_client.get("/chat/")
+    assert len(r.context["all_files"]) == 12
+    html = r.content.decode()
+    assert "checked" not in html.split('id="document-selector"')[1].split("</section>")[0]
+    assert "Searching the whole vault" in html
+    assert 'id="reset-context-button"' in html
 
 
 # --- notes page -------------------------------------------------------------
@@ -178,7 +182,7 @@ def test_notes_page_without_repo_does_not_sync(auth_client):
     with mock.patch("core.git_sync.sync_obsidian_repo") as sync:
         r = auth_client.get("/notes/")
     sync.assert_not_called()
-    assert b"No synced .md files found" in r.content
+    assert b"No synced .md files yet" in r.content
 
 
 # --- tasks page -------------------------------------------------------------
@@ -237,13 +241,53 @@ def test_settings_page_reflects_saved_values(auth_client, user):
     assert 'value="0.3"' in html
 
 
-@pytest.mark.characterization
-def test_settings_page_echoes_github_token_into_html(auth_client, user):
-    """Q7: current behaviour — the PAT is rendered into the page source."""
+def test_settings_page_never_contains_github_token(auth_client, user):
+    """Q7: the PAT is not rendered into the page source; a placeholder says it is saved."""
     s = user.settings
-    s.github_token = "ghp_visible"
+    s.github_token = "ghp_secret_value_123"
     s.save()
-    assert b'value="ghp_visible"' in auth_client.get("/settings/").content
+    html = auth_client.get("/settings/").content.decode()
+    assert "ghp_secret_value_123" not in html
+    assert "Token saved" in html
+    assert 'id="clear-github-token"' in html
+
+
+def test_settings_page_without_token_has_no_saved_hint(auth_client):
+    html = auth_client.get("/settings/").content.decode()
+    assert "Token saved" not in html and 'id="clear-github-token"' not in html
+
+
+def test_settings_shows_display_name_not_login(auth_client, user):
+    s = user.settings
+    s.display_name = "Alice Liddell"
+    s.save()
+    html = auth_client.get("/settings/").content.decode()
+    assert 'id="display-name"' in html and 'value="Alice Liddell"' in html
+
+
+@pytest.mark.parametrize("url", ["/", "/tasks/", "/settings/"])
+def test_sidebar_and_greeting_use_display_name(auth_client, user, url):
+    s = user.settings
+    s.display_name = "Captain Alice"
+    s.save()
+    assert "Captain Alice" in auth_client.get(url).content.decode()
+
+
+def test_settings_dropdown_shows_real_model_names_and_limits(auth_client, settings):
+    settings.GEMINI_MODEL_DEFAULT = "gemini-3.5-flash-lite"
+    settings.GEMINI_MODEL_SMART = "gemini-3.8-flash"
+    html = auth_client.get("/settings/").content.decode()
+    assert "Gemini 3.5 Flash Lite (~500/day)" in html
+    assert "Gemini 3.8 Flash (~20/day)" in html
+    assert "Gemini 2.5 Flash" not in html  # the old, wrong label (Q8)
+
+
+def test_last_model_indicator_on_home_and_settings(auth_client, user):
+    s = user.settings
+    s.last_model_used = "Gemma 4 31B"
+    s.save()
+    for url in ("/", "/settings/"):
+        assert "Gemma 4 31B" in auth_client.get(url).content.decode()
 
 
 # --- robustness: user without settings row -----------------------------------

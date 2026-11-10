@@ -28,12 +28,11 @@ def test_add_task_error_is_reported(logged_page, live_server):
     p.goto(f"{live_server.url}/tasks/")
     p.get_by_role("button", name=re.compile("Add New Task")).click()
     p.fill("#task-title", "   ")  # passes HTML `required`, rejected by the API
-    messages = []
-    p.on("dialog", lambda d: (messages.append(d.message), d.accept()))
     p.get_by_role("button", name="Save Task").click()
     expect(p.locator("#task-modal")).to_be_visible()
-    p.wait_for_timeout(500)
-    assert any("title" in m.lower() for m in messages), messages
+    # Round 2: shown inline in the modal (role=alert) instead of a browser alert().
+    expect(p.locator("#task-form-error")).to_be_visible()
+    expect(p.locator("#task-form-error")).to_contain_text(re.compile("title", re.I))
     assert Task.objects.count() == 0
 
 

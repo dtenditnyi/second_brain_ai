@@ -5,6 +5,15 @@ from tests.conftest import write_note
 WIDTHS = [360, 390, 768, 1024, 1440]
 HEIGHT = {360: 780, 390: 844, 768: 1024, 1024: 768, 1440: 900}
 
+# Round 2 screenshot matrix: (label, width, height) — phones, tablets (incl.
+# landscape), desktops and a phone in landscape (667x375).
+SHOT_SIZES = [
+    ("320", 320, 568), ("375", 375, 667), ("390", 390, 844), ("414", 414, 896),
+    ("768", 768, 1024), ("834", 834, 1194), ("1024", 1024, 768),
+    ("1280", 1280, 800), ("1440", 1440, 900), ("1920", 1920, 1080),
+    ("667x375", 667, 375),
+]
+
 # name -> (path, needs_admin, optional action to run after load)
 PAGES = {
     "login": ("/login/", None, None),
@@ -68,6 +77,9 @@ METRICS_JS = """
   const insideOffCanvas = el => { const sb = el.closest('#main-sidebar'); return sb && sb.getBoundingClientRect().right <= 0; };
   const label = el => el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') +
       (el.className && typeof el.className === 'string' ? '.' + el.className.split(' ').slice(0, 3).join('.') : '');
+  const srOnly = el => { const r = el.getBoundingClientRect(); return r.width <= 1 || r.height <= 1; };
+  // WCAG 2.5.8 exempts links inside running text (markdown, hints, sentences).
+  const inlineLink = el => el.tagName === 'A' && !!el.closest('.markdown-body, .field-hint, .empty-state, p');
   const clippedByScroller = el => {
     for (let p = el.parentElement; p; p = p.parentElement) {
       const ox = getComputedStyle(p).overflowX;
@@ -79,9 +91,13 @@ METRICS_JS = """
     if (!visible(el) || insideOffCanvas(el)) continue;
     const r = el.getBoundingClientRect();
     if (r.right > vw + 1 && !clippedByScroller(el) && res.overflowing.length < 15) res.overflowing.push(label(el) + ' right=' + Math.round(r.right));
-    if (el.matches('a, button, input:not([type=hidden]), select, textarea, label[for]') &&
-        (r.height < 44 || r.width < 44) && res.smallTargets.length < 40)
-      res.smallTargets.push(label(el) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
+    if (el.matches('a, button, input:not([type=hidden]), select, textarea') && !srOnly(el) && !inlineLink(el)) {
+      // A checkbox/radio is tapped through its wrapping <label> (the 44px hit zone).
+      const hit = el.matches('input[type=checkbox], input[type=radio]') && el.closest('label')
+        ? el.closest('label').getBoundingClientRect() : r;
+      if ((hit.height < 43.5 || hit.width < 43.5) && res.smallTargets.length < 40)
+        res.smallTargets.push(label(el) + ' ' + Math.round(hit.width) + 'x' + Math.round(hit.height));
+    }
     if (el.childNodes.length && [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) &&
         parseFloat(getComputedStyle(el).fontSize) < 12) res.tinyText++;
     const ox = getComputedStyle(el).overflowX;

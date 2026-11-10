@@ -4,59 +4,63 @@
 {% block title %}
   Second Brain - AI Chat
 {% endblock %}
+{% block mobile_title %}AI Chat{% endblock %}
 
 {% block content %}
-<!-- Chat workspace pairs a selected-document context panel with the conversation feed. -->
-  <main class="lg:flex-1 lg:min-h-0 lg:overflow-hidden flex flex-col lg:flex-row relative lg:z-10 p-4 lg:p-8 gap-6">
+<!-- Chat workspace: context panel (compact bar on phones) + conversation feed.
+     The page itself does not scroll; only the feed does, so the composer stays
+     at the bottom of the screen (100dvh shell, safe-area padding). -->
+  <main class="flex-1 min-h-0 overflow-hidden flex flex-col lg:flex-row relative p-2 sm:p-4 lg:p-8 gap-2 sm:gap-4 lg:gap-6">
     <!-- Selected context documents and active model settings. -->
-    <aside class="w-full lg:w-64 xl:w-80 shrink-0 lg:min-h-0 lg:h-full flex flex-col gap-6">
-      <header>
-        <h2 class="text-2xl font-bold text-[var(--text-primary)]">Context</h2>
-        <p class="text-sm mt-1">Documents being analyzed</p>
+    <aside class="w-full lg:w-64 xl:w-80 shrink-0 lg:min-h-0 lg:h-full flex flex-col gap-2 lg:gap-5" aria-label="Chat context">
+      <header class="hidden lg:block">
+        <h1 class="text-2xl font-bold text-fg">Context</h1>
+        <p class="text-sm mt-1">Notes the AI searches</p>
       </header>
 
-      <!-- The applied document selection is rendered here by chat.js. -->
-      <ul id="context-file-list" class="max-h-48 lg:max-h-none lg:flex-1 min-h-0 overflow-y-auto flex flex-col gap-3">
-        <!-- Initial context entries supplied by ai_chat_view. -->
-        {% for file in context_files %}
-        <li>
-          <a href="{% url 'notes' %}?file={{ file|urlencode }}" class="glass-card rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-800 transition-colors">
-            <span class="text-xl">📄</span>
-            <div class="flex flex-col">
-              <span class="font-medium text-[var(--text-primary)] text-sm truncate w-48">{{ file }}.md</span>
-              <span class="text-xs opacity-60 uppercase tracking-wide">note</span>
-            </div>
-          </a>
-        </li>
-        {% empty %}
-        <li class="text-sm opacity-50 italic">No documents synced.</li>
-        {% endfor %}
+      <!-- Search scope (Q12): whole vault unless notes are selected. -->
+      <div class="glass-card rounded-xl px-3 py-2 lg:p-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p class="text-sm text-fg font-semibold flex items-center gap-2 min-w-0 mr-auto" aria-live="polite">
+          <span aria-hidden="true">🔎</span><span id="context-mode" class="truncate">Searching the whole vault</span>
+        </p>
+        <div class="flex items-center gap-2">
+          <button id="add-documents-button" type="button" class="btn btn-primary btn-sm">Choose notes</button>
+          <button id="reset-context-button" type="button" class="btn btn-ghost btn-sm hidden">Reset</button>
+        </div>
+        <label class="w-full sm:w-auto lg:w-full flex items-center gap-2 text-sm cursor-pointer min-h-11 lg:mt-2" title="{{ models.smart_label }}">
+          <span class="tap-zone"><input id="smart-answer-toggle" type="checkbox"></span>
+          <span>Smart answer <span class="hidden lg:inline text-muted">({{ models.smart_label }})</span></span>
+        </label>
+      </div>
+
+      <!-- The applied document selection is rendered here by chat.js (desktop). -->
+      <ul id="context-file-list" class="hidden lg:flex lg:flex-1 min-h-0 overflow-y-auto flex-col gap-2">
+        <li class="empty-state"><span class="empty-icon" aria-hidden="true">📚</span>All {{ all_files|length }} notes are searched.</li>
       </ul>
 
-      <button id="add-documents-button" type="button" class="btn-primary w-full py-2 rounded-lg text-sm font-bold border border-dashed">+ Add Documents</button>
-
-      <article class="glass-card rounded-xl p-4 mt-auto border-[var(--active-accent)]">
-        <h3 class="font-bold text-[var(--text-primary)] mb-2 flex items-center gap-2"><span>✨</span> Active Core</h3>
-        <p class="text-sm font-medium text-[var(--active-accent)]">{{ config.ai_strategy|upper }}</p>
-        <p class="text-xs mt-1">Temp: {{ config.temperature }}</p>
+      <article class="hidden lg:block glass-card rounded-xl p-4 mt-auto border-accent">
+        <h2 class="font-bold text-fg mb-2 flex items-center gap-2"><span aria-hidden="true">✨</span> Active Core</h2>
+        <p class="text-sm font-medium text-accent">{{ config.ai_strategy|upper }}</p>
+        <p class="text-xs mt-1">Temp: {{ config.temperature }} · Chat model: {{ models.default.name }}</p>
+        <p class="text-xs mt-1 text-muted">Last answer by: <span class="text-soft" data-last-model>{{ config.last_model_used|default:"—" }}</span></p>
       </article>
     </aside>
 
     <!-- Conversation history and message composer. -->
-    <section class="flex-1 min-h-[75vh] lg:min-h-0 flex flex-col glass-card rounded-2xl overflow-hidden shadow-2xl relative">
-      <header class="p-6 border-b border-[var(--border-glass)] bg-[var(--bg-glass)] backdrop-blur-md z-20">
-        <h2 class="text-xl font-bold text-[var(--text-primary)]">Terminal Chat</h2>
-        <p class="text-sm opacity-80">Ask questions directly to your knowledge base.</p>
+    <section class="flex-1 min-h-0 flex flex-col glass-card rounded-2xl overflow-hidden shadow-2xl relative" aria-label="Conversation">
+      <header class="hidden lg:block px-6 py-4 border-b border-line bg-surface backdrop-blur-md z-20">
+        <h2 class="text-xl font-bold text-fg">Terminal Chat</h2>
+        <p class="text-sm">Ask questions directly to your knowledge base.</p>
       </header>
 
-      <div class="flex-1 min-h-0 overflow-y-auto p-6 flex flex-col gap-6 chat-feed" id="chat-feed">
-        
+      <div class="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 chat-feed" id="chat-feed" aria-live="polite">
+
         {% if not chat_history %}
-            <article class="flex gap-4 ai-message">
-              <div class="text-2xl mt-1">✨</div>
-              <div class="glass-card rounded-2xl rounded-tl-none p-4 max-w-[85%] border-[var(--active-accent)] shadow-[var(--glow-active)]">
-                <p class="text-[var(--text-primary)] leading-relaxed">
-                  Hello! I'm your AI assistant using the <strong class="text-[var(--active-accent)]">{{ config.ai_strategy|upper }}</strong> strategy. I've analyzed your selected documents. What would you like to know?
+            <article class="flex gap-2 sm:gap-4 ai-message">
+              <div class="text-xl sm:text-2xl mt-1" aria-hidden="true">✨</div>
+              <div class="chat-bubble glass-card rounded-2xl rounded-tl-none p-3 sm:p-4 max-w-[85%] border-accent shadow-[var(--glow-active)]">
+                <p class="text-fg leading-relaxed">
+                  Hello! I'm your AI assistant using the <strong class="text-accent">{{ config.ai_strategy|upper }}</strong> strategy. I search your whole vault unless you choose notes. What would you like to know?
                 </p>
               </div>
             </article>
@@ -65,17 +69,17 @@
         <!-- Restore recent user and assistant turns from the database. -->
         {% for msg in chat_history %}
             {% if msg.role == 'ai' %}
-                <article class="flex gap-4 self-start w-full">
-                  <div class="text-2xl mt-1">✨</div>
-                  <div class="glass-card rounded-2xl rounded-tl-none p-4 max-w-[85%] border-[var(--active-accent)] shadow-[var(--glow-active)]">
-                    <p class="text-[var(--text-primary)] leading-relaxed">{{ msg.content|linebreaksbr }}</p>
+                <article class="flex gap-2 sm:gap-4 self-start w-full">
+                  <div class="text-xl sm:text-2xl mt-1" aria-hidden="true">✨</div>
+                  <div class="chat-bubble glass-card rounded-2xl rounded-tl-none p-3 sm:p-4 max-w-[85%] border-accent shadow-[var(--glow-active)]{% if msg.content|slice:':7' == 'System ' %} is-notice{% endif %}">
+                    <p class="text-fg leading-relaxed">{{ msg.content|linebreaksbr }}</p>
                   </div>
                 </article>
             {% else %}
-                <article class="flex gap-4 self-end flex-row-reverse w-full">
-                  <div class="text-2xl mt-1">👤</div>
-                  <div class="glass-card rounded-2xl rounded-tr-none p-4 max-w-[85%] bg-[var(--active-accent)]/10 border border-[var(--active-accent)]">
-                    <p class="text-[var(--text-primary)] leading-relaxed">{{ msg.content|linebreaksbr }}</p>
+                <article class="flex gap-2 sm:gap-4 self-end flex-row-reverse w-full">
+                  <div class="text-xl sm:text-2xl mt-1" aria-hidden="true">👤</div>
+                  <div class="chat-bubble glass-card rounded-2xl rounded-tr-none p-3 sm:p-4 max-w-[85%] bg-accent/10 border border-accent">
+                    <p class="text-fg leading-relaxed">{{ msg.content|linebreaksbr }}</p>
                   </div>
                 </article>
             {% endif %}
@@ -83,55 +87,56 @@
 
       </div>
 
-      <div class="p-4 border-t border-[var(--border-glass)] bg-[var(--bg-sidebar)]">
+      <div class="px-3 pt-3 sm:px-4 sm:pt-4 border-t border-line bg-[var(--bg-sidebar)]" style="padding-bottom:max(0.75rem,var(--safe-bottom))">
         <form class="chat-input-form relative flex items-end gap-2" onsubmit="event.preventDefault();">
-          <textarea id="chat-input" rows="1" placeholder="Type your query..." class="input-field w-full rounded-xl py-4 pl-4 pr-16 resize-none min-h-[60px]"></textarea>
-          <button type="submit" aria-label="Send message" class="absolute right-2 bottom-2 bg-[var(--active-accent)] text-black w-11 h-11 rounded-lg flex items-center justify-center font-bold hover:scale-105 transition-transform shadow-[var(--glow-active)]">➤</button>
+          <label for="chat-input" class="sr-only">Message</label>
+          <textarea id="chat-input" rows="1" enterkeyhint="send" placeholder="Type your query…" class="input-field w-full rounded-xl py-3 pl-4 pr-14 resize-none min-h-[52px] max-h-40"></textarea>
+          <button type="submit" aria-label="Send message" class="absolute right-1.5 bottom-1.5 btn-solid w-11 h-11 rounded-lg flex items-center justify-center font-bold hover:scale-105 transition-transform">➤</button>
         </form>
-        <p class="text-xs text-center mt-3 opacity-50">
-          Press <kbd class="bg-[var(--bg-glass)] px-1 rounded">Enter</kbd> to send, <kbd class="bg-[var(--bg-glass)] px-1 rounded">Shift+Enter</kbd> for new line.
+        <p class="hidden lg:block text-xs text-center mt-2 text-muted">
+          Press <kbd class="bg-surface px-1 rounded">Enter</kbd> to send, <kbd class="bg-surface px-1 rounded">Shift+Enter</kbd> for new line.
         </p>
       </div>
     </section>
+
   <!-- Document picker modal: its list is independently scrollable and its footer stays visible. -->
-  <div id="context-modal" class="fixed lg:absolute inset-0 z-50 hidden flex min-h-0 items-start justify-center overflow-y-auto overflow-x-hidden p-4 lg:p-8 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="context-modal-title">
-    <div id="context-modal-backdrop" class="absolute inset-0"></div>
-    <section class="relative z-10 w-full max-w-4xl h-full max-h-full min-h-0 flex flex-col glass-card border border-[var(--border-glass)] shadow-2xl rounded-2xl overflow-hidden">
-      <header class="flex-none flex items-start justify-between p-6 border-b border-[var(--border-glass)]">
-        <div>
-          <p class="text-xs uppercase tracking-[0.25em] text-[var(--active-accent)]">Context matrix</p>
-          <h2 id="context-modal-title" class="mt-1 text-xl font-bold text-[var(--text-primary)]">Add Documents</h2>
-          <p class="mt-1 text-sm opacity-70">Choose the notes available to the next AI request.</p>
+  <div id="context-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="context-modal-title">
+    <section class="modal-panel max-w-4xl h-full min-h-0">
+      <header class="flex-none flex items-start justify-between gap-3 p-4 sm:p-6 border-b border-line">
+        <div class="min-w-0">
+          <p class="text-xs uppercase tracking-[0.25em] text-accent">Context matrix</p>
+          <h2 id="context-modal-title" class="mt-1 text-xl font-bold text-fg">Choose notes</h2>
+          <p class="mt-1 text-sm text-muted">Leave everything unchecked to search the whole vault.</p>
         </div>
-        <button id="close-context-modal" type="button" aria-label="Close document selector" class="w-11 h-11 shrink-0 flex items-center justify-center text-2xl leading-none text-[var(--active-accent)] transition-transform hover:scale-110">&times;</button>
+        <button id="close-context-modal" type="button" aria-label="Close document selector" class="icon-btn shrink-0 text-2xl leading-none text-accent">&times;</button>
       </header>
 
       <!-- All synchronized Markdown files are exposed as selectable context sources. -->
-      <div id="document-selector" class="flex-1 min-h-0 overflow-y-scroll overscroll-contain p-6">
+      <div id="document-selector" class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6">
         <div class="flex flex-col gap-2">
           <!-- Each checkbox value is passed to the RAG API as a filename filter. -->
           {% for file in all_files %}
-          <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-[var(--border-glass)] bg-black/10 p-3 transition-colors hover:border-[var(--active-accent)] hover:bg-[var(--active-accent)]/10">
-            <input class="file-checkbox shrink-0" type="checkbox" value="{{ file }}" {% if file in context_files %}checked{% endif %}>
-            <span class="text-lg">📄</span>
-            <span class="min-w-0 truncate text-sm text-[var(--text-primary)]">{{ file }}.md</span>
+          <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-black/10 px-3 py-2.5 min-h-12 transition-colors hover:border-accent hover:bg-accent/10">
+            <input class="file-checkbox" type="checkbox" value="{{ file }}">
+            <span aria-hidden="true">📄</span>
+            <span class="min-w-0 truncate text-sm text-fg">{{ file }}.md</span>
           </label>
           {% empty %}
-          <p class="text-sm italic opacity-60">No documents synced.</p>
+          <p class="empty-state">No documents synced yet.</p>
           {% endfor %}
         </div>
       </div>
 
       <!-- Bulk selection, current selection count, and context-apply action. -->
-      <footer class="flex-none p-6 border-t border-[var(--border-glass)] flex justify-between items-center gap-3">
-        <div class="flex items-center gap-5">
-          <label for="select-all-checkbox" class="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-primary)]">
-            <input id="select-all-checkbox" type="checkbox" class="cursor-pointer accent-[var(--active-accent)]">
-            <span>Select All</span>
+      <footer class="flex-none p-4 sm:p-6 border-t border-line flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center gap-4">
+          <label for="select-all-checkbox" class="flex items-center gap-2 cursor-pointer text-sm text-fg min-h-11">
+            <input id="select-all-checkbox" type="checkbox">
+            <span>Select all</span>
           </label>
-          <span id="selected-files-count" class="text-xs uppercase tracking-wider opacity-60">0 selected</span>
+          <span id="selected-files-count" class="text-xs uppercase tracking-wider text-muted">0 selected</span>
         </div>
-        <button id="apply-context-button" type="button" class="btn-primary rounded-lg px-5 py-2 text-sm font-bold">Apply Context</button>
+        <button id="apply-context-button" type="button" class="btn btn-solid">Apply</button>
       </footer>
     </section>
   </div>

@@ -166,11 +166,13 @@ def test_superuser_cannot_delete_own_account(admin_client_, superuser, post_json
 
 def test_own_row_controls_are_disabled_in_ui(admin_client_, superuser, user):
     html = admin_client_.get("/system-matrix/").content.decode()
+    import re
+    attr = re.compile(r'\sdisabled[\s>]')  # the attribute, not Tailwind's "disabled:" variant
     own = html.split(f'data-id="{superuser.id}" data-self="true"')[1].split("</tr>")[0]
-    assert 'name="is_superuser"' in own and "disabled" in own
-    assert own.count("disabled") >= 2  # superuser select + delete button
+    assert 'name="is_superuser"' in own
+    assert len(attr.findall(own)) == 2  # superuser select + delete button
     other = html.split(f'<tr data-id="{user.id}"')[1].split("</tr>")[0]
-    assert "disabled" not in other
+    assert not attr.findall(other)
 
 
 def test_back_to_dashboard_links_home(admin_client_):

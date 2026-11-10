@@ -1,0 +1,28 @@
+<!-- One Project Board column (Home). Each card has a status control (Q10). -->
+<div class="flex flex-col gap-4 min-w-0">
+    <h3 class="font-semibold text-fg flex items-center justify-between border-b border-line pb-2">
+        {{ title }}
+        <span class="badge badge-muted">{{ tasks|length }}</span>
+    </h3>
+    {% for task in tasks %}
+        <article class="glass-card rounded-lg p-4 min-w-0 {% if task.status == 'in_progress' %}border-accent shadow-[var(--glow-active)]{% elif task.status == 'done' %}{% else %}hover:border-accent{% endif %} transition-colors">
+            <p class="text-fg font-medium mb-3 break-words {% if task.status == 'done' %}line-through text-muted{% endif %}">{{ task.title }}</p>
+            <div class="flex flex-wrap justify-between items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2 min-w-0">
+                    {% if task.status == 'in_progress' %}
+                        <span class="badge badge-accent">Active</span>
+                    {% elif task.priority == 'urgent' or task.priority == 'high' %}
+                        <span class="badge badge-danger">{{ task.priority }}</span>
+                    {% else %}
+                        <span class="badge badge-accent">{{ task.priority }}</span>
+                    {% endif %}
+                    {% if task.due_date %}<span class="text-xs text-muted">📅 {{ task.due_date|date:"M d" }}</span>{% endif %}
+                    {% if task.tags %}<span class="text-xs text-muted truncate max-w-[9rem]">#{{ task.tags }}</span>{% endif %}
+                </div>
+                {% include "partials/task_status_select.html" %}
+            </div>
+        </article>
+    {% empty %}
+        <div class="empty-state">{{ empty }}</div>
+    {% endfor %}
+</div>

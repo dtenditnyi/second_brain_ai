@@ -1,68 +1,44 @@
 <!-- Persistent primary navigation, account actions, and task synchronization status. -->
-<aside id="main-sidebar" class="fixed inset-y-0 left-0 w-64 lg:w-72 bg-[var(--bg-sidebar)] border-r border-[var(--border-glass)] flex flex-col h-full min-h-0 shrink-0 overflow-hidden backdrop-blur-md z-50 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0">
-    
+<aside id="main-sidebar" tabindex="-1" aria-label="Main navigation" class="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-[var(--bg-sidebar)] border-r border-line flex flex-col h-full min-h-0 shrink-0 overflow-hidden backdrop-blur-md z-50 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:max-w-none outline-none" style="padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);padding-left:var(--safe-left)">
+
     <!-- Brand and mobile close control. -->
-    <header class="p-6 border-b border-[var(--border-glass)] flex justify-between items-center">
-        <div class="flex items-center gap-3">
-            <h1 class="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Second Brain</h1>
-            <p class="text-sm text-[var(--active-accent)] font-medium mt-1">Knowledge Manager</p>
-        </div>
-        <button id="mobile-menu-close" aria-label="Close menu" class="lg:hidden w-11 h-11 flex items-center justify-center text-2xl text-gray-400 hover:text-white">&times;</button>
+    <header class="px-6 py-5 border-b border-line flex justify-between items-center gap-3">
+        <a href="{% url 'home' %}" class="flex flex-col min-w-0 rounded-md">
+            <span class="text-2xl font-bold text-fg tracking-tight leading-tight">Second Brain</span>
+            <span class="text-sm text-accent font-medium">Knowledge Manager</span>
+        </a>
+        <button id="mobile-menu-close" type="button" aria-label="Close menu" class="lg:hidden icon-btn text-2xl leading-none">&times;</button>
     </header>
 
     <!-- Navigation links are rendered according to authentication and privileges. -->
-    <nav class="flex-1 overflow-y-auto py-6 px-4">
-        <ul class="flex flex-col gap-2">
+    <nav class="flex-1 overflow-y-auto py-5 px-4" aria-label="Pages">
+        <ul class="flex flex-col gap-1.5">
             {% if request.user.is_authenticated %}
-                <!-- Authenticated workspace destinations. -->
-                <li>
-                    <a href="{% url 'home' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'home' %}bg-[var(--active-accent)]/10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
-                        <span class="mr-2 opacity-80">🏠</span> Home
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'notes' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'notes' %}bg-[var(--active-accent)]/10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
-                        <span class="mr-2 opacity-80">📝</span> Notes
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'chat' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'ai-chat' %}bg-[var(--active-accent)]/10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
-                        <span class="mr-2 opacity-80">✨</span> AI Chat
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'tasks' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'tasks' %}bg-[var(--active-accent)]/10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
-                        <span class="mr-2 opacity-80">✅</span> Tasks
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'settings' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'settings' %}bg-[var(--active-accent)]/10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
-                        <span class="mr-2 opacity-80">⚙️</span> Settings
-                    </a>
-                </li>
+                {% with base="flex items-center gap-3 min-h-11 px-4 py-2.5 rounded-lg transition-colors duration-200 border" on="bg-accent/10 text-fg border-accent shadow-[var(--glow-active)] font-semibold" off="border-transparent text-soft hover:text-fg hover:bg-surface" %}
+                <li><a href="{% url 'home' %}" class="{{ base }} {% if active == 'home' %}{{ on }}{% else %}{{ off }}{% endif %}"{% if active == 'home' %} aria-current="page"{% endif %}><span aria-hidden="true">🏠</span> Home</a></li>
+                <li><a href="{% url 'notes' %}" class="{{ base }} {% if active == 'notes' %}{{ on }}{% else %}{{ off }}{% endif %}"{% if active == 'notes' %} aria-current="page"{% endif %}><span aria-hidden="true">📝</span> Notes</a></li>
+                <li><a href="{% url 'chat' %}" class="{{ base }} {% if active == 'ai-chat' %}{{ on }}{% else %}{{ off }}{% endif %}"{% if active == 'ai-chat' %} aria-current="page"{% endif %}><span aria-hidden="true">✨</span> AI Chat</a></li>
+                <li><a href="{% url 'tasks' %}" class="{{ base }} {% if active == 'tasks' %}{{ on }}{% else %}{{ off }}{% endif %}"{% if active == 'tasks' %} aria-current="page"{% endif %}><span aria-hidden="true">✅</span> Tasks</a></li>
+                <li><a href="{% url 'settings' %}" class="{{ base }} {% if active == 'settings' %}{{ on }}{% else %}{{ off }}{% endif %}"{% if active == 'settings' %} aria-current="page"{% endif %}><span aria-hidden="true">⚙️</span> Settings</a></li>
+                {% endwith %}
                 {% if request.user.is_superuser %}
-                    <li>
-                        <a href="{% url 'admin_dashboard' %}" class="block px-4 py-3 rounded-lg text-purple-400 hover:bg-purple-500/10 hover:text-white transition-all font-bold text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(176,38,255,0.1)] border border-purple-500/20 flex items-center">
-                            <span class="mr-2 text-base">🌌</span> Core Matrix
+                    <li class="mt-2">
+                        <a href="{% url 'admin_dashboard' %}" class="flex items-center gap-3 min-h-11 px-4 py-2.5 rounded-lg text-purple-400 hover:bg-purple-500/10 hover:text-fg transition-colors font-bold text-xs uppercase tracking-widest border border-purple-500/25">
+                            <span class="text-base" aria-hidden="true">🌌</span> Core Matrix
                         </a>
                     </li>
                 {% endif %}
-                <li class="mt-4 border-t border-[var(--border-glass)] pt-4">
-                    <a href="{% url 'logout' %}" class="block px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all">
-                        <span class="mr-2">🚪</span> Log Out
+                <li class="mt-4 border-t border-line pt-4">
+                    <a href="{% url 'logout' %}" class="flex items-center gap-3 min-h-11 px-4 py-2.5 rounded-lg text-danger hover:bg-danger/10 transition-colors">
+                        <span aria-hidden="true">🚪</span> Log Out
                     </a>
                 </li>
             {% else %}
-                <!-- Public entry points shown to anonymous visitors. -->
                 <li>
-                    <a href="{% url 'login' %}" class="block px-4 py-3 rounded-lg text-[var(--text-primary)] bg-[var(--bg-glass)] hover:bg-[var(--bg-glass)]/80">
-                        <span class="mr-2">🔑</span> Sign In
-                    </a>
+                    <a href="{% url 'login' %}" class="flex items-center gap-3 min-h-11 px-4 py-2.5 rounded-lg text-fg bg-surface hover:bg-surface/80"><span aria-hidden="true">🔑</span> Sign In</a>
                 </li>
                 <li>
-                    <a href="{% url 'register' %}" class="block px-4 py-3 rounded-lg text-[var(--active-accent)] border border-[var(--active-accent)]/30 mt-2 hover:bg-[var(--active-accent)]/10 hover:text-[var(--text-primary)]">
-                        <span class="mr-2">📝</span> Create Account
-                    </a>
+                    <a href="{% url 'register' %}" class="flex items-center gap-3 min-h-11 px-4 py-2.5 rounded-lg text-accent border border-accent/30 mt-2 hover:bg-accent/10"><span aria-hidden="true">📝</span> Create Account</a>
                 </li>
             {% endif %}
         </ul>
@@ -70,19 +46,19 @@
 
     <!-- Signed-in users receive live task-completion statistics. -->
     {% if request.user.is_authenticated %}
-    <div class="p-6 border-t border-[var(--border-glass)] relative z-20">
+    <div class="p-6 border-t border-line relative z-20">
         <div class="flex justify-between items-center mb-2">
             <span class="text-sm font-medium tracking-wide">Neural Sync</span>
-            <span id="sidebar-sync-percent" class="text-xs font-bold text-[var(--active-accent)]">...</span>
+            <span id="sidebar-sync-percent" class="text-xs font-bold text-accent">…</span>
         </div>
-        <div class="w-full bg-[var(--bg-base)] rounded-full h-2 mb-1">
-            <div id="sidebar-sync-bar" class="bg-[var(--active-accent)] h-2 rounded-full shadow-[var(--glow-active)] transition-all duration-1000 ease-out" style="width: 0%"></div>
+        <div class="w-full bg-base rounded-full h-2 mb-1" role="progressbar" aria-label="Tasks completed" aria-valuemin="0" aria-valuemax="100">
+            <div id="sidebar-sync-bar" class="bg-accent h-2 rounded-full shadow-[var(--glow-active)] transition-all duration-1000 ease-out" style="width: 0%"></div>
         </div>
-        <div class="flex justify-between items-center">
-            <p class="text-xs uppercase font-mono tracking-widest opacity-50">Tasks Completed</p>
-            <p id="sidebar-sync-ratio" class="text-xs font-mono opacity-50">-/-</p>
+        <div class="flex justify-between items-center text-muted">
+            <p class="text-xs uppercase font-mono tracking-widest">Tasks Completed</p>
+            <p id="sidebar-sync-ratio" class="text-xs font-mono">-/-</p>
         </div>
-        <p class="text-xs mt-4 text-center opacity-70">Operator: <span class="font-bold text-white">{{ request.user.username }}</span></p>
+        <p class="text-xs mt-4 text-center text-muted truncate">Operator: <span class="font-bold text-[var(--text-primary)]">{{ config.display_name|default:request.user.username }}</span></p>
     </div>
 
     <!-- Fetch sidebar progress asynchronously so navigation renders immediately. -->
@@ -91,16 +67,13 @@
             try {
                 const response = await fetch('/api/sidebar-stats/');
                 const data = await response.json();
-                
                 if (data.status === 'ok') {
-                    // Update UI elements dynamically
                     document.getElementById('sidebar-sync-percent').textContent = data.percent + '%';
                     document.getElementById('sidebar-sync-ratio').textContent = `${data.done}/${data.total}`;
-                    
-                    // Trigger CSS width transition
-                    setTimeout(() => {
-                        document.getElementById('sidebar-sync-bar').style.width = data.percent + '%';
-                    }, 100); // Small delay allows the CSS transition to execute visually on page load
+                    const bar = document.getElementById('sidebar-sync-bar');
+                    bar.parentElement.setAttribute('aria-valuenow', data.percent);
+                    // Small delay so the width transition is visible on page load.
+                    setTimeout(() => { bar.style.width = data.percent + '%'; }, 100);
                 }
             } catch (error) {
                 console.error('Sidebar matrix sync failed:', error);

@@ -2,114 +2,121 @@
 {% load static %}
 
 {% block title %}Second Brain - Tasks{% endblock %}
+{% block mobile_title %}Tasks{% endblock %}
 
 {% block content %}
 <!-- Task board with active and completed collections plus a creation dialog. -->
-<main class="p-8 lg:p-12 max-w-5xl mx-auto w-full relative lg:z-10">
-    <header class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<main class="px-4 py-6 sm:p-8 lg:p-12 max-w-5xl mx-auto w-full relative">
+    <header class="mb-8 lg:mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-[var(--text-primary)] mb-2">Tasks</h1>
-            <p class="text-[var(--text-secondary)]">Manage your tasks and stay productive.</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-fg mb-2">Tasks</h1>
+            <p class="text-soft">Manage your tasks and stay productive.</p>
         </div>
-        <button onclick="document.getElementById('task-modal').classList.remove('hidden')" class="btn-primary px-6 py-3 lg:py-2 rounded-lg font-bold flex items-center justify-center gap-2">
-            <span>+</span> Add New Task
+        <button type="button" id="open-task-modal" class="btn btn-primary px-6 w-full md:w-auto">
+            <span aria-hidden="true">+</span> Add New Task
         </button>
     </header>
 
     <div class="flex flex-col gap-8">
-        <section>
-            <h2 class="text-xl font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                <span>🔥</span> Active Tasks ({{ active_tasks|length }})
+        <section aria-labelledby="active-title">
+            <h2 id="active-title" class="text-xl font-bold text-fg mb-4 flex items-center gap-2">
+                <span aria-hidden="true">🔥</span> Active Tasks ({{ active_tasks|length }})
             </h2>
             <div class="flex flex-col gap-4">
                 <!-- Active tasks expose status, priority, due date, and tags. -->
                 {% for task in active_tasks %}
-                <article class="glass-card rounded-xl p-5 flex items-start gap-4 hover:border-[var(--active-accent)] transition-colors">
-                    <input type="checkbox" class="mt-1 w-5 h-5 task-checkbox" data-id="{{ task.id }}" {% if task.status == 'done' %}checked{% endif %} />
-                    <div class="flex-1">
-                        <label class="text-lg font-medium text-[var(--text-primary)] cursor-pointer">{{ task.title }}</label>
-                        <div class="flex flex-wrap gap-3 mt-3 items-center">
+                <article class="glass-card rounded-xl p-4 sm:p-5 flex items-start gap-3 sm:gap-4 hover:border-accent transition-colors min-w-0 {% if task.status == 'in_progress' %}border-accent{% endif %}">
+                    <label class="tap-zone mt-0.5" title="Mark as done">
+                        <input type="checkbox" class="task-checkbox" data-id="{{ task.id }}" aria-label="Done: {{ task.title }}" {% if task.status == 'done' %}checked{% endif %} />
+                    </label>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-base sm:text-lg font-medium text-fg break-words">{{ task.title }}</p>
+                        <div class="flex flex-wrap gap-2 sm:gap-3 mt-3 items-center">
                             {% if task.priority == 'urgent' %}
-                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30 ">Urgent</span>
+                                <span class="badge badge-danger">Urgent</span>
                             {% elif task.priority == 'high' %}
-                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 ">High</span>
+                                <span class="badge badge-warning">High</span>
                             {% elif task.priority == 'medium' %}
-                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 ">Medium</span>
+                                <span class="badge badge-info">Medium</span>
                             {% else %}
-                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30 ">Low</span>
+                                <span class="badge badge-muted">Low</span>
                             {% endif %}
-                            
                             {% if task.due_date %}
-                                <span class="text-sm">📅 {{ task.due_date|date:"Y-m-d" }}</span>
+                                <span class="text-sm text-soft">📅 {{ task.due_date|date:"Y-m-d" }}</span>
                             {% endif %}
-                            
                             {% if task.tags %}
-                                <span class="text-xs uppercase px-2 py-1 rounded border border-[var(--border-glass)]">#{{ task.tags }}</span>
+                                <span class="badge badge-muted max-w-full truncate">#{{ task.tags }}</span>
                             {% endif %}
+                            <span class="sm:ml-auto">{% include "partials/task_status_select.html" with status_ctx="active" %}</span>
                         </div>
                     </div>
                 </article>
                 {% empty %}
-                <p class="text-[var(--text-secondary)] italic">No active tasks! You are all caught up.</p>
+                <div class="empty-state"><span class="empty-icon" aria-hidden="true">🎉</span>No active tasks! You are all caught up.</div>
                 {% endfor %}
             </div>
         </section>
 
-        <section class="opacity-60">
-            <h2 class="text-xl font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                <span>✔️</span> Completed
+        <section aria-labelledby="done-title">
+            <h2 id="done-title" class="text-xl font-bold text-fg mb-4 flex items-center gap-2">
+                <span aria-hidden="true">✔️</span> Completed
             </h2>
-            <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-3">
                 <!-- Completed records remain visible for review and reversible status changes. -->
                 {% for task in completed_tasks %}
-                <article class="glass-card rounded-xl p-5 flex items-start gap-4">
-                    <input type="checkbox" checked class="mt-1 w-5 h-5 task-checkbox" data-id="{{ task.id }}" />
-                    <div class="flex-1">
-                        <label class="text-lg font-medium text-[var(--text-secondary)] line-through cursor-pointer">{{ task.title }}</label>
-                    </div>
+                <article class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 min-w-0">
+                    <label class="tap-zone" title="Mark as not done">
+                        <input type="checkbox" checked class="task-checkbox" data-id="{{ task.id }}" aria-label="Done: {{ task.title }}" />
+                    </label>
+                    <p class="flex-1 min-w-0 text-base sm:text-lg font-medium text-muted line-through break-words">{{ task.title }}</p>
+                    {% include "partials/task_status_select.html" with status_ctx="done" %}
                 </article>
                 {% empty %}
-                <p class="text-[var(--text-secondary)] italic">No completed tasks yet.</p>
+                <div class="empty-state">No completed tasks yet.</div>
                 {% endfor %}
             </div>
         </section>
     </div>
 
     <!-- Modal form collects all optional task fields before the task API request. -->
-    <div id="task-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="glass-card rounded-2xl p-6 sm:p-8 w-full max-w-md max-h-full overflow-y-auto shadow-2xl border-[var(--active-accent)]">
-            <h2 class="text-2xl font-bold text-white mb-6">Create New Task</h2>
+    <div id="task-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
+        <div class="modal-panel max-w-md p-6 sm:p-8 overflow-y-auto">
+            <div class="flex items-start justify-between gap-4 mb-6">
+                <h2 id="task-modal-title" class="text-2xl font-bold text-fg">Create New Task</h2>
+                <button type="button" class="icon-btn text-2xl leading-none -mr-2 -mt-2" aria-label="Close" data-close-task-modal>&times;</button>
+            </div>
             <form id="add-task-form" class="flex flex-col gap-4">
-                <div>
-                    <label class="text-xs uppercase font-semibold text-gray-400">Task Title</label>
-                    <input type="text" id="task-title" required class="input-field rounded-lg px-4 py-2 w-full mt-1">
+                <div class="field">
+                    <label for="task-title" class="field-label">Task title</label>
+                    <input type="text" id="task-title" required maxlength="255" class="input-field rounded-lg px-4 py-2 w-full">
                 </div>
-                <div>
-                    <label class="text-xs uppercase font-semibold text-gray-400">Priority</label>
-                    <select id="task-priority" class="input-field rounded-lg px-4 py-2 w-full mt-1">
+                <div class="field">
+                    <label for="task-priority" class="field-label">Priority</label>
+                    <select id="task-priority" class="input-field rounded-lg px-4 py-2 w-full">
                         <option value="low">Low</option>
                         <option value="medium" selected>Medium</option>
                         <option value="high">High</option>
                         <option value="urgent">Urgent</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-xs uppercase font-semibold text-gray-400">Due Date (Optional)</label>
-                    <input type="date" id="task-date" class="input-field rounded-lg px-4 py-2 w-full mt-1">
+                <div class="field">
+                    <label for="task-date" class="field-label">Due date <span class="font-normal text-muted">(optional)</span></label>
+                    <input type="date" id="task-date" class="input-field rounded-lg px-4 py-2 w-full">
                 </div>
-                <div>
-                    <label class="text-xs uppercase font-semibold text-gray-400">Tags (comma separated)</label>
-                    <input type="text" id="task-tags" placeholder="work, coding" class="input-field rounded-lg px-4 py-2 w-full mt-1">
+                <div class="field">
+                    <label for="task-tags" class="field-label">Tags <span class="font-normal text-muted">(comma separated)</span></label>
+                    <input type="text" id="task-tags" placeholder="work, coding" maxlength="100" class="input-field rounded-lg px-4 py-2 w-full">
                 </div>
-                <div class="flex gap-4 mt-4">
-                    <button type="button" onclick="document.getElementById('task-modal').classList.add('hidden')" class="flex-1 py-3 rounded-lg font-bold border border-gray-500 text-gray-400 hover:bg-gray-800">Cancel</button>
-                    <button type="submit" class="flex-1 btn-primary py-3 rounded-lg font-bold">Save Task</button>
+                <p id="task-form-error" class="alert alert-danger hidden" role="alert"></p>
+                <div class="flex gap-3 mt-2">
+                    <button type="button" data-close-task-modal class="btn btn-ghost flex-1">Cancel</button>
+                    <button type="submit" class="btn btn-solid flex-1">Save Task</button>
                 </div>
             </form>
         </div>
     </div>
 </main>
 
-<!-- Handles task completion toggles and asynchronous task creation. -->
+<!-- Handles task status changes and asynchronous task creation. -->
 <script src="{% static 'js/tasks.js' %}"></script>
 {% endblock %}

@@ -10,7 +10,7 @@ import pytest
 from playwright.sync_api import expect
 
 from tests.e2e.conftest import login
-from tests.e2e.responsive_helpers import PAGES, WIDTHS, HEIGHT, seed, run_action, METRICS_JS
+from tests.e2e.responsive_helpers import PAGES, WIDTHS, HEIGHT, SHOT_SIZES, seed, run_action, METRICS_JS
 
 pytestmark = [pytest.mark.responsive, pytest.mark.e2e]
 
@@ -35,9 +35,9 @@ def seeded(e2e_user, e2e_admin, isolated_vault):
     return e2e_user
 
 
-def open_page(browser, live_server, name, width):
+def open_page(browser, live_server, name, width, height=None, **context_options):
     path, role, action = PAGES[name]
-    ctx = browser.new_context(viewport={"width": width, "height": HEIGHT[width]})
+    ctx = browser.new_context(viewport={"width": width, "height": height or HEIGHT[width]}, **context_options)
     page = ctx.new_page()
     if role:
         login(page, live_server, "e2e" if role == "user" else "e2eroot")
@@ -48,10 +48,12 @@ def open_page(browser, live_server, name, width):
     return ctx, page
 
 
-@pytest.mark.parametrize("width", WIDTHS)
+@pytest.mark.parametrize("size", SHOT_SIZES, ids=[label for label, _, _ in SHOT_SIZES])
 @pytest.mark.parametrize("name", list(PAGES))
-def test_no_horizontal_overflow_and_key_elements_visible(browser, live_server, seeded, name, width):
-    ctx, page = open_page(browser, live_server, name, width)
+def test_no_horizontal_overflow_and_key_elements_visible(browser, live_server, seeded, name, size):
+    """Round 2: 11 sizes — phones 320–414, tablets 768/834/1024, desktops 1280–1920, phone landscape 667x375."""
+    _, width, height = size
+    ctx, page = open_page(browser, live_server, name, width, height)
     try:
         m = page.evaluate(METRICS_JS)
         assert m["docScroll"] <= m["vw"], f"page scrolls horizontally: {m['docScroll']} > {m['vw']}"

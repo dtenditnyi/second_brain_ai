@@ -16,26 +16,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load one note for requests originating from the file list, a wiki link, or a backlink.
     // Parameters: noteName is the vault filename without the .md suffix.
     // Returns: a promise that resolves after the page regions reflect the API result.
-    async function loadNoteArchitecture(noteName) {
+    async function loadNoteArchitecture(noteName, userInitiated = true) {
         if (!noteName) return;
 
         // Highlight the selected source note before the network request completes.
         fileItems.forEach(item => {
             if (item.getAttribute('data-filename') === noteName) {
-                item.classList.add('text-[var(--text-primary)]', 'bg-[var(--active-accent)]/10', 'shadow-[var(--glow-active)]', 'border', 'border-[var(--active-accent)]/20');
+                item.classList.add('text-fg', 'bg-accent/10', 'border-accent/40');
+                item.setAttribute('aria-current', 'true');
             } else {
-                item.classList.remove('text-[var(--text-primary)]', 'bg-[var(--active-accent)]/10', 'shadow-[var(--glow-active)]', 'border', 'border-[var(--active-accent)]/20');
+                item.classList.remove('text-fg', 'bg-accent/10', 'border-accent/40');
+                item.removeAttribute('aria-current');
             }
         });
 
         // Provide immediate feedback because note retrieval may take noticeable time.
         contentArea.innerHTML = `
-            <div class="flex items-center justify-center h-full">
-                <p class="text-[var(--active-accent)] animate-pulse font-mono text-sm uppercase tracking-widest">
-                    Defragmenting Vault Node Content: ${window.escapeHtml(noteName)}...
-                </p>
+            <div class="flex flex-col gap-4" role="status" aria-label="Loading ${window.escapeHtml(noteName)}">
+                <div class="skeleton h-9 w-2/3"></div>
+                <div class="skeleton h-3 w-1/3"></div>
+                <div class="skeleton h-4 w-full mt-4"></div>
+                <div class="skeleton h-4 w-11/12"></div>
+                <div class="skeleton h-4 w-4/5"></div>
             </div>
         `;
+        // Below the 3-pane layout the reader sits under the explorer: bring it into view.
+        if (window.innerWidth < 1280 && userInitiated) {
+            contentArea.scrollIntoView({ behavior: window.prefersReducedMotion && window.prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+        }
 
         try {
             // Encode the filename because vault names may contain spaces or Unicode.
@@ -45,13 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.status === 'ok') {
                 // The API returns rendered Markdown plus backlink metadata for this note.
                 contentArea.innerHTML = `
-                    <header class="mb-8 border-b border-[var(--border-glass)] pb-6">
-                        <h1 class="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] mb-2 tracking-tight">${window.escapeHtml(noteName)}</h1>
-                        <p class="text-xs text-[var(--active-accent)] opacity-80 uppercase tracking-widest font-mono font-semibold">
-                            Secure Sandbox Node Sync Matrix
-                        </p>
+                    <header class="mb-6 sm:mb-8 border-b border-line pb-5 sm:pb-6">
+                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-fg mb-2 tracking-tight break-words">${window.escapeHtml(noteName)}</h1>
+                        <p class="text-xs text-accent uppercase tracking-widest font-mono font-semibold">Markdown note</p>
                     </header>
-                    <div class="text-[var(--text-secondary)] leading-relaxed space-y-6 markdown-body">
+                    <div class="text-soft leading-relaxed space-y-6 markdown-body">
                         ${data.html_content}
                     </div>
                 `;
@@ -64,36 +70,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (totalBacklinks > 0) {
                     data.backlinks.forEach(mention => {
                         const cardHtml = `
-                            <article class="backlink-card p-4 rounded-xl border border-[var(--border-glass)] hover:border-[var(--active-accent)] hover:shadow-[var(--glow-active)] transition-all cursor-pointer bg-[var(--bg-base)]/40 hover:-translate-y-0.5" data-target="${window.escapeHtml(mention.title)}">
-                                <h4 class="font-medium text-[var(--text-primary)] text-sm mb-1 truncate">${window.escapeHtml(mention.title)}</h4>
-                                <p class="text-[11px] opacity-60 leading-relaxed font-serif italic">${window.escapeHtml(mention.snippet)}</p>
-                            </article>
+                            <button type="button" class="backlink-card w-full text-left p-4 rounded-xl border border-line hover:border-accent hover:shadow-[var(--glow-active)] transition-all cursor-pointer bg-base/40" data-target="${window.escapeHtml(mention.title)}">
+                                <span class="block font-medium text-fg text-sm mb-1 truncate">${window.escapeHtml(mention.title)}</span>
+                                <span class="block text-xs text-muted leading-relaxed italic break-words">${window.escapeHtml(mention.snippet)}</span>
+                            </button>
                         `;
                         mentionsFeed.insertAdjacentHTML('beforeend', cardHtml);
                     });
                 } else {
-                    mentionsFeed.innerHTML = `
-                        <div class="p-4 rounded-xl border border-dashed border-[var(--border-glass)] text-center text-xs opacity-50 italic">
-                            No active backlinks mapped for this node.
-                        </div>
-                    `;
+                    mentionsFeed.innerHTML = '<div class="empty-state">No other note links here.</div>';
                 }
 
             } else {
                 // Keep server-side lookup/rendering errors inside the reading pane.
                 contentArea.innerHTML = `
-                    <div class="p-5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400">
-                        <h4 class="font-bold mb-1">Core Link Interrupted</h4>
-                        <p class="text-xs opacity-80">${window.escapeHtml(data.msg)}</p>
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="font-bold mb-1">Could not open “${window.escapeHtml(noteName)}”</h4>
+                        <p class="text-sm">${window.escapeHtml(data.msg)}</p>
                     </div>
                 `;
             }
         } catch (error) {
             console.error('API Transmission failure:', error);
             contentArea.innerHTML = `
-                <div class="p-5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400">
-                    <h4 class="font-bold mb-1">Network Synchronization Loss</h4>
-                    <p class="text-xs opacity-80">Failed to establish handshake pipeline with server cluster.</p>
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="font-bold mb-1">Connection problem</h4>
+                    <p class="text-sm">The note could not be loaded. Check your connection and try again.</p>
                 </div>
             `;
         }
@@ -129,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Handle note links opened from the chat context list. ---
     const urlParams = new URLSearchParams(window.location.search);
     const encodedFile = urlParams.get('file');
-    console.log("Проверяем наличие внешнего параметра 'file':", encodedFile);
 
     if (encodedFile) {
         try {
@@ -137,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const requestedFile = decodeURIComponent(encodedFile).trim();
             const cleanRequestedName = requestedFile.replace(/\.md$/i, '').trim();
 
-            console.log("Пытаемся открыть заметку:", cleanRequestedName);
 
             // Match either the canonical data attribute or the visible explorer label.
             const requestedItem = Array.from(fileItems).find(item => {
@@ -152,23 +152,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (requestedItem) {
-                console.log("Заметка найдена! Кликаем.");
 
                 // Bring the matching item into view before triggering its normal handler.
-                requestedItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                // Reuse the regular click flow to load note content and backlinks.
-                requestedItem.click();
+                requestedItem.scrollIntoView({ block: 'nearest' });
+                loadNoteArchitecture(requestedItem.getAttribute('data-filename'), false);
 
                 // Remove the one-time parameter so a later reload does not reopen it.
                 const newUrl = new URL(window.location.href);
                 newUrl.searchParams.delete('file');
                 window.history.replaceState({}, document.title, newUrl);
             } else {
-                console.warn(`Файл '${cleanRequestedName}' не найден в File Explorer. Проверь классы и текст.`);
+                console.warn(`Note '${cleanRequestedName}' is not in the explorer.`);
             }
         } catch (error) {
-            console.error('Ошибка при обработке ссылки:', error);
+            console.error('Could not open the linked note:', error);
         }
     }
 
