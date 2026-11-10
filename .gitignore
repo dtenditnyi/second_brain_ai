@@ -27,3 +27,6 @@ node_modules/
 
 # Логи и временные файлы
 *.log
+# Audit / local test artefacts
+ai_manager/staticfiles/
+test-results/
