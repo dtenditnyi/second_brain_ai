@@ -5,6 +5,7 @@ import os
 import re
 import markdown
 from django.http import JsonResponse
+from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
@@ -13,6 +14,10 @@ from .. import rag_engine
 from .utils import parse_json_body
 
 logger = logging.getLogger(__name__)
+
+
+def _task_error(message):
+    return JsonResponse({'status': 'error', 'msg': message}, status=400)
 
 @csrf_exempt
 @login_required(login_url='login')
@@ -93,12 +98,33 @@ def api_add_task(request):
         data = parse_json_body(request)
         if data is None:
             return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
+        # Validate before writing so bad input yields 400 instead of a 500 (B-04).
+        title = str(data.get('title') or '').strip()
+        priority = data.get('priority') or 'medium'
+        tags = str(data.get('tags') or '')
+        raw_due = data.get('due_date') or None
+        if not title:
+            return _task_error('Task title is required.')
+        if len(title) > Task._meta.get_field('title').max_length:
+            return _task_error('Task title is too long.')
+        if priority not in dict(Task.PRIORITY_CHOICES):
+            return _task_error('Unknown priority.')
+        if len(tags) > Task._meta.get_field('tags').max_length:
+            return _task_error('Tags are too long.')
+        due_date = None
+        if raw_due:
+            try:
+                due_date = parse_date(str(raw_due))
+            except ValueError:
+                due_date = None
+            if due_date is None:
+                return _task_error('Invalid due date (expected YYYY-MM-DD).')
         task = Task.objects.create(
             user=request.user,
-            title=data.get('title'),
-            priority=data.get('priority', 'medium'),
-            due_date=data.get('due_date') or None,
-            tags=data.get('tags', '')
+            title=title,
+            priority=priority,
+            due_date=due_date,
+            tags=tags
         )
         return JsonResponse({'status': 'ok', 'task_id': task.id})
     return JsonResponse({'status': 'error'}, status=400)
@@ -112,13 +138,22 @@ def api_update_task_status(request):
         data = parse_json_body(request)
         if data is None:
             return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
+        new_status = data.get('status')
+        if new_status not in dict(Task.STATUS_CHOICES):
+            return _task_error('Unknown task status.')
         try:
-            task = Task.objects.get(id=data.get('task_id'), user=request.user)
-            task.status = data.get('status')
+            task_id = int(data.get('task_id'))
+        except (TypeError, ValueError):
+            return _task_error('Invalid task id.')
+        try:
+            task = Task.objects.get(id=task_id, user=request.user)
+            task.status = new_status
             task.save()
             return JsonResponse({'status': 'ok'})
         except Task.DoesNotExist:
             return JsonResponse({'status': 'error', 'msg': 'Task not found'}, status=404)
+    # Non-POST requests previously fell through and returned None → HTTP 500 (B-04).
+    return JsonResponse({'status': 'error'}, status=400)
 
 @login_required(login_url='login')
 def api_get_note_content(request):
