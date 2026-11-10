@@ -97,3 +97,16 @@ def test_admin_delete_requires_csrf(superuser, user):
 
 def test_django_admin_accessible_for_superuser(admin_client_):
     assert admin_client_.get("/admin/").status_code == 200
+
+
+def test_dashboard_has_no_stray_debug_text(admin_client_, user):
+    assert b"Anti-corruption layer code entry point" not in admin_client_.get("/system-matrix/").content
+
+
+def test_admin_update_settings_empty_temperature_is_not_500(superuser, user, post_json):
+    c = Client(raise_request_exception=False)
+    c.force_login(superuser)
+    r = post_json(c, "/api/admin/update-row/", {"table": "settings", "id": user.settings.id, "fields": {"temperature": ""}})
+    assert r.status_code in (200, 400)
+    user.settings.refresh_from_db()
+    assert user.settings.temperature == 0.7
