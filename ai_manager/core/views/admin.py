@@ -1,5 +1,6 @@
 """Superuser-only dashboard and JSON operations for administrative data tables."""
 import json
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -23,7 +24,7 @@ def admin_dashboard_view(request):
     return render(request, 'admin_dashboard.html', context)
 
 @csrf_exempt
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_superuser, login_url='login')
 def api_admin_update_row(request):
     # Dispatch a table-row update to the appropriate Django model using posted fields.
     # Returns: JSON status; lookup, validation, and persistence errors become HTTP 500.
@@ -43,7 +44,12 @@ def api_admin_update_row(request):
                 obj = UserSettings.objects.get(id=row_id)
                 for f in ['display_name', 'theme', 'accent_color', 'ai_strategy', 'github_repo_url']:
                     setattr(obj, f, fields.get(f, getattr(obj, f)))
-                obj.temperature = float(fields.get('temperature', obj.temperature))
+                raw_temperature = fields.get('temperature')
+                if raw_temperature not in (None, ''):
+                    try:
+                        obj.temperature = float(raw_temperature)
+                    except (TypeError, ValueError):
+                        return JsonResponse({'status': 'error', 'msg': 'Temperature must be a number.'}, status=400)
                 obj.save()
             elif target_table == 'tasks':
                 obj = Task.objects.get(id=row_id)
@@ -58,12 +64,14 @@ def api_admin_update_row(request):
             else:
                 return JsonResponse({'status': 'error', 'msg': 'Target table unrecognized.'}, status=400)
             return JsonResponse({'status': 'ok'})
+        except ObjectDoesNotExist:
+            return JsonResponse({'status': 'error', 'msg': 'Row not found.'}, status=404)
         except Exception as e:
             return JsonResponse({'status': 'error', 'msg': str(e)}, status=500)
     return JsonResponse({'status': 'error'}, status=400)
 
 @csrf_exempt
-@user_passes_test(lambda u: u.is_superuser)
+@user_passes_test(lambda u: u.is_superuser, login_url='login')
 def api_admin_delete_row(request):
     # Delete a selected row from an explicit allowlist of administrative models.
     # Returns: JSON status or a client/server error when the target cannot be deleted.
