@@ -13,7 +13,7 @@ Key Features:
 - Multi-Tenant Architecture: Each account is isolated at the database level, has its own settings, and gets a personal directory for storing notes.
 
 Tech Stack:
-- Backend: Python, Django, SQLite
+- Backend: Python, Django, PostgreSQL (Docker) / SQLite copy for local runs
 - AI Components: LlamaIndex, ChromaDB, Ollama (local LLMs and embeddings)
 - Frontend: HTML5, Vanilla JavaScript, Tailwind CSS v4 CLI
 - Security: python-dotenv for environment variables, cryptography for DB token encryption
@@ -29,7 +29,7 @@ ollama run llama3
 or
 ollama run phi3
 
-Note: The nomic-embed-text embedding model will download automatically during the first indexing of the note base.
+Note: the BAAI/bge-small-en-v1.5 embedding model (HuggingFace) downloads automatically on the first chat request.
 
 Installation and Setup:
 
@@ -47,9 +47,8 @@ source venv/bin/activate
 3. Install backend dependencies:
 pip install django llama-index llama-index-vector-stores-chroma llama-index-embeddings-ollama llama-index-llms-ollama chromadb gitpython markdown cryptography python-dotenv
 
-4. Create a .env file in the ai_manager folder (next to manage.py) and set the core variables:
-SECRET_KEY=your-super-secret-django-key-here
-DEBUG=True
+4. Optional: copy .env.example to .env in the repository root and fill in your values
+(SECRET_KEY, GEMINI_API_KEY, OLLAMA_HOST, ...). Never commit .env.
 
 5. Install frontend dependencies:
 npm install
@@ -61,20 +60,59 @@ python manage.py createsuperuser
 
 Running the Application:
 
-For Windows, there is a ready-made script for automatically starting all modules:
-run_matrix.bat
+The main way to start everything on Windows is start.bat (double-click it, or run it from a terminal
+in the repository root). It calls start.ps1, which runs these steps with an OK / FAIL status for each:
+1. Environment checks: venv\Scripts\python.exe, Python 3.10+, node/npx. It warns (does not stop) when
+   .env is missing or GEMINI_API_KEY / OLLAMA_HOST are not set. The contents of .env are never read or shown.
+2. Local database: creates ai_manager\audit_copy_db.sqlite3 from db.sqlite3 if the copy is missing
+   (it never overwrites the copy and never touches the original or the production PostgreSQL DB).
+3. Optional dependency install (-Install).
+4. manage.py check and migrate with ai_manager.settings_local.
+5. CSS build (npm run build).
+6. Tests on every start: the fast suite by default. If tests fail, the server is not started and the
+   path to the log is shown.
+7. Django runserver on http://127.0.0.1:8000; the browser opens once the server answers.
 
-For manual startup, open two separate terminals with the activated venv environment:
-- Terminal 1 (Django Server):
-  python manage.py runserver
-- Terminal 2 (Tailwind Compiler):
+Switches (combine freely, e.g. start.bat -FullTests -Watch -Port 8080):
+  -Install     pip install -r requirements.txt -r requirements-dev.txt and npm install
+  -FullTests   run all tests, including the Playwright browser tests (needs MS Edge)
+  -SkipTests   do not run tests
+  -Force       start the server even if tests failed (also skips the -Docker confirmation)
+  -Port N      port for the server (default 8000)
+  -Watch       Tailwind watch (npm run dev) in a separate window
+  -Tunnel      cloudflared tunnel to the local server in a separate window
+  -Docker      docker compose up --build instead of the local mode (production configuration!)
+  -NoBrowser   do not open the browser
+  -NoServer    only run the checks and tests
+
+Every run is logged to logs\runs\run_YYYY-MM-DD_HH-mm-ss.log (the last 30 logs are kept) with the
+git branch/commit, parameters, step durations, test results and the final OK/FAIL. One line per run
+is appended to logs\runs\history.csv. The old run_matrix.bat still works but start.bat is the
+recommended way.
+
+Manual start (two terminals, from ai_manager\ with ..\venv):
+  ..\venv\Scripts\python.exe manage.py migrate --settings=ai_manager.settings_local
+  ..\venv\Scripts\python.exe manage.py runserver --settings=ai_manager.settings_local
   npm run dev
 
-After that, the web interface will be available at: http://127.0.0.1:8000
+Environment variables (see .env.example; all optional for a local start):
+  SECRET_KEY, DEBUG (False unless set to True; local settings always use True)
+  OLLAMA_HOST (default http://localhost:11434), OLLAMA_MODEL (default llama3:latest)
+  GEMINI_API_KEY
+  GEMINI_MODEL_DEFAULT (default gemini-3.5-flash-lite) - everyday chat
+  GEMINI_MODEL_SMART (default gemini-3.8-flash) - status report and the "Smart answer" toggle
+  GEMINI_FALLBACK_MODELS (default gemini-3.1-flash-lite,gemma-4-31b-it) - tried in order when a model
+    hits its quota (HTTP 429 / RESOURCE_EXHAUSTED); in Auto-Hybrid mode Ollama is the last fallback
+  CHAT_HISTORY_MESSAGES (default 6) - previous messages sent to the model as conversation memory
+  PROMPT_TOKEN_BUDGET_GEMMA / _GEMINI / _LOCAL (default 8000 / 30000 / 6000)
+To check which Gemini model IDs your key can use: venv\Scripts\python.exe scripts\list_gemini_models.py
+
+Tests: from ai_manager\ run ..\venv\Scripts\python.exe -m pytest (all) or add -m "not e2e and not responsive"
+for the fast part. External services (Gemini, Ollama, GitHub, HuggingFace) are always mocked.
 
 First Run and Indexing:
 1. Register an account or log in with the superuser credentials.
 2. Navigate to the Settings section.
 3. Provide the URL of your private GitHub repository containing your Obsidian notes and your Personal Access Token (PAT).
-4. Select the local model you want to use (Llama 3 or Phi 3) and save the settings.
+4. Choose the AI strategy (Auto-Hybrid, Strictly Local or Cloud Only) and save the settings. The token is never shown again; leave the field empty to keep it.
 5. Go to the Notes or AI Chat section. The system will automatically clone the repository, start indexing, and create a local vector database in ChromaDB.

@@ -30,3 +30,6 @@ node_modules/
 # Audit / local test artefacts
 ai_manager/staticfiles/
 test-results/
+
+# start.ps1 run logs
+logs/runs/
