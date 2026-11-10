@@ -2,6 +2,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.utils.http import url_has_allowed_host_and_scheme
 
 # Register a new account, establish its authenticated session, or redisplay errors.
 # Parameters: request contains registration form data on POST.
@@ -37,6 +38,12 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            # Honour ?next= for same-site targets only (B-12).
+            next_url = request.POST.get('next') or request.GET.get('next')
+            if next_url and url_has_allowed_host_and_scheme(
+                next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+            ):
+                return redirect(next_url)
             return redirect('home')
         else:
             error_message = "Authentication failed. Invalid username or security credentials."

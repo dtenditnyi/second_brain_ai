@@ -67,7 +67,9 @@ def ai_chat_view(request):
                 if file.endswith(".md"):
                     synced_notes.append(file.replace(".md", ""))
                     
-    chat_history = reversed(ChatMessage.objects.filter(user=request.user).order_by('-created_at')[:50])
+    # A list (not a reversed() iterator, which is always truthy) so the template's
+    # `{% if not chat_history %}` greeting works (B-05).
+    chat_history = list(reversed(ChatMessage.objects.filter(user=request.user).order_by('-created_at')[:50]))
     synced_notes.sort()
     context = {
         'active_page': 'ai-chat', 

@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import markdown
+from html import escape
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
@@ -219,7 +220,7 @@ def api_get_note_content(request):
                 note_target, note_display = link_text.split('|', 1)
             else:
                 note_target, note_display = link_text, link_text
-            return f'<a href="#" class="wiki-link text-[var(--active-accent)] border-b border-dashed border-[var(--active-accent)] hover:text-white transition-colors" data-note="{note_target.strip()}">{note_display.strip()}</a>'
+            return f'<a href="#" class="wiki-link text-[var(--active-accent)] border-b border-dashed border-[var(--active-accent)] hover:text-white transition-colors" data-note="{escape(note_target.strip())}">{escape(note_display.strip())}</a>'
 
         html_content = markdown.markdown(re.sub(r'\[\[(.*?)\]\]', replace_wiki_links, raw_markdown), extensions=['fenced_code', 'tables'])
         return JsonResponse({'status': 'ok', 'html_content': html_content, 'backlinks': linked_mentions})
