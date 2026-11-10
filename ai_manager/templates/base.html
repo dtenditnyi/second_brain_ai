@@ -13,13 +13,13 @@
 </head>
 <body class="bg-[var(--bg-base)] text-[var(--text-secondary)] font-sans h-screen overflow-hidden transition-colors duration-300">
     <!-- Application shell: persistent sidebar plus the active page content region. -->
-    <div id="app-wrapper" class="flex h-screen w-screen min-h-0 overflow-hidden">
+    <div id="app-wrapper" class="flex h-screen w-full min-h-0 overflow-hidden">
         {% include "sidebar.html" with active=active_page %}
         
         <div class="flex-1 flex flex-col h-full min-h-0 overflow-y-auto relative">            
             <header class="lg:hidden flex items-center justify-between p-4 border-b border-[var(--border-glass)] bg-[var(--bg-sidebar)] z-40 shadow-md">
                 <div class="flex items-center gap-3">
-                    <button id="mobile-menu-open" class="text-[var(--active-accent)] p-2 bg-[var(--bg-glass)] rounded-lg focus:outline-none shadow-[var(--glow-active)]">
+                    <button id="mobile-menu-open" aria-label="Open menu" class="text-[var(--active-accent)] p-2.5 bg-[var(--bg-glass)] rounded-lg focus:outline-none shadow-[var(--glow-active)]">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
                     <h1 class="font-bold text-[var(--text-primary)] tracking-widest uppercase text-sm">MENU</h1>

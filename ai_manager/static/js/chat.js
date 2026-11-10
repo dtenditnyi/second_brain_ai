@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const alignmentClass = isAI ? 'self-start' : 'self-end flex-row-reverse';
         const bubbleStyle = isAI
             ? 'rounded-tl-none border-[var(--active-accent)] shadow-[var(--glow-active)]'
-            : 'rounded-tr-none bg-[var(--active-accent)] bg-opacity-10 border border-[var(--active-accent)]';
+            : 'rounded-tr-none bg-[var(--active-accent)]/10 border border-[var(--active-accent)]';
 
         const html = `
             <article class="flex gap-4 w-full ${alignmentClass}" id="${id}">

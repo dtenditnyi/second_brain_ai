@@ -13,11 +13,11 @@
 <body class="bg-[#07070a] text-gray-300 font-sans h-screen flex flex-col overflow-hidden">
 
     <!-- Administrative identity, operator label, and session exit action. -->
-    <header class="bg-[#0d0d14] border-b border-purple-500 border-opacity-20 px-8 py-4 flex items-center justify-between shadow-[0_0_30px_rgba(176,38,255,0.05)]">
+    <header class="bg-[#0d0d14] border-b border-purple-500/20 px-4 md:px-8 py-3 md:py-4 flex flex-wrap items-center justify-between gap-3 shadow-[0_0_30px_rgba(176,38,255,0.05)]">
         <div class="flex items-center gap-4">
             <span class="text-2xl animate-pulse text-purple-500">🌌</span>
             <div>
-                <h1 class="text-xl font-extrabold tracking-widest text-white uppercase">Central Control Panel</h1>
+                <h1 class="text-base md:text-xl font-extrabold tracking-widest text-white uppercase">Central Control Panel</h1>
                 <p class="text-[10px] text-purple-400 font-mono tracking-wider uppercase">Administrative Sandbox System</p>
             </div>
         </div>
@@ -26,46 +26,46 @@
                 <span class="opacity-50">Operator:</span>
                 <span class="text-purple-400 font-bold">{{ request.user.username }}</span>
             </div>
-            <a href="{% url 'logout' %}" class="px-4 py-1.5 rounded border border-red-500 border-opacity-30 text-red-400 text-xs hover:bg-red-500 hover:bg-opacity-10 transition-all font-bold uppercase tracking-wider">Disengage</a>
+            <a href="{% url 'logout' %}" class="px-4 py-1.5 rounded border border-red-500/30 text-red-400 text-xs hover:bg-red-500/10 transition-all font-bold uppercase tracking-wider">Disengage</a>
         </div>
     </header>
 
     <!-- Main admin shell: table navigation at left and active records at right. -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         <!-- Tab buttons map to the section IDs rendered in the main panel. -->
-        <aside class="w-64 bg-[#09090f] border-r border-white border-opacity-5 p-6 flex flex-col gap-2">
-            <p class="text-[10px] uppercase font-mono tracking-widest text-gray-500 mb-2 px-4">Database Entities</p>
-            <button data-tab="users-table" class="tab-btn w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center gap-3 bg-purple-500 bg-opacity-10 text-white border border-purple-500 border-opacity-20 shadow-[0_0_15px_rgba(176,38,255,0.1)]">
+        <aside class="w-full md:w-64 shrink-0 bg-[#09090f] border-b md:border-b-0 md:border-r border-white/5 p-3 md:p-6 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-x-visible">
+            <p class="hidden md:block text-xs uppercase font-mono tracking-widest text-gray-500 mb-2 px-4">Database Entities</p>
+            <button data-tab="users-table" class="tab-btn shrink-0 whitespace-nowrap md:w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center gap-3 bg-purple-500/10 text-white border border-purple-500/20 shadow-[0_0_15px_rgba(176,38,255,0.1)]">
                 <span>👤</span> Core Users Row
             </button>
-            <button data-tab="settings-table" class="tab-btn w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center gap-3 text-gray-400 hover:bg-[var(--bg-glass)] hover:text-white">
+            <button data-tab="settings-table" class="tab-btn shrink-0 whitespace-nowrap md:w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center gap-3 text-gray-400 hover:bg-[var(--bg-glass)] hover:text-white">
                 <span>🎨</span> User System Matrix
             </button>
-            <button data-tab="tasks-table" class="tab-btn w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center gap-3 text-gray-400 hover:bg-[var(--bg-glass)] hover:text-white">
+            <button data-tab="tasks-table" class="tab-btn shrink-0 whitespace-nowrap md:w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center gap-3 text-gray-400 hover:bg-[var(--bg-glass)] hover:text-white">
                 <span>✅</span> Active Global Tasks
             </button>
-            <button data-tab="messages-table" class="tab-btn w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center gap-3 text-gray-400 hover:bg-[var(--bg-glass)] hover:text-white">
+            <button data-tab="messages-table" class="tab-btn shrink-0 whitespace-nowrap md:w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center gap-3 text-gray-400 hover:bg-[var(--bg-glass)] hover:text-white">
                 <span>✨</span> Chat Log Architecture
             </button>
-            <a href="{% url 'notes' %}" class="w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center gap-3 text-gray-400 hover:bg-[var(--bg-glass)] hover:text-white">
+            <a href="{% url 'notes' %}" class="shrink-0 whitespace-nowrap md:w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center gap-3 text-gray-400 hover:bg-[var(--bg-glass)] hover:text-white">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg> Back to Dashboard
             </a>
         </aside>
 
-        <main class="flex-1 p-8 overflow-y-auto bg-black bg-opacity-40">
+        <main class="flex-1 min-h-0 p-4 md:p-8 overflow-y-auto bg-black/40 ">
             
             <!-- Django User records and authentication privilege controls. -->
             <section id="users-table" class="table-section block">
                 <div class="mb-4">
-                    <h2 class="text-xl font-bold text-white uppercase tracking-wider">Authentication Users Entity</h2>
+                    <h2 class="text-lg md:text-xl font-bold text-white uppercase tracking-wider">Authentication Users Entity</h2>
                     <p class="text-xs text-gray-500">Modify global login authentication keys and system privileges.</p>
                 </div>
-                <div class="glass-card rounded-2xl overflow-hidden border border-white border-opacity-5">
-                    <table class="w-full border-collapse text-left text-sm" data-model="users">
+                <div class="glass-card rounded-2xl overflow-x-auto border border-white/5 ">
+                    <table class="w-full min-w-[720px] border-collapse text-left text-sm" data-model="users">
                         <thead>
-                            <tr class="bg-[#11111a] text-xs font-mono text-purple-400 uppercase border-b border-white border-opacity-5">
+                            <tr class="bg-[#11111a] text-xs font-mono text-purple-400 uppercase border-b border-white/5 ">
                                 <th class="p-4 w-16">ID</th>
                                 <th class="p-4">Username Handle</th>
                                 <th class="p-4">Secure Email Account</th>
@@ -73,22 +73,22 @@
                                 <th class="p-4 w-48 text-center">Runtime Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-white divide-opacity-5">
+                        <tbody class="divide-y divide-white/5 ">
                             <!-- Each row is keyed by the database ID for API updates. -->
                             {% for u in users %}
-                            <tr data-id="{{ u.id }}" class="hover:bg-white hover:bg-opacity-5 transition-colors">
+                            <tr data-id="{{ u.id }}" class="hover:bg-white/5 transition-colors">
                                 <td class="p-4 font-mono font-bold text-purple-500">{{ u.id }}</td>
-                                <td class="p-4"><input type="text" name="username" value="{{ u.username }}" class="input-field rounded px-3 py-1.5 w-full bg-black bg-opacity-40 text-white text-sm"></td>
-                                <td class="p-4"><input type="email" name="email" value="{{ u.email }}" class="input-field rounded px-3 py-1.5 w-full bg-black bg-opacity-40 text-white text-sm"></td>
+                                <td class="p-4"><input type="text" name="username" value="{{ u.username }}" class="input-field rounded px-3 py-1.5 w-full bg-black/40 text-white text-sm"></td>
+                                <td class="p-4"><input type="email" name="email" value="{{ u.email }}" class="input-field rounded px-3 py-1.5 w-full bg-black/40 text-white text-sm"></td>
                                 <td class="p-4">
-                                    <select name="is_superuser" class="input-field rounded px-3 py-1.5 w-full bg-black bg-opacity-40 text-sm">
+                                    <select name="is_superuser" class="input-field rounded px-3 py-1.5 w-full bg-black/40 text-sm">
                                         <option value="true" {% if u.is_superuser %}selected{% endif %}>AUTHORIZED</option>
                                         <option value="false" {% if not u.is_superuser %}selected{% endif %}>RESTRICTED</option>
                                     </select>
                                 </td>
                                 <td class="p-4 text-center flex justify-center gap-2">
                                     <button class="save-row-btn px-3 py-1.5 rounded bg-purple-500 text-black font-bold text-xs uppercase tracking-wide hover:scale-105 transition-transform">Commit</button>
-                                    <button class="delete-row-btn px-3 py-1.5 rounded border border-red-500 border-opacity-30 text-red-400 font-bold text-xs uppercase tracking-wide hover:bg-red-500 hover:bg-opacity-10 transition-all">Drop</button>
+                                    <button class="delete-row-btn px-3 py-1.5 rounded border border-red-500/30 text-red-400 font-bold text-xs uppercase tracking-wide hover:bg-red-500/10 transition-all">Drop</button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -100,13 +100,13 @@
             <!-- Per-account appearance, AI strategy, and repository preferences. -->
             <section id="settings-table" class="table-section hidden">
                 <div class="mb-4">
-                    <h2 class="text-xl font-bold text-white uppercase tracking-wider">UserSettings Configuration Row</h2>
+                    <h2 class="text-lg md:text-xl font-bold text-white uppercase tracking-wider">UserSettings Configuration Row</h2>
                     <p class="text-xs text-gray-500">Edit design preferences, target LLM model cores, and personal vault parameters.</p>
                 </div>
-                <div class="glass-card rounded-2xl overflow-hidden border border-white border-opacity-5">
-                    <table class="w-full border-collapse text-left text-sm" data-model="settings">
+                <div class="glass-card rounded-2xl overflow-x-auto border border-white/5 ">
+                    <table class="w-full min-w-[1100px] border-collapse text-left text-sm" data-model="settings">
                         <thead>
-                            <tr class="bg-[#11111a] text-xs font-mono text-purple-400 uppercase border-b border-white border-opacity-5">
+                            <tr class="bg-[#11111a] text-xs font-mono text-purple-400 uppercase border-b border-white/5 ">
                                 <th class="p-4 w-12">ID</th>
                                 <th class="p-4">Display Name</th>
                                 <th class="p-4 w-32">UI Theme</th>
@@ -117,37 +117,37 @@
                                 <th class="p-4 w-44 text-center">Runtime Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-white divide-opacity-5">
+                        <tbody class="divide-y divide-white/5 ">
                             <!-- Preference row fields are serialized by admin.js. -->
                             {% for s in settings %}
-                            <tr data-id="{{ s.id }}" class="hover:bg-white hover:bg-opacity-5 transition-colors">
+                            <tr data-id="{{ s.id }}" class="hover:bg-white/5 transition-colors">
                                 <td class="p-4 font-mono font-bold text-purple-500">{{ s.id }}</td>
-                                <td class="p-4"><input type="text" name="display_name" value="{{ s.display_name }}" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm"></td>
+                                <td class="p-4"><input type="text" name="display_name" value="{{ s.display_name }}" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm"></td>
                                 <td class="p-4">
-                                    <select name="theme" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm">
+                                    <select name="theme" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm">
                                         <option value="cyberpunk" {% if s.theme == 'cyberpunk' %}selected{% endif %}>Cyberpunk</option>
                                         <option value="light" {% if s.theme == 'light' %}selected{% endif %}>Light</option>
                                     </select>
                                 </td>
                                 <td class="p-4">
-                                    <select name="accent_color" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm">
+                                    <select name="accent_color" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm">
                                         <option value="cyan" {% if s.accent_color == 'cyan' %}selected{% endif %}>Cyan</option>
                                         <option value="purple" {% if s.accent_color == 'purple' %}selected{% endif %}>Purple</option>
                                         <option value="green" {% if s.accent_color == 'green' %}selected{% endif %}>Green</option>
                                     </select>
                                 </td>
                                 <td class="p-4">
-                                    <select name="ai_strategy" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm">
+                                    <select name="ai_strategy" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm">
                                         <option value="auto" {% if s.ai_strategy == 'auto' %}selected{% endif %}>Auto-Hybrid</option>
                                         <option value="local_only" {% if s.ai_strategy == 'local_only' %}selected{% endif %}>Strictly Local</option>
                                         <option value="cloud_only" {% if s.ai_strategy == 'cloud_only' %}selected{% endif %}>Cloud Only</option>
                                     </select>
                                 </td>
-                                <td class="p-4"><input type="number" name="temperature" step="0.1" min="0" max="1" value="{{ s.temperature }}" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm"></td>
-                                <td class="p-4"><input type="text" name="github_repo_url" value="{{ s.github_repo_url }}" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm"></td>
+                                <td class="p-4"><input type="number" name="temperature" step="0.1" min="0" max="1" value="{{ s.temperature }}" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm"></td>
+                                <td class="p-4"><input type="text" name="github_repo_url" value="{{ s.github_repo_url }}" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm"></td>
                                 <td class="p-4 text-center flex justify-center gap-1">
                                     <button class="save-row-btn px-2 py-1.5 rounded bg-purple-500 text-black font-bold text-xs uppercase hover:scale-105 transition-all">Commit</button>
-                                    <button class="delete-row-btn px-2 py-1.5 rounded border border-red-500 border-opacity-30 text-red-400 font-bold text-xs uppercase hover:bg-red-500 hover:bg-opacity-10 transition-all">Drop</button>
+                                    <button class="delete-row-btn px-2 py-1.5 rounded border border-red-500/30 text-red-400 font-bold text-xs uppercase hover:bg-red-500/10 transition-all">Drop</button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -159,13 +159,13 @@
             <!-- Global task records include owner, workflow, schedule, and tags. -->
             <section id="tasks-table" class="table-section hidden">
                 <div class="mb-4">
-                    <h2 class="text-xl font-bold text-white uppercase tracking-wider">Global Task Database Entity</h2>
+                    <h2 class="text-lg md:text-xl font-bold text-white uppercase tracking-wider">Global Task Database Entity</h2>
                     <p class="text-xs text-gray-500">Track and manipulate user project cards across the global clusters.</p>
                 </div>
-                <div class="glass-card rounded-2xl overflow-hidden border border-white border-opacity-5">
-                    <table class="w-full border-collapse text-left text-sm" data-model="tasks">
+                <div class="glass-card rounded-2xl overflow-x-auto border border-white/5 ">
+                    <table class="w-full min-w-[1100px] border-collapse text-left text-sm" data-model="tasks">
                         <thead>
-                            <tr class="bg-[#11111a] text-xs font-mono text-purple-400 uppercase border-b border-white border-opacity-5">
+                            <tr class="bg-[#11111a] text-xs font-mono text-purple-400 uppercase border-b border-white/5 ">
                                 <th class="p-4 w-12">ID</th>
                                 <th class="p-4 w-32">User Owner</th>
                                 <th class="p-4">Task Title Header</th>
@@ -176,33 +176,33 @@
                                 <th class="p-4 w-44 text-center">Runtime Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-white divide-opacity-5">
+                        <tbody class="divide-y divide-white/5 ">
                             <!-- Task records are editable through the row transaction controls. -->
                             {% for t in tasks %}
-                            <tr data-id="{{ t.id }}" class="hover:bg-white hover:bg-opacity-5 transition-colors">
+                            <tr data-id="{{ t.id }}" class="hover:bg-white/5 transition-colors">
                                 <td class="p-4 font-mono font-bold text-purple-500">{{ t.id }}</td>
                                 <td class="p-4 font-mono text-xs text-gray-400">{{ t.user.username }}</td>
-                                <td class="p-4"><input type="text" name="title" value="{{ t.title }}" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm"></td>
+                                <td class="p-4"><input type="text" name="title" value="{{ t.title }}" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm"></td>
                                 <td class="p-4">
-                                    <select name="status" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm">
+                                    <select name="status" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm">
                                         <option value="todo" {% if t.status == 'todo' %}selected{% endif %}>To Do</option>
                                         <option value="in_progress" {% if t.status == 'in_progress' %}selected{% endif %}>In Progress</option>
                                         <option value="done" {% if t.status == 'done' %}selected{% endif %}>Done</option>
                                     </select>
                                 </td>
                                 <td class="p-4">
-                                    <select name="priority" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm">
+                                    <select name="priority" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm">
                                         <option value="low" {% if t.priority == 'low' %}selected{% endif %}>Low</option>
                                         <option value="medium" {% if t.priority == 'medium' %}selected{% endif %}>Medium</option>
                                         <option value="high" {% if t.priority == 'high' %}selected{% endif %}>High</option>
                                         <option value="urgent" {% if t.priority == 'urgent' %}selected{% endif %}>Urgent</option>
                                     </select>
                                 </td>
-                                <td class="p-4"><input type="date" name="due_date" value="{{ t.due_date|date:'Y-m-d' }}" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm font-mono"></td>
-                                <td class="p-4"><input type="text" name="tags" value="{{ t.tags }}" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm"></td>
+                                <td class="p-4"><input type="date" name="due_date" value="{{ t.due_date|date:'Y-m-d' }}" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm font-mono"></td>
+                                <td class="p-4"><input type="text" name="tags" value="{{ t.tags }}" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm"></td>
                                 <td class="p-4 text-center flex justify-center gap-1">
                                     <button class="save-row-btn px-2 py-1.5 rounded bg-purple-500 text-black font-bold text-xs uppercase hover:scale-105 transition-all">Commit</button>
-                                    <button class="delete-row-btn px-2 py-1.5 rounded border border-red-500 border-opacity-30 text-red-400 font-bold text-xs uppercase hover:bg-red-500 hover:bg-opacity-10 transition-all">Drop</button>
+                                    <button class="delete-row-btn px-2 py-1.5 rounded border border-red-500/30 text-red-400 font-bold text-xs uppercase hover:bg-red-500/10 transition-all">Drop</button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -214,13 +214,13 @@
             <!-- Recent chat turns for operational inspection and moderation. -->
             <section id="messages-table" class="table-section hidden">
                 <div class="mb-4">
-                    <h2 class="text-xl font-bold text-white uppercase tracking-wider">Chat Log Architecture Records</h2>
+                    <h2 class="text-lg md:text-xl font-bold text-white uppercase tracking-wider">Chat Log Architecture Records</h2>
                     <p class="text-xs text-gray-500">Monitor and refine system interactions and saved LLM history strings.</p>
                 </div>
-                <div class="glass-card rounded-2xl overflow-hidden border border-white border-opacity-5">
-                    <table class="w-full border-collapse text-left text-sm" data-model="messages">
+                <div class="glass-card rounded-2xl overflow-x-auto border border-white/5 ">
+                    <table class="w-full min-w-[800px] border-collapse text-left text-sm" data-model="messages">
                         <thead>
-                            <tr class="bg-[#11111a] text-xs font-mono text-purple-400 uppercase border-b border-white border-opacity-5">
+                            <tr class="bg-[#11111a] text-xs font-mono text-purple-400 uppercase border-b border-white/5 ">
                                 <th class="p-4 w-12">ID</th>
                                 <th class="p-4 w-32">Sender Engine</th>
                                 <th class="p-4 w-28">Identity Context</th>
@@ -228,22 +228,22 @@
                                 <th class="p-4 w-44 text-center">Runtime Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-white divide-opacity-5">
+                        <tbody class="divide-y divide-white/5 ">
                             <!-- Message role and content are editable per persisted turn. -->
                             {% for m in messages %}
-                            <tr data-id="{{ m.id }}" class="hover:bg-white hover:bg-opacity-5 transition-colors">
+                            <tr data-id="{{ m.id }}" class="hover:bg-white/5 transition-colors">
                                 <td class="p-4 font-mono font-bold text-purple-500">{{ m.id }}</td>
                                 <td class="p-4 font-mono text-xs text-gray-400">{{ m.user.username }}</td>
                                 <td class="p-4">
-                                    <select name="role" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm">
+                                    <select name="role" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm">
                                         <option value="user" {% if m.role == 'user' %}selected{% endif %}>User</option>
                                         <option value="ai" {% if m.role == 'ai' %}selected{% endif %}>AI Core</option>
                                     </select>
                                 </td>
-                                <td class="p-4"><textarea name="content" rows="1" class="input-field rounded px-2 py-1 w-full bg-black bg-opacity-40 text-sm resize-y">{{ m.content }}</textarea></td>
+                                <td class="p-4"><textarea name="content" rows="1" class="input-field rounded px-2 py-1 w-full bg-black/40 text-sm resize-y">{{ m.content }}</textarea></td>
                                 <td class="p-4 text-center flex justify-center gap-1">
                                     <button class="save-row-btn px-2 py-1.5 rounded bg-purple-500 text-black font-bold text-xs uppercase hover:scale-105 transition-all">Commit</button>
-                                    <button class="delete-row-btn px-2 py-1.5 rounded border border-red-500 border-opacity-30 text-red-400 font-bold text-xs uppercase hover:bg-red-500 hover:bg-opacity-10 transition-all">Drop</button>
+                                    <button class="delete-row-btn px-2 py-1.5 rounded border border-red-500/30 text-red-400 font-bold text-xs uppercase hover:bg-red-500/10 transition-all">Drop</button>
                                 </td>
                             </tr>
                             {% endfor %}

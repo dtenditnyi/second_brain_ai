@@ -29,3 +29,12 @@ Each entry: context · options · chosen · why · how to roll back.
 ## D6. B-15 lazy embedding model
 - Options: (a) lazy load on first chat request (`ensure_embed_model()`); (b) load in `AppConfig.ready()` (still at start); (c) env flag to skip.
 - Chosen (a): smallest change, same model, same vectors. Trade-off: first chat message per process pays the load (~1–5 s). Rollback: revert commit.
+
+## D7. Tailwind v4 opacity utilities (R2)
+- Context: templates were written with v3 `bg-opacity-*` classes; the project compiles with Tailwind v4 which removed them → solid badges/nav (unreadable). Not strictly "responsive" but a readability defect on every device.
+- Options: (a) convert classes to `/NN` syntax (script `docs/audit/tw4_opacity.py`); (b) add v3-compat CSS (impossible to emulate generically in v4); (c) leave.
+- Chosen (a); restores the intended translucent design. Rollback: revert the phase-4 commit.
+
+## D8. Responsive changes are mobile-scoped
+- All layout changes use mobile-first classes with the original desktop classes kept behind `lg:`/`xl:`/`md:`; the 44 px control sizing is inside `@media (max-width: 1023.98px)`. Exceptions with desktop effect: R2 colours (intended), notes 3-pane now from 1280 px (was 1024), admin tables get min widths + horizontal scroll.
+- `styles.css` rebuilt with `npx @tailwindcss/cli ... --minify` (same as `npm run build`).

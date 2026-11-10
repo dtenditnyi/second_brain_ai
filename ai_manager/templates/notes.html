@@ -5,9 +5,9 @@
 
 {% block content %}
 <!-- Three-pane note workspace: vault explorer, selected note, and backlinks. -->
-<main class="flex-1 flex flex-col lg:flex-row relative z-10 p-4 lg:p-8 gap-6 overflow-visible lg:overflow-hidden">
+<main class="flex-1 flex flex-col xl:flex-row relative z-10 p-4 lg:p-8 gap-6 overflow-visible xl:overflow-hidden">
     
-        <aside class="w-full lg:w-64 glass-card rounded-2xl p-5 flex flex-col h-[40vh] lg:h-full overflow-y-auto shadow-lg max-h-screen mb-6 lg:mb-0">       
+        <aside class="w-full xl:w-64 shrink-0 glass-card rounded-2xl p-5 flex flex-col h-[40vh] xl:h-full overflow-y-auto shadow-lg max-h-screen">       
             <header class="mb-4 pb-2 border-b border-[var(--border-glass)]">
             <h2 class="font-bold text-[var(--text-primary)] tracking-wider text-xs uppercase flex items-center gap-2">
                 <span>📁</span> File Explorer
@@ -36,7 +36,7 @@
     </aside>
 
     <!-- The center pane is populated asynchronously with rendered note content. -->
-    <article id="workspace-content-area" class="flex-1 min-h-[60vh] lg:min-h-0 glass-card rounded-2xl p-6 lg:p-10 overflow-y-auto shadow-2xl border-[var(--border-glass)]">
+    <article id="workspace-content-area" class="flex-1 min-w-0 min-h-[60vh] xl:min-h-0 glass-card rounded-2xl p-6 lg:p-10 overflow-y-auto shadow-2xl border-[var(--border-glass)]">
         <div class="flex flex-col items-center justify-center h-full text-center opacity-60">
             <span class="text-4xl mb-4">🧠</span>
             <h3 class="text-xl font-bold text-[var(--text-primary)] mb-1">Knowledge Core Idle</h3>
@@ -45,7 +45,7 @@
     </article>
 
     <!-- Inbound wiki-link references are rendered in the right-hand pane. -->
-    <aside class="w-full lg:w-72 glass-card rounded-2xl p-5 min-h-[30vh] lg:h-full overflow-y-auto shadow-lg flex flex-col">
+    <aside class="w-full xl:w-72 shrink-0 glass-card rounded-2xl p-5 min-h-[30vh] xl:h-full overflow-y-auto shadow-lg flex flex-col">
         <header class="mb-6 pb-2 border-b border-[var(--border-glass)]">
             <h3 class="font-bold text-[var(--text-primary)] tracking-wider text-xs uppercase flex items-center gap-2">
                 <span>🔗</span> Linked Mentions

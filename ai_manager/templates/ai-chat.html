@@ -7,16 +7,16 @@
 
 {% block content %}
 <!-- Chat workspace pairs a selected-document context panel with the conversation feed. -->
-  <main class="flex-1 min-h-0 overflow-hidden flex flex-col lg:flex-row relative z-10 p-4 lg:p-8 gap-6">
+  <main class="lg:flex-1 lg:min-h-0 lg:overflow-hidden flex flex-col lg:flex-row relative z-10 p-4 lg:p-8 gap-6">
     <!-- Selected context documents and active model settings. -->
-    <aside class="w-full lg:w-80 min-h-0 lg:h-full flex flex-col gap-6">
+    <aside class="w-full lg:w-80 shrink-0 lg:min-h-0 lg:h-full flex flex-col gap-6">
       <header>
         <h2 class="text-2xl font-bold text-[var(--text-primary)]">Context</h2>
         <p class="text-sm mt-1">Documents being analyzed</p>
       </header>
 
       <!-- The applied document selection is rendered here by chat.js. -->
-      <ul id="context-file-list" class="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3">
+      <ul id="context-file-list" class="max-h-48 lg:max-h-none lg:flex-1 min-h-0 overflow-y-auto flex flex-col gap-3">
         <!-- Initial context entries supplied by ai_chat_view. -->
         {% for file in context_files %}
         <li>
@@ -43,7 +43,7 @@
     </aside>
 
     <!-- Conversation history and message composer. -->
-    <section class="flex-1 min-h-0 flex flex-col glass-card rounded-2xl overflow-hidden shadow-2xl relative">
+    <section class="flex-1 min-h-[75vh] lg:min-h-0 flex flex-col glass-card rounded-2xl overflow-hidden shadow-2xl relative">
       <header class="p-6 border-b border-[var(--border-glass)] bg-[var(--bg-glass)] backdrop-blur-md z-20">
         <h2 class="text-xl font-bold text-[var(--text-primary)]">Terminal Chat</h2>
         <p class="text-sm opacity-80">Ask questions directly to your knowledge base.</p>
@@ -74,7 +74,7 @@
             {% else %}
                 <article class="flex gap-4 self-end flex-row-reverse w-full">
                   <div class="text-2xl mt-1">👤</div>
-                  <div class="glass-card rounded-2xl rounded-tr-none p-4 max-w-[85%] bg-[var(--active-accent)] bg-opacity-10 border border-[var(--active-accent)]">
+                  <div class="glass-card rounded-2xl rounded-tr-none p-4 max-w-[85%] bg-[var(--active-accent)]/10 border border-[var(--active-accent)]">
                     <p class="text-[var(--text-primary)] leading-relaxed">{{ msg.content|linebreaksbr }}</p>
                   </div>
                 </article>
@@ -86,7 +86,7 @@
       <div class="p-4 border-t border-[var(--border-glass)] bg-[var(--bg-sidebar)]">
         <form class="chat-input-form relative flex items-end gap-2" onsubmit="event.preventDefault();">
           <textarea id="chat-input" rows="1" placeholder="Type your query..." class="input-field w-full rounded-xl py-4 pl-4 pr-16 resize-none min-h-[60px]"></textarea>
-          <button type="submit" class="absolute right-2 bottom-2 bg-[var(--active-accent)] text-black w-10 h-10 rounded-lg flex items-center justify-center font-bold hover:scale-105 transition-transform shadow-[var(--glow-active)]">➤</button>
+          <button type="submit" aria-label="Send message" class="absolute right-2 bottom-2 bg-[var(--active-accent)] text-black w-11 h-11 rounded-lg flex items-center justify-center font-bold hover:scale-105 transition-transform shadow-[var(--glow-active)]">➤</button>
         </form>
         <p class="text-xs text-center mt-3 opacity-50">
           Press <kbd class="bg-[var(--bg-glass)] px-1 rounded">Enter</kbd> to send, <kbd class="bg-[var(--bg-glass)] px-1 rounded">Shift+Enter</kbd> for new line.
@@ -94,7 +94,7 @@
       </div>
     </section>
   <!-- Document picker modal: its list is independently scrollable and its footer stays visible. -->
-  <div id="context-modal" class="absolute inset-0 z-50 hidden flex min-h-0 items-start justify-center overflow-y-auto overflow-x-hidden p-4 lg:p-8 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="context-modal-title">
+  <div id="context-modal" class="fixed lg:absolute inset-0 z-50 hidden flex min-h-0 items-start justify-center overflow-y-auto overflow-x-hidden p-4 lg:p-8 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="context-modal-title">
     <div id="context-modal-backdrop" class="absolute inset-0"></div>
     <section class="relative z-10 w-full max-w-4xl h-full max-h-full min-h-0 flex flex-col glass-card border border-[var(--border-glass)] shadow-2xl rounded-2xl overflow-hidden">
       <header class="flex-none flex items-start justify-between p-6 border-b border-[var(--border-glass)]">
@@ -103,7 +103,7 @@
           <h2 id="context-modal-title" class="mt-1 text-xl font-bold text-[var(--text-primary)]">Add Documents</h2>
           <p class="mt-1 text-sm opacity-70">Choose the notes available to the next AI request.</p>
         </div>
-        <button id="close-context-modal" type="button" aria-label="Close document selector" class="text-2xl leading-none text-[var(--active-accent)] transition-transform hover:scale-110">&times;</button>
+        <button id="close-context-modal" type="button" aria-label="Close document selector" class="w-11 h-11 shrink-0 flex items-center justify-center text-2xl leading-none text-[var(--active-accent)] transition-transform hover:scale-110">&times;</button>
       </header>
 
       <!-- All synchronized Markdown files are exposed as selectable context sources. -->
@@ -112,7 +112,7 @@
           <!-- Each checkbox value is passed to the RAG API as a filename filter. -->
           {% for file in all_files %}
           <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-[var(--border-glass)] bg-black/10 p-3 transition-colors hover:border-[var(--active-accent)] hover:bg-[var(--active-accent)]/10">
-            <input class="file-checkbox" type="checkbox" value="{{ file }}" {% if file in context_files %}checked{% endif %}>
+            <input class="file-checkbox shrink-0" type="checkbox" value="{{ file }}" {% if file in context_files %}checked{% endif %}>
             <span class="text-lg">📄</span>
             <span class="min-w-0 truncate text-sm text-[var(--text-primary)]">{{ file }}.md</span>
           </label>

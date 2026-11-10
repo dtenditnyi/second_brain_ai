@@ -108,3 +108,36 @@ input[type="radio"], input[type="checkbox"] {
     height: 1.2rem;
     cursor: pointer;
 }
+/* ==========================================================================
+   3. RESPONSIVE HELPERS (audit phase 4)
+   ========================================================================== */
+/* Rendered Markdown: wide tables / code scroll inside their own box instead of
+   stretching the reading pane; media never exceeds the column. */
+.markdown-body table,
+.markdown-body pre {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+.markdown-body img,
+.markdown-body video {
+    max-width: 100%;
+    height: auto;
+}
+.markdown-body {
+    overflow-wrap: anywhere;
+}
+
+/* Touch-friendly controls below the desktop breakpoint (>=44px tap targets);
+   desktop sizes are unchanged. */
+@media (max-width: 1023.98px) {
+    .input-field,
+    .btn-primary {
+        min-height: 44px;
+    }
+    input[type="radio"],
+    input[type="checkbox"] {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+}

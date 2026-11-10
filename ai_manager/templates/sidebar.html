@@ -7,7 +7,7 @@
             <h1 class="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Second Brain</h1>
             <p class="text-sm text-[var(--active-accent)] font-medium mt-1">Knowledge Manager</p>
         </div>
-        <button id="mobile-menu-close" class="lg:hidden text-2xl text-gray-400 hover:text-white">&times;</button>
+        <button id="mobile-menu-close" aria-label="Close menu" class="lg:hidden w-11 h-11 flex items-center justify-center text-2xl text-gray-400 hover:text-white">&times;</button>
     </header>
 
     <!-- Navigation links are rendered according to authentication and privileges. -->
@@ -16,51 +16,51 @@
             {% if request.user.is_authenticated %}
                 <!-- Authenticated workspace destinations. -->
                 <li>
-                    <a href="{% url 'home' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'home' %}bg-[var(--active-accent)] bg-opacity-10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
+                    <a href="{% url 'home' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'home' %}bg-[var(--active-accent)]/10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
                         <span class="mr-2 opacity-80">🏠</span> Home
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'notes' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'notes' %}bg-[var(--active-accent)] bg-opacity-10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
+                    <a href="{% url 'notes' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'notes' %}bg-[var(--active-accent)]/10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
                         <span class="mr-2 opacity-80">📝</span> Notes
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'chat' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'ai-chat' %}bg-[var(--active-accent)] bg-opacity-10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
+                    <a href="{% url 'chat' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'ai-chat' %}bg-[var(--active-accent)]/10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
                         <span class="mr-2 opacity-80">✨</span> AI Chat
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'tasks' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'tasks' %}bg-[var(--active-accent)] bg-opacity-10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
+                    <a href="{% url 'tasks' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'tasks' %}bg-[var(--active-accent)]/10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
                         <span class="mr-2 opacity-80">✅</span> Tasks
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'settings' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'settings' %}bg-[var(--active-accent)] bg-opacity-10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
+                    <a href="{% url 'settings' %}" class="block px-4 py-3 rounded-lg transition-all duration-200 {% if active == 'settings' %}bg-[var(--active-accent)]/10 text-[var(--text-primary)] border border-[var(--active-accent)] shadow-[var(--glow-active)]{% else %}text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-glass)]{% endif %}">
                         <span class="mr-2 opacity-80">⚙️</span> Settings
                     </a>
                 </li>
                 {% if request.user.is_superuser %}
                     <li>
-                        <a href="{% url 'admin_dashboard' %}" class="block px-4 py-3 rounded-lg text-purple-400 hover:bg-purple-500 hover:bg-opacity-10 hover:text-white transition-all font-bold text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(176,38,255,0.1)] border border-purple-500 border-opacity-20 flex items-center">
+                        <a href="{% url 'admin_dashboard' %}" class="block px-4 py-3 rounded-lg text-purple-400 hover:bg-purple-500/10 hover:text-white transition-all font-bold text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(176,38,255,0.1)] border border-purple-500/20 flex items-center">
                             <span class="mr-2 text-base">🌌</span> Core Matrix
                         </a>
                     </li>
                 {% endif %}
                 <li class="mt-4 border-t border-[var(--border-glass)] pt-4">
-                    <a href="{% url 'logout' %}" class="block px-4 py-3 rounded-lg text-red-400 hover:bg-red-500 hover:bg-opacity-10 hover:text-red-300 transition-all">
+                    <a href="{% url 'logout' %}" class="block px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all">
                         <span class="mr-2">🚪</span> Log Out
                     </a>
                 </li>
             {% else %}
                 <!-- Public entry points shown to anonymous visitors. -->
                 <li>
-                    <a href="{% url 'login' %}" class="block px-4 py-3 rounded-lg text-[var(--text-primary)] bg-[var(--bg-glass)] hover:bg-opacity-80">
+                    <a href="{% url 'login' %}" class="block px-4 py-3 rounded-lg text-[var(--text-primary)] bg-[var(--bg-glass)] hover:bg-[var(--bg-glass)]/80">
                         <span class="mr-2">🔑</span> Sign In
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'register' %}" class="block px-4 py-3 rounded-lg text-[var(--active-accent)] border border-[var(--active-accent)] border-opacity-30 mt-2 hover:bg-[var(--active-accent)] hover:bg-opacity-10 hover:text-[var(--text-primary)]">
+                    <a href="{% url 'register' %}" class="block px-4 py-3 rounded-lg text-[var(--active-accent)] border border-[var(--active-accent)]/30 mt-2 hover:bg-[var(--active-accent)]/10 hover:text-[var(--text-primary)]">
                         <span class="mr-2">📝</span> Create Account
                     </a>
                 </li>
@@ -79,8 +79,8 @@
             <div id="sidebar-sync-bar" class="bg-[var(--active-accent)] h-2 rounded-full shadow-[var(--glow-active)] transition-all duration-1000 ease-out" style="width: 0%"></div>
         </div>
         <div class="flex justify-between items-center">
-            <p class="text-[10px] uppercase font-mono tracking-widest opacity-50">Tasks Completed</p>
-            <p id="sidebar-sync-ratio" class="text-[10px] font-mono opacity-50">-/-</p>
+            <p class="text-xs uppercase font-mono tracking-widest opacity-50">Tasks Completed</p>
+            <p id="sidebar-sync-ratio" class="text-xs font-mono opacity-50">-/-</p>
         </div>
         <p class="text-xs mt-4 text-center opacity-70">Operator: <span class="font-bold text-white">{{ request.user.username }}</span></p>
     </div>

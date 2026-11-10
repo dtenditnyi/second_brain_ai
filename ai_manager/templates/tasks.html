@@ -11,7 +11,7 @@
             <h1 class="text-3xl font-bold text-[var(--text-primary)] mb-2">Tasks</h1>
             <p class="text-[var(--text-secondary)]">Manage your tasks and stay productive.</p>
         </div>
-        <button onclick="document.getElementById('task-modal').classList.remove('hidden')" class="btn-primary px-6 py-2 rounded-lg font-bold flex items-center gap-2">
+        <button onclick="document.getElementById('task-modal').classList.remove('hidden')" class="btn-primary px-6 py-3 lg:py-2 rounded-lg font-bold flex items-center justify-center gap-2">
             <span>+</span> Add New Task
         </button>
     </header>
@@ -30,13 +30,13 @@
                         <label class="text-lg font-medium text-[var(--text-primary)] cursor-pointer">{{ task.title }}</label>
                         <div class="flex flex-wrap gap-3 mt-3 items-center">
                             {% if task.priority == 'urgent' %}
-                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-red-500 bg-opacity-20 text-red-400 border border-red-500 border-opacity-30">Urgent</span>
+                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30 ">Urgent</span>
                             {% elif task.priority == 'high' %}
-                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-orange-500 bg-opacity-20 text-orange-400 border border-orange-500 border-opacity-30">High</span>
+                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 ">High</span>
                             {% elif task.priority == 'medium' %}
-                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-blue-500 bg-opacity-20 text-blue-400 border border-blue-500 border-opacity-30">Medium</span>
+                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 ">Medium</span>
                             {% else %}
-                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-gray-500 bg-opacity-20 text-gray-400 border border-gray-500 border-opacity-30">Low</span>
+                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30 ">Low</span>
                             {% endif %}
                             
                             {% if task.due_date %}
@@ -76,8 +76,8 @@
     </div>
 
     <!-- Modal form collects all optional task fields before the task API request. -->
-    <div id="task-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="glass-card rounded-2xl p-8 w-full max-w-md shadow-2xl border-[var(--active-accent)]">
+    <div id="task-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="glass-card rounded-2xl p-6 sm:p-8 w-full max-w-md max-h-full overflow-y-auto shadow-2xl border-[var(--active-accent)]">
             <h2 class="text-2xl font-bold text-white mb-6">Create New Task</h2>
             <form id="add-task-form" class="flex flex-col gap-4">
                 <div>
@@ -102,8 +102,8 @@
                     <input type="text" id="task-tags" placeholder="work, coding" class="input-field rounded-lg px-4 py-2 w-full mt-1">
                 </div>
                 <div class="flex gap-4 mt-4">
-                    <button type="button" onclick="document.getElementById('task-modal').classList.add('hidden')" class="flex-1 py-2 rounded-lg font-bold border border-gray-500 text-gray-400 hover:bg-gray-800">Cancel</button>
-                    <button type="submit" class="flex-1 btn-primary py-2 rounded-lg font-bold">Save Task</button>
+                    <button type="button" onclick="document.getElementById('task-modal').classList.add('hidden')" class="flex-1 py-3 rounded-lg font-bold border border-gray-500 text-gray-400 hover:bg-gray-800">Cancel</button>
+                    <button type="submit" class="flex-1 btn-primary py-3 rounded-lg font-bold">Save Task</button>
                 </div>
             </form>
         </div>

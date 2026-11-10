@@ -22,9 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Highlight the selected source note before the network request completes.
         fileItems.forEach(item => {
             if (item.getAttribute('data-filename') === noteName) {
-                item.classList.add('text-[var(--text-primary)]', 'bg-[var(--active-accent)]', 'bg-opacity-10', 'shadow-[var(--glow-active)]', 'border', 'border-[var(--active-accent)]', 'border-opacity-20');
+                item.classList.add('text-[var(--text-primary)]', 'bg-[var(--active-accent)]/10', 'shadow-[var(--glow-active)]', 'border', 'border-[var(--active-accent)]/20');
             } else {
-                item.classList.remove('text-[var(--text-primary)]', 'bg-[var(--active-accent)]', 'bg-opacity-10', 'shadow-[var(--glow-active)]', 'border', 'border-[var(--active-accent)]', 'border-opacity-20');
+                item.classList.remove('text-[var(--text-primary)]', 'bg-[var(--active-accent)]/10', 'shadow-[var(--glow-active)]', 'border', 'border-[var(--active-accent)]/20');
             }
         });
 
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (totalBacklinks > 0) {
                     data.backlinks.forEach(mention => {
                         const cardHtml = `
-                            <article class="backlink-card p-4 rounded-xl border border-[var(--border-glass)] hover:border-[var(--active-accent)] hover:shadow-[var(--glow-active)] transition-all cursor-pointer bg-[var(--bg-base)] bg-opacity-40 hover:-translate-y-0.5" data-target="${window.escapeHtml(mention.title)}">
+                            <article class="backlink-card p-4 rounded-xl border border-[var(--border-glass)] hover:border-[var(--active-accent)] hover:shadow-[var(--glow-active)] transition-all cursor-pointer bg-[var(--bg-base)]/40 hover:-translate-y-0.5" data-target="${window.escapeHtml(mention.title)}">
                                 <h4 class="font-medium text-[var(--text-primary)] text-sm mb-1 truncate">${window.escapeHtml(mention.title)}</h4>
                                 <p class="text-[11px] opacity-60 leading-relaxed font-serif italic">${window.escapeHtml(mention.snippet)}</p>
                             </article>
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Keep server-side lookup/rendering errors inside the reading pane.
                 contentArea.innerHTML = `
-                    <div class="p-5 bg-red-500 bg-opacity-10 border border-red-500 border-opacity-20 rounded-xl text-red-400">
+                    <div class="p-5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400">
                         <h4 class="font-bold mb-1">Core Link Interrupted</h4>
                         <p class="text-xs opacity-80">${window.escapeHtml(data.msg)}</p>
                     </div>
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('API Transmission failure:', error);
             contentArea.innerHTML = `
-                <div class="p-5 bg-red-500 bg-opacity-10 border border-red-500 border-opacity-20 rounded-xl text-red-400">
+                <div class="p-5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400">
                     <h4 class="font-bold mb-1">Network Synchronization Loss</h4>
                     <p class="text-xs opacity-80">Failed to establish handshake pipeline with server cluster.</p>
                 </div>
