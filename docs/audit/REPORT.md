@@ -8,7 +8,7 @@ Details: `docs/SITE_MAP.md`, `docs/TEST_PLAN.md`, `docs/BUGS.md`, `docs/audit/RE
 - Pages: login, register, home dashboard, AI chat (RAG over your Obsidian vault: LlamaIndex + Chroma + HuggingFace embeddings; Ollama locally or Gemini in the cloud), notes viewer (wiki links + backlinks), tasks, settings, superuser "Core Matrix" admin, Django admin. 8 JSON APIs. Models: UserSettings (encrypted GitHub token), Task, ChatMessage.
 
 ## 2. Tests (none existed before)
-- **278 tests** (pytest + pytest-django + pytest-playwright in installed MS Edge): unit/integration for models, auth, every page, every API, admin, RAG engine (real LlamaIndex + Chroma in a temp folder, fake LLMs), git sync; 28 E2E user flows/error/XSS cases; 74 responsive tests (176 unit/integration + 28 E2E + 74 responsive) (11 page states × 5 widths).
+- **279 tests collected: 278 pass + 1 skipped screenshot tool** (pytest + pytest-django + pytest-playwright in installed MS Edge): unit/integration for models, auth, every page, every API, admin, RAG engine (real LlamaIndex + Chroma in a temp folder, fake LLMs), git sync; 28 E2E user flows/error/XSS cases; 74 responsive tests (176 unit/integration + 28 E2E + 74 responsive) (11 page states × 5 widths).
 - All external services are mocked (HuggingFace, Ollama, Gemini, GitHub). No real data is touched: tests use in-memory SQLite and temp folders.
 - Quality checked by an independent agent using mutation testing: round 1 caught 6/9 mutations (missing tests were added), round 2 caught 5/5.
 - Final run: see `docs/audit/test-run-final.txt`.
