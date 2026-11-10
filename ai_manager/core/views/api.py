@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
-from ..models import Task, ChatMessage
+from ..models import Task, ChatMessage, get_user_settings
 from .. import rag_engine
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ def api_save_settings(request):
         request.user.email = str(email).strip()
         request.user.save()
 
-        settings = request.user.settings
+        settings = get_user_settings(request.user)
         
         settings.display_name = data.get('display_name', settings.display_name)
         settings.theme = data.get('theme', settings.theme)

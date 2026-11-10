@@ -126,3 +126,19 @@ def create_user_settings(sender, instance, created, **kwargs):
             github_repo_url="",
             github_token=""
         )
+
+def get_user_settings(user):
+    """Return the user's settings row, recreating it with defaults if it is missing (B-07).
+
+    The row can be missing for accounts created before the post_save signal
+    existed, or after an administrator deleted it in Core Matrix; previously
+    every page then crashed with RelatedObjectDoesNotExist.
+    """
+    try:
+        return user.settings
+    except UserSettings.DoesNotExist:
+        settings_row, _ = UserSettings.objects.get_or_create(
+            user=user, defaults={'display_name': user.username}
+        )
+        user.settings = settings_row
+        return settings_row

@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import make_aware
 
-from ..models import Task, ChatMessage
+from ..models import Task, ChatMessage, get_user_settings
 from .. import rag_engine
 from .utils import get_user_config
 
@@ -87,7 +87,7 @@ def notes_view(request):
     from ..git_sync import sync_obsidian_repo
     
     paths = get_user_paths(request.user)
-    settings = request.user.settings
+    settings = get_user_settings(request.user)
     git_folder = os.path.join(paths["notes_dir"], '.git')
     
     if settings.github_repo_url and not os.path.exists(git_folder):

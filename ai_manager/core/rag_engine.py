@@ -89,7 +89,8 @@ def ask_second_brain(user_query, user, selected_files=None):
     global _user_chat_engines, _user_indexes
     selected_files = selected_files or []
     
-    settings = user.settings
+    from .models import get_user_settings
+    settings = get_user_settings(user)
     paths = get_user_paths(user)
     ai_strategy = settings.ai_strategy or 'auto'
     try:
