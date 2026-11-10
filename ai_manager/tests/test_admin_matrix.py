@@ -180,3 +180,33 @@ def test_back_to_dashboard_links_home(admin_client_):
     html = admin_client_.get("/system-matrix/").content.decode()
     link = html.split("Back to Dashboard")[0].rsplit("<a ", 1)[1]
     assert 'href="/"' in link
+
+
+@pytest.mark.parametrize("variant", ["0{id}", "{id}.0", " {id}", "{id} ", "float"])
+def test_superuser_cannot_delete_own_account_with_odd_id_formats(admin_client_, superuser, post_json, variant):
+    """Final-audit finding: "01", 2.0 or " 3" slipped past a string comparison."""
+    rid = float(superuser.id) if variant == "float" else variant.format(id=superuser.id)
+    r = post_json(admin_client_, "/api/admin/delete-row/", {"table": "users", "id": rid})
+    assert r.status_code == 400
+    assert User.objects.filter(id=superuser.id).exists()
+
+
+@pytest.mark.parametrize("rid", ["abc", None, [1], "1.5"])
+def test_admin_delete_invalid_id_is_400(admin_client_, user, post_json, rid):
+    r = post_json(admin_client_, "/api/admin/delete-row/", {"table": "tasks", "id": rid})
+    assert r.status_code == 400
+
+
+def test_admin_delete_other_user_with_string_id_still_works(admin_client_, user, post_json):
+    assert post_json(admin_client_, "/api/admin/delete-row/", {"table": "users", "id": str(user.id)}).status_code == 200
+    assert not User.objects.filter(id=user.id).exists()
+
+
+@pytest.mark.parametrize("fields", [{"display_name": ""}, {"display_name": "   "}, {"display_name": "x" * 101},
+                                    {"theme": "t" * 21}, {"accent_color": ["x"]}])
+def test_admin_settings_row_is_validated(admin_client_, user, post_json, fields):
+    s = user.settings
+    r = post_json(admin_client_, "/api/admin/update-row/", {"table": "settings", "id": s.id, "fields": fields})
+    assert r.status_code == 400
+    s.refresh_from_db()
+    assert s.display_name == "alice" and s.theme == "cyberpunk"

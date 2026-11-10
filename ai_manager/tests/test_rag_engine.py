@@ -442,7 +442,8 @@ def test_all_models_exhausted_cloud_only_gives_clear_message(configured_user, ch
 def test_all_models_exhausted_auto_hybrid_uses_ollama(configured_user, chain, fake_sync, monkeypatch, note_writer, llms):
     gem = ScriptedGemini(fail={"gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-31b-it"})
     monkeypatch.setattr(rag_engine, "GoogleGenAI", gem)
-    set_local_online(monkeypatch, False)
+    probes = iter([False, True])  # offline at the start, back online at the re-check
+    monkeypatch.setattr(rag_engine, "is_local_ai_ready", lambda timeout=3.0: next(probes))
     note_writer(configured_user, "A", "OLLAMA-SAW-THIS")
     out = rag_engine.ask_second_brain("q", _cloud_user(configured_user, "auto"))
     assert "OLLAMA-SAW-THIS" in out and len(llms[0].calls) == 1
@@ -536,3 +537,36 @@ def test_each_user_keeps_own_llm(configured_user, other_user, monkeypatch, fake_
     a.settings.refresh_from_db()
     b.settings.refresh_from_db()
     assert a.settings.last_model_used.startswith("Gemini") and b.settings.last_model_used.startswith("Ollama")
+
+
+
+# --- final-audit findings -------------------------------------------------------
+
+def test_estimate_tokens_is_pessimistic_for_cyrillic():
+    english, russian = "a" * 400, "я" * 400
+    assert rag_engine.estimate_tokens(english) == 101
+    assert rag_engine.estimate_tokens(russian) == 201  # ~2 chars per token
+
+
+def test_russian_prompt_for_gemma_stays_under_budget():
+    chunks = ["заметка " * 600] * 5
+    history = [("user", "вопрос " * 400), ("ai", "ответ " * 400)] * 3
+    msgs, _, _ = rag_engine.build_messages("Система", chunks, history, "Что в заметках?", budget=8000, inline_system=True)
+    real_chars = sum(len(m.content) for m in msgs)
+    assert real_chars / 2.0 <= 8000  # even at 2 chars/token the prompt fits
+
+
+@pytest.mark.parametrize("error", [Exception("500 INTERNAL"), Exception("504 DEADLINE_EXCEEDED"),
+                                   requests.exceptions.ConnectionError("down"), TimeoutError("slow")])
+def test_server_and_network_errors_move_to_next_model(error):
+    assert rag_engine.classify_llm_error(error) == "unavailable"
+
+
+def test_auto_hybrid_does_not_call_unreachable_ollama(configured_user, chain, fake_sync, monkeypatch, note_writer, llms):
+    gem = ScriptedGemini(fail={"gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-31b-it"})
+    monkeypatch.setattr(rag_engine, "GoogleGenAI", gem)
+    set_local_online(monkeypatch, False)  # also the re-check before the fallback
+    note_writer(configured_user, "A", "a")
+    out = rag_engine.ask_second_brain("q", _cloud_user(configured_user, "auto"))
+    assert out == rag_engine.MSG_QUOTA
+    assert llms[0].calls == []

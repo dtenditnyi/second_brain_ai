@@ -10,6 +10,7 @@ also removes tokens that older versions stored in the URL — also on errors.
 import base64
 import os
 import shutil
+from urllib.parse import urlsplit
 import logging
 from git import Repo
 
@@ -17,13 +18,18 @@ logger = logging.getLogger(__name__)
 
 
 def auth_env(token, repo_url):
-    """Environment for one git call: token as an HTTP header, never as config/URL."""
+    """Environment for one git call: token as an HTTP header, never as config/URL.
+
+    The header is scoped to the repository's host (http.<https://host/>.extraHeader),
+    so git never sends it to another server (e.g. a submodule elsewhere).
+    """
     env = {"GIT_TERMINAL_PROMPT": "0"}
     if token and repo_url.startswith("https://"):
         basic = base64.b64encode(f"x-access-token:{token}".encode("utf-8")).decode("ascii")
+        host = urlsplit(repo_url).netloc.rsplit("@", 1)[-1]
         env.update({
             "GIT_CONFIG_COUNT": "1",
-            "GIT_CONFIG_KEY_0": "http.extraHeader",
+            "GIT_CONFIG_KEY_0": f"http.https://{host}/.extraHeader",
             "GIT_CONFIG_VALUE_0": f"Authorization: Basic {basic}",
         })
     return env

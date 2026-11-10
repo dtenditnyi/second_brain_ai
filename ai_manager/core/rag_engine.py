@@ -119,8 +119,15 @@ def get_user_paths(user):
 # --- conversation memory & token budget --------------------------------------
 
 def estimate_tokens(text):
-    """Cheap token estimate (~4 characters per token); good enough for budgeting."""
-    return len(text or "") // 4 + 1
+    """Cheap, deliberately pessimistic token estimate.
+
+    ~4 characters per token for ASCII (English, code), ~2 for other scripts:
+    Cyrillic needs about 2-3 characters per token, so a 4-chars rule would let
+    a Russian prompt be twice the budget (Gemma: 16K tokens/minute).
+    """
+    text = text or ""
+    non_ascii = sum(1 for ch in text if ord(ch) > 127)
+    return (len(text) - non_ascii) // 4 + non_ascii // 2 + 1
 
 
 def is_answer_text(text):
@@ -241,7 +248,11 @@ def classify_llm_error(error):
     text = f"{type(error).__name__} {error}".upper()
     if code == 429 or '429' in text or 'RESOURCE_EXHAUSTED' in text or 'QUOTA' in text or 'RATE LIMIT' in text:
         return 'quota'
-    if code in (404, 503) or 'NOT_FOUND' in text or 'UNAVAILABLE' in text or ' 503' in text or ' 404' in text:
+    if code in (404, 500, 503, 504) or any(marker in text for marker in (
+            'NOT_FOUND', 'UNAVAILABLE', 'INTERNAL', 'DEADLINE_EXCEEDED', ' 500', ' 503', ' 504', ' 404')):
+        return 'unavailable'
+    if isinstance(error, (requests.exceptions.ConnectionError, requests.exceptions.Timeout, ConnectionError, TimeoutError)) \
+            or type(error).__name__ in ('ConnectError', 'ReadTimeout', 'ConnectTimeout', 'RemoteProtocolError'):
         return 'unavailable'
     return None
 
@@ -407,11 +418,16 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
 
         # Every cloud model failed with quota/unavailable errors.
         if ai_strategy == 'auto':
-            logger.warning("All Gemini models exhausted; falling back to local Ollama.")
-            try:
-                return attempt('ollama', django_settings.OLLAMA_MODEL)
-            except Exception as error:
-                logger.warning("Ollama fallback failed: %s.", type(error).__name__)
+            # The probe said "offline" a moment ago; ask again quickly instead of
+            # letting a 600 s Ollama timeout hang an unreachable OLLAMA_HOST.
+            if is_local_ai_ready(timeout=2.0):
+                logger.warning("All Gemini models exhausted; falling back to local Ollama.")
+                try:
+                    return attempt('ollama', django_settings.OLLAMA_MODEL)
+                except Exception as error:
+                    logger.warning("Ollama fallback failed: %s.", type(error).__name__)
+            else:
+                logger.warning("All Gemini models exhausted and local Ollama is offline.")
         return MSG_QUOTA if 'quota' in failures else MSG_MODELS_UNAVAILABLE
 
     except Exception as e:

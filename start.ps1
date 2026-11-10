@@ -150,8 +150,14 @@ function Stop-Run([int]$Code) {
 }
 
 # ---------------------------------------------------------------- run info
-$script:Branch = (git -C $Root rev-parse --abbrev-ref HEAD 2>$null)
-$script:Commit = (git -C $Root rev-parse --short HEAD 2>$null)
+$script:Branch = ''
+$script:Commit = ''
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    try {
+        $script:Branch = (git -C $Root rev-parse --abbrev-ref HEAD 2>$null)
+        $script:Commit = (git -C $Root rev-parse --short HEAD 2>$null)
+    } catch {}
+}
 if (-not $script:Branch) { $script:Branch = 'unknown' }
 if (-not $script:Commit) { $script:Commit = 'unknown' }
 Write-Header 'Second Brain AI - start'
@@ -276,7 +282,7 @@ if ($SkipTests) {
     $testStatus = Invoke-Step $label {
         $marker = if ($FullTests) { '' } else { ' -m "not e2e and not responsive"' }
         $code = Invoke-Native "`"$Python`" -m pytest -q -p no:warnings$marker" $App 'TestOutput'
-        $summary = ($script:TestOutput | Where-Object { "$_" -match '\d+ (passed|failed)' } | Select-Object -Last 1)
+        $summary = ($script:TestOutput | Where-Object { "$_" -match '\d+ (passed|failed|errors?)\b' } | Select-Object -Last 1)
         if ($summary -match '(\d+) passed') { $script:TestsPassed = $Matches[1] } else { $script:TestsPassed = '0' }
         if ($summary -match '(\d+) failed') { $script:TestsFailed = $Matches[1] } else { $script:TestsFailed = '0' }
         if ($summary -match '(\d+) error') { $script:TestsFailed = [string]([int]$script:TestsFailed + [int]$Matches[1]) }

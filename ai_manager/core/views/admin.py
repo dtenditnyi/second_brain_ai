@@ -46,7 +46,15 @@ def api_admin_update_row(request):
             elif target_table == 'settings':
                 obj = UserSettings.objects.get(id=row_id)
                 for f in ['display_name', 'theme', 'accent_color', 'ai_strategy', 'github_repo_url']:
-                    setattr(obj, f, fields.get(f, getattr(obj, f)))
+                    value = fields.get(f, getattr(obj, f))
+                    max_length = UserSettings._meta.get_field(f).max_length
+                    if not isinstance(value, str) or len(value) > max_length:
+                        return JsonResponse({'status': 'error', 'msg': f'Invalid value for {f}.'}, status=400)
+                    if f == 'display_name':
+                        value = value.strip()
+                        if not value:
+                            return JsonResponse({'status': 'error', 'msg': 'Display name cannot be empty.'}, status=400)
+                    setattr(obj, f, value)
                 raw_temperature = fields.get('temperature')
                 if raw_temperature not in (None, ''):
                     try:
@@ -84,10 +92,18 @@ def api_admin_delete_row(request):
                 return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
             models_map = {'users': User, 'settings': UserSettings, 'tasks': Task, 'messages': ChatMessage}
             if data.get('table') in models_map:
+                # The id is normalised once and used for both the guard and the
+                # delete ("01", 2.0, " 3" used to slip past a string comparison).
+                raw_id = data.get('id')
+                valid = (isinstance(raw_id, int) and not isinstance(raw_id, bool)) or (
+                    isinstance(raw_id, str) and raw_id.strip().isdigit())
+                if not valid:
+                    return JsonResponse({'status': 'error', 'msg': 'Invalid row id.'}, status=400)
+                row_id = int(str(raw_id).strip())
                 # Q11: deleting your own account from Core Matrix is refused.
-                if data.get('table') == 'users' and str(data.get('id')) == str(request.user.pk):
+                if data.get('table') == 'users' and row_id == request.user.pk:
                     return JsonResponse({'status': 'error', 'msg': 'You cannot delete your own account.'}, status=400)
-                models_map[data.get('table')].objects.filter(id=data.get('id')).delete()
+                models_map[data.get('table')].objects.filter(id=row_id).delete()
                 return JsonResponse({'status': 'ok'})
             return JsonResponse({'status': 'error', 'msg': 'Invalid model context.'}, status=400)
         except Exception as e:

@@ -19,7 +19,7 @@ def test_no_url_returns_false():
 
 def test_auth_env_puts_token_only_in_http_header():
     env = git_sync.auth_env(TOKEN, URL)
-    assert env["GIT_CONFIG_KEY_0"] == "http.extraHeader"
+    assert env["GIT_CONFIG_KEY_0"] == "http.https://github.com/.extraHeader"  # scoped to the repo host
     basic = env["GIT_CONFIG_VALUE_0"].split("Basic ")[1]
     assert base64.b64decode(basic).decode() == f"x-access-token:{TOKEN}"
     assert env["GIT_TERMINAL_PROMPT"] == "0"
@@ -175,6 +175,8 @@ def test_real_git_accepts_env_header_config(tmp_path):
     repo = git.Repo.init(tmp_path / "r")
     env = git_sync.auth_env(TOKEN, URL)
     with repo.git.custom_environment(**env):
-        value = repo.git.config("--get", "http.extraHeader")
+        value = repo.git.config("--get-urlmatch", "http.extraHeader", URL)
+        other = repo.git.config("--get-urlmatch", "http.extraHeader", "https://evil.example/x.git", with_exceptions=False)
     assert value.startswith("Authorization: Basic ")
+    assert other == ""  # not sent to other hosts
     assert TOKEN not in _config_text(tmp_path / "r")
