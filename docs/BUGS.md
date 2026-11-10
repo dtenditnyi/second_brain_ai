@@ -32,7 +32,7 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 | B-14 | latent | Encrypted token can exceed `max_length=255` | `test_api::test_long_token_is_stored_and_read_back`, `..._overlong_token_rejected_without_partial_save` | FIXED (Round 2) 4a751f6 (migration 0007) |
 | B-06 | note | "Generate Status Report" stores prompt/answer in chat history | `test_api::test_status_report_is_not_stored_and_uses_smart_model`, e2e `test_e2e_round2::test_smart_toggle_and_report_mode` | FIXED (Round 2) 4a751f6 |
 | B-26 | functional (Round 2) | Core Matrix: saving a user row without `is_superuser` silently removed superuser rights | `test_admin_matrix::test_missing_superuser_key_does_not_demote` | FIXED 5a76f6a |
-| B-27 | functional (Round 2) | Superuser could demote / delete themself in Core Matrix (Q11) | `test_admin_matrix::test_superuser_cannot_*`, `..._own_row_controls_are_disabled_in_ui`, e2e `test_core_matrix_own_row_is_protected` | FIXED 5a76f6a + e3dcb36 |
+| B-27 | functional (Round 2) | Superuser could demote / delete themself in Core Matrix (Q11) | `test_admin_matrix::test_superuser_cannot_*`, `..._own_row_controls_are_disabled_in_ui`, e2e `test_core_matrix_own_row_is_protected` | FIXED 5a76f6a + e3dcb36 + 1afdf64 |
 | B-28 | functional (Round 2) | Display Name renamed the login (Q6) | `test_api::test_save_settings_display_name_does_not_rename_login`, e2e `test_display_name_change_keeps_login` | FIXED 4a751f6 |
 | B-29 | functional (Round 2) | Chat searched only the first 10 notes by default (Q12) | `test_pages::test_chat_page_preselects_nothing_and_searches_whole_vault`, e2e `test_chat_sends_selected_context_files_to_api` | FIXED 4a751f6 + e3dcb36 |
 | B-30 | functional (Round 2) | First chat after a failed sync answered "Empty Response" (Q14) | `test_rag_engine::test_ask_sync_failure_explains_instead_of_empty_response`, `..._empty_vault_after_successful_sync` | FIXED 4a751f6 |
@@ -108,9 +108,9 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 - B-24: type checks for title/tags/priority/status; username limited to min(150, display_name 100); `api_save_settings` wrapped in `transaction.atomic`.
 - B-25: `window.escapeHtml` for the note name, backlink title/snippet and error message in `notes.js` (Markdown body still rendered as HTML — own notes).
 
-### B-14 — OPEN: encrypted token length
+### B-14 — encrypted token length (Round 1 analysis; superseded — fixed in Round 2, see below)
 - Analysis: Fernet output ≈ `4/3·(57 + 16·ceil((n+1)/16))` chars. Classic `ghp_` (40) and fine-grained `github_pat_` (93) tokens → ~120–204 chars: fit. Tokens of ≥ 128 chars encrypt to ≥ 268 chars and would exceed 255 (≤ 127 → ≤ 248, fits) → `value too long` on PostgreSQL (SQLite does not enforce; not reproducible in the test DB).
-- Options: (1) migration `max_length=500`; (2) `TextField`; (3) leave. Not applied: schema migration on the production DB is a decision for the owner and current GitHub tokens fit. Status: OPEN.
+- Options: (1) migration `max_length=500`; (2) `TextField`; (3) leave. Round 1: not applied (owner decision). **Round 2: fixed by migration 0007, see "B-14 — fixed in Round 2".**
 
 ### B-13 / B-21 / B-06 — were QUESTIONS, fixed in Round 2
 - B-13 (Q7): the settings page renders an empty password field; placeholder/hint "Token saved — leave empty to keep it"; empty value keeps the token, the explicit "Delete the saved token" checkbox (`clear_github_token`) removes it.
@@ -122,7 +122,7 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 
 ### B-26 … B-31 — Round 2
 - B-26: `api_admin_update_row` set `is_superuser = fields.get('is_superuser') in ['true', True]`, so a request without the key demoted the user. Now only changed when the key is present.
-- B-27 (Q11): backend refuses removing your own superuser flag (400) and deleting your own user row (400, int or string id); the template disables both controls for the own row; `admin.js` skips disabled controls.
+- B-27 (Q11): backend refuses removing your own superuser flag (400) and deleting your own user row (400). The final auditor found that ids like `"01"`, `2.0` or `" 3"` slipped past the first string comparison → now the id is normalised once (int or digit string, else 400) and used for both the guard and the delete (1afdf64, `test_superuser_cannot_delete_own_account_with_odd_id_formats[*]`); Core Matrix settings rows are validated too; the template disables both controls for the own row; `admin.js` skips disabled controls.
 - B-28 (Q6): `username` in the save-settings payload is ignored; `display_name` validated (string, non-empty after strip, ≤ 100). Data migration 0008 fills empty display names. Sidebar/greeting/system prompt use the display name.
 - B-29 (Q12): no pre-checked notes; empty selection = whole vault; UI shows "Searching the whole vault" / "Selected: N notes" + Reset.
 - B-30 (Q14): see DECISIONS D16.

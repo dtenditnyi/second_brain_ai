@@ -88,3 +88,9 @@ Each entry: context · options · chosen · why · how to roll back.
 - Native commands run through `cmd /c "… 2>&1" | Out-Host` so their output lands in the PowerShell 5.1 transcript without NativeCommandError noise. `.env` is only checked for existence; AI variables are checked in the real environment (a hint says they may still be in `.env`).
 - The summary and the `history.csv` row are written before `runserver` starts (the server runs until Ctrl+C); the log is closed after the server stops. `-Docker` asks for "YES" unless `-Force` (production compose). `-NoServer` added for checks-only runs.
 - ASCII-only script: PowerShell 5.1 reads BOM-less UTF-8 as ANSI.
+
+## D19. Final-audit adjustments (1afdf64)
+- Token estimate: ~4 chars/token for ASCII, ~2 for other scripts (Cyrillic ≈ 2–3), so Russian prompts stay inside the Gemma budget.
+- Fallback also on 500/INTERNAL/504/DEADLINE_EXCEEDED and network errors; Auto-Hybrid re-probes Ollama (2 s) before using it as the last fallback (no 600 s hang on an unreachable OLLAMA_HOST).
+- The PAT header is scoped to the repository host (`http.https://<host>/.extraHeader`), so git never sends it to another server (e.g. submodules elsewhere).
+- Left: `ai_manager/logs/rag_engine.log` is a tracked log file from before the audit that contains the old LAN IP; not changed (pre-existing, owner's call whether to untrack it).

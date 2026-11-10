@@ -113,7 +113,21 @@ Branch `feature/audit` (continues Round 1; nothing merged into `main`). Date: 20
 **Responsive & visual (section 4):** design system, mobile menu backdrop / Esc / scroll lock, Core Matrix as cards on phones, 44 px tap zones, safe areas, `dvh` chat with a pinned composer, 16 px inputs, AA contrast in both themes, focus ring, skip link, reduced motion, no theme flash. Checked at 11 sizes; see `docs/audit/RESPONSIVE.md` (R16–R26) and `responsive/round2/before|after/`.
 
 ## R2.2 Tests
-TESTS_PLACEHOLDER
+- **592 tests collected: 591 passed, 1 skipped** (the screenshot tool, which runs only with `SCREENSHOT_DIR`). The final run used the launcher itself: `start.bat -FullTests -NoServer` → `docs/audit/test-run-round2.txt`.
+  - 265 unit/integration tests (Round 1: 176).
+  - 38 end-to-end tests (28).
+  - 289 responsive tests (74), now at 11 sizes, plus tap zones on phones and touch tablets, 16 px inputs, chat composer, modals, Core Matrix cards, focus, reduced motion, and the contrast of rendered text in 2 themes × 3 accents.
+- Tests that pinned the old behaviour (characterization of Q2, Q6, Q7, Q12 and Q14) were replaced by tests for the new behaviour.
+- New tests cover:
+  - Q13 with real local git repositories.
+  - DEBUG off + WhiteNoise + 404/500.
+  - The fallback chain: a 429 on the first model → the second model answers; the whole chain exhausted → Ollama or a clear message.
+  - Gemma's inline system prompt and ≤ 8K budget, also for Russian text.
+  - Per-user memory isolation; the report is not stored.
+- Mutation checks:
+  - Restoring the old light-theme colour fails the contrast test.
+  - The final auditor removed the `finally` cleanup in git_sync and made the report get saved; the tests caught both.
+- External services stay mocked (Gemini, Ollama, GitHub, HuggingFace).
 
 ## R2.3 How to run
 From the repository root: **`start.bat`** (double-click works). The steps are: environment checks → local DB copy (only if missing) → `check` + `migrate` (settings_local) → `npm run build` → fast tests → server on http://127.0.0.1:8000 + browser.
@@ -128,13 +142,20 @@ From the repository root: **`start.bat`** (double-click works). The steps are: e
 | `-Docker` | `docker compose up --build` instead of the local mode (**production** config, asks for YES) |
 | `-NoBrowser` / `-NoServer` | do not open the browser / only checks + tests |
 
-Logs: `logs/runs/run_YYYY-MM-DD_HH-mm-ss.log` (last 30 kept) and `logs/runs/history.csv`. `.env` is never read. Verified by real runs: `-SkipTests` + server, fast tests, failing tests (server not started), and tests + server. **Not run:** `-Install`, `-Watch`, `-Tunnel`, `-Docker`.
+Logs: `logs/runs/run_YYYY-MM-DD_HH-mm-ss.log` (last 30 kept) and `logs/runs/history.csv`. `.env` is never read. Verified by real runs: `-SkipTests` + server, fast tests, a failing test (the server is not started), a collection error, fast tests + server, `-FullTests -NoServer` (the final run), and log retention (37 → 30). **Not run:** `-Install`, `-Watch`, `-Tunnel`, `-Docker`.
 
 ## R2.4 New environment variables
 `DEBUG` (now honoured), `OLLAMA_HOST` (default localhost), `OLLAMA_MODEL`, `GEMINI_MODEL_DEFAULT`, `GEMINI_MODEL_SMART`, `GEMINI_FALLBACK_MODELS`, `CHAT_HISTORY_MESSAGES`, `PROMPT_TOKEN_BUDGET_GEMMA` / `_GEMINI` / `_LOCAL`. All are listed in `.env.example`. New migrations: 0007 (token length), 0008 (fill display_name), 0009 (last model). They must be applied on Postgres with `migrate` when deploying.
 
 ## R2.5 What is left / for you
-VERIFIER_PLACEHOLDER
+- Independent checks by two separate agents:
+  - **Responsive verifier.** It found a light-theme contrast failure, touch targets at 1024 px, a desktop regression in the Notes explorer and a cramped landscape chat. All fixed in 49ee379 (R27–R30).
+  - **Final auditor.** Overall PASS. It found that a superuser could still delete their own account using ids like "01" / 2.0, that the token budget underestimated Cyrillic, that the Ollama fallback had no re-probe, that 500/network errors did not move to the next model, and two launcher edge cases. All fixed in 1afdf64 (D19).
+- Not changed (your call):
+  - Core Matrix keeps its own always-dark "console" style. It is not part of the light theme, but it uses the shared touch and contrast rules.
+  - From 768 px the wide admin tables still scroll sideways (scroll shadows show this).
+  - `ai_manager/logs/rag_engine.log` is still tracked and contains the old LAN IP. This predates the audit.
+  - In phone landscape (667×375) the chat feed is small but usable (≥ 100 px, tested).
 - Check the Gemini model IDs with `scripts/list_gemini_models.py`, especially `gemini-3.1-flash-lite`.
 - Production: compose already sets `DEBUG=False`, which is now honoured. `collectstatic` runs in the compose command. Apply migrations 0007–0009 on Postgres.
 - Token budgets are estimates (≈ 4 characters per token); a real tokenizer is not used.
@@ -147,4 +168,4 @@ VERIFIER_PLACEHOLDER
 - `main` is unchanged. The leftover worktree `.claude/worktrees/agent-a75bfa6f39eb5319d` and the branch `worktree-agent-a75bfa6f39eb5319d` were removed (clean, at the `main` commit).
 
 ## R2.7 Commits (Round 2)
-COMMITS_PLACEHOLDER
+758145b Q13 PAT not in .git/config · 2cb8e41 Q5 remove app_config.json · 5a76f6a Q11 + B-26 Core Matrix self-protection · c52427f Q1/Q8/Q9 DEBUG, 404/500, AI config · 4a751f6 Q2/Q3/Q6/Q7/Q12/Q14 + B-14 + Gemini chain · e3dcb36 design system + Round 2 UI · 80bf980 launcher, .env.example, README/CLAUDE.md · 8bcb359 retry sync after empty index · 49ee379 verifier findings · d0c3234 docs + screenshots · 1afdf64 final-audit findings · (last commit: final docs)
