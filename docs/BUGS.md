@@ -2,6 +2,7 @@
 
 Order: whole-site breakers → functional → security → minor. Each fix: red test → code → green → full suite (no new failures, D5) → commit. End of phase 3 (after review rounds 1–2): **204 passed, 0 failed** (+1 skipped screenshot helper).
 Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION** (behaviour kept, see `docs/audit/QUESTIONS.md`).
+**Round 2 (owner answers):** all former QUESTION items and B-14 are fixed; B-26…B-31 added. Responsive/visual items of Round 2 are R16+ in `docs/audit/RESPONSIVE.md`.
 
 | ID | Severity | Title | Test(s) | Status |
 |---|---|---|---|---|
@@ -26,10 +27,16 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 | B-23 | functional (regression of B-12 fix, found by reviewer) | `POST /login/?next=foo` → 500 (`redirect()` tried `reverse('foo')`); `?next=logout` logged the user out right away | `test_auth::test_login_with_odd_next_values_is_safe[*]` | FIXED 2fc5f6c |
 | B-24 | functional (review) | Non-string `priority`/`status` (list/dict) → `TypeError` 500; dict/list title stored as repr; 101–150-char name → DataError on Postgres (`display_name` max 100); user+settings saves not atomic; (round 2) over-long / non-string display_name, theme, accent_color → DataError on Postgres | `test_api::test_add_task_invalid_payload_returns_400[payload6-8]`, `test_update_task_rejects_non_string_status`, `test_save_settings_name_longer_than_display_name_field_rejected`, `test_save_settings_rejects_overlong_or_non_string_preferences[*]` | FIXED 2fc5f6c + faf211a |
 | B-25 | security, low (review) | `notes.js` inserts note name, backlink title/snippet and error msg via `innerHTML` unescaped | e2e `test_e2e_errors::test_note_names_and_backlinks_are_rendered_as_text` | FIXED 2fc5f6c |
-| B-13 | security (design) | GitHub PAT rendered into settings page HTML | characterization `test_pages::test_settings_page_echoes_github_token_into_html` | QUESTION Q7 |
-| B-21 | security (design) | PAT stored in plain text in vault `.git/config` | — | QUESTION Q13 |
-| B-14 | latent | Encrypted token can exceed `max_length=255` | — | OPEN |
-| B-06 | note | "Generate Status Report" stores prompt/answer in chat history | — | QUESTION Q3 |
+| B-13 | security (design) | GitHub PAT rendered into settings page HTML | `test_pages::test_settings_page_never_contains_github_token`, `test_api::test_empty_token_field_keeps_saved_token`, `..._clear_token_checkbox_removes_token`, e2e `test_e2e_round2::test_token_field_is_empty_and_keeps_or_clears_token` | FIXED (Round 2) 4a751f6 + e3dcb36 |
+| B-21 | security (design) | PAT stored in plain text in vault `.git/config` | `test_git_sync::test_pull_leaves_no_token_in_git_config[*]`, `..._clone_leaves_no_token_in_git_config[*]`, `..._failure_after_tokenised_url_is_cleaned_in_finally`, `..._real_git_accepts_env_header_config` | FIXED (Round 2) 758145b |
+| B-14 | latent | Encrypted token can exceed `max_length=255` | `test_api::test_long_token_is_stored_and_read_back`, `..._overlong_token_rejected_without_partial_save` | FIXED (Round 2) 4a751f6 (migration 0007) |
+| B-06 | note | "Generate Status Report" stores prompt/answer in chat history | `test_api::test_status_report_is_not_stored_and_uses_smart_model`, e2e `test_e2e_round2::test_smart_toggle_and_report_mode` | FIXED (Round 2) 4a751f6 |
+| B-26 | functional (Round 2) | Core Matrix: saving a user row without `is_superuser` silently removed superuser rights | `test_admin_matrix::test_missing_superuser_key_does_not_demote` | FIXED 5a76f6a |
+| B-27 | functional (Round 2) | Superuser could demote / delete themself in Core Matrix (Q11) | `test_admin_matrix::test_superuser_cannot_*`, `..._own_row_controls_are_disabled_in_ui`, e2e `test_core_matrix_own_row_is_protected` | FIXED 5a76f6a + e3dcb36 |
+| B-28 | functional (Round 2) | Display Name renamed the login (Q6) | `test_api::test_save_settings_display_name_does_not_rename_login`, e2e `test_display_name_change_keeps_login` | FIXED 4a751f6 |
+| B-29 | functional (Round 2) | Chat searched only the first 10 notes by default (Q12) | `test_pages::test_chat_page_preselects_nothing_and_searches_whole_vault`, e2e `test_chat_sends_selected_context_files_to_api` | FIXED 4a751f6 + e3dcb36 |
+| B-30 | functional (Round 2) | First chat after a failed sync answered "Empty Response" (Q14) | `test_rag_engine::test_ask_sync_failure_explains_instead_of_empty_response`, `..._empty_vault_after_successful_sync` | FIXED 4a751f6 |
+| B-31 | config (Round 2) | DEBUG hard-coded True, LAN-IP default for OLLAMA_HOST, settings label "Gemini 2.5 Flash" vs code `gemini-3.6-flash` (Q1, Q8, Q9) | `test_debug_static::*`, `test_rag_engine::test_ollama_url_from_settings_with_localhost_default`, `..._no_hardcoded_lan_ip_in_code`, `test_pages::test_settings_dropdown_shows_real_model_names_and_limits` | FIXED c52427f + e3dcb36 |
 
 ## Details
 
@@ -105,5 +112,18 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 - Analysis: Fernet output ≈ `4/3·(57 + 16·ceil((n+1)/16))` chars. Classic `ghp_` (40) and fine-grained `github_pat_` (93) tokens → ~120–204 chars: fit. Tokens of ≥ 128 chars encrypt to ≥ 268 chars and would exceed 255 (≤ 127 → ≤ 248, fits) → `value too long` on PostgreSQL (SQLite does not enforce; not reproducible in the test DB).
 - Options: (1) migration `max_length=500`; (2) `TextField`; (3) leave. Not applied: schema migration on the production DB is a decision for the owner and current GitHub tokens fit. Status: OPEN.
 
-### B-13 / B-21 / B-06 — QUESTIONS
-Kept as-is, documented in QUESTIONS (Q7, Q13, Q3) and pinned by characterization tests where testable.
+### B-13 / B-21 / B-06 — were QUESTIONS, fixed in Round 2
+- B-13 (Q7): the settings page renders an empty password field; placeholder/hint "Token saved — leave empty to keep it"; empty value keeps the token, the explicit "Delete the saved token" checkbox (`clear_github_token`) removes it.
+- B-21 (Q13): token passed only to the git process via `GIT_CONFIG_*` env (`http.extraHeader`, Basic auth), origin always reset to the plain URL (before pull and in `finally`), see DECISIONS D12.
+- B-06 (Q3): Home sends `mode: "report"`; the API does not store the prompt/answer and sends no memory; SMART model.
+
+### B-14 — fixed in Round 2
+- Migration `0007_alter_usersettings_github_token_length` (`max_length=500`); the API rejects tokens > 255 plain characters before any write (they would still fit, but no real PAT is that long).
+
+### B-26 … B-31 — Round 2
+- B-26: `api_admin_update_row` set `is_superuser = fields.get('is_superuser') in ['true', True]`, so a request without the key demoted the user. Now only changed when the key is present.
+- B-27 (Q11): backend refuses removing your own superuser flag (400) and deleting your own user row (400, int or string id); the template disables both controls for the own row; `admin.js` skips disabled controls.
+- B-28 (Q6): `username` in the save-settings payload is ignored; `display_name` validated (string, non-empty after strip, ≤ 100). Data migration 0008 fills empty display names. Sidebar/greeting/system prompt use the display name.
+- B-29 (Q12): no pre-checked notes; empty selection = whole vault; UI shows "Searching the whole vault" / "Selected: N notes" + Reset.
+- B-30 (Q14): see DECISIONS D16.
+- B-31: DEBUG from env (default off), OLLAMA_HOST env-only (default localhost), model labels from `core/ai_models.py`.

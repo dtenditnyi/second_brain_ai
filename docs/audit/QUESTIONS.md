@@ -16,3 +16,6 @@ Format: question · default chosen · where in code
 12. **Chat searches only the first 10 notes by default** (they are pre-checked; whole-vault search only when nothing is checked). With >10 notes, answers silently ignore the rest. Intended? · Default: unchanged, pinned by test · `core/views/pages.py:74`, `templates/ai-chat.html:115`, `static/js/chat.js:19`
 13. **PAT stored in plain text in the vault's `.git/config`** (token embedded in remote URL). Use a credential helper / strip the token after pull? · Default: unchanged (needs design choice; tests document it) · `core/git_sync.py:28-40`
 14. **First chat with a failed Git sync answers "Empty Response"** (LlamaIndex default for an empty index) instead of an explanatory message. Show "vault sync failed" instead? · Default: unchanged, pinned by test · `core/rag_engine.py` (index build branch)
+
+## Round 2 — answered by the owner (docs/audit/PROMPT_ROUND2.md)
+All 14 questions were answered and implemented in Round 2 — see `docs/audit/REPORT.md` → "Round 2", `docs/BUGS.md` (B-13, B-21, B-14, B-06, B-26…B-31) and `docs/audit/DECISIONS.md` (D9–D18).

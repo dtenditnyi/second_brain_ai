@@ -1,0 +1,81 @@
+Round 2 final run — start.bat -FullTests -NoServer (log: logs/runs/run_2026-11-10_22-41-49.log)
+Branch/commit, parameters and steps as printed by start.ps1:
+
+  Second Brain AI - start
+======================================================================
+  Time:       2026-11-10 22:41:49
+  Git:        feature/audit @ 49ee379
+  Parameters: -FullTests True -NoServer True  Port=8000
+  Log file:   C:\Users\dania\Desktop\Projects\second_brain_ai\logs\runs\run_2026-11-10_22-41-49.log
+
+======================================================================
+  1. Environment checks
+======================================================================
+  [OK  ] Python: Python 3.14.7 (C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Scripts\python.exe)
+  [OK  ] node found (C:\Program Files\nodejs\node.exe)
+  [OK  ] npx found (C:\Program Files\nodejs\npx.ps1)
+  [OK  ] git found (C:\Program Files\Git\mingw64\bin\git.exe)
+  [OK  ] .env present (contents not read)
+  [WARN] GEMINI_API_KEY is not set in the environment (may still be defined in .env)
+  [OK  ] OLLAMA_HOST is set in the environment
+  -> WARN in 0s
+
+======================================================================
+  2. Local database copy (SQLite)
+======================================================================
+  [OK  ] Copy exists, not touched: C:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\audit_copy_db.sqlite3
+  -> OK in 0s
+
+======================================================================
+  4. Django check + migrate (settings_local)
+======================================================================
+System check identified no issues (0 silenced).
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, core, sessions
+Running migrations:
+  No migrations to apply.
+  [OK  ] System check passed, migrations applied to the local copy
+  -> OK in 13.9s
+
+======================================================================
+  5. Build CSS (Tailwind)
+======================================================================
+
+> ai_manager@1.0.0 build
+> npx @tailwindcss/cli -i ./static/css/input.css -o ./static/css/styles.css --minify
+
+[3m[1m[34mΓëê[39m[22m[23m tailwindcss [34mv4.3.0[39m
+
+Done in [34m56ms[39m
+  [OK  ] static/css/styles.css rebuilt
+  -> OK in 1s
+
+======================================================================
+  6. Tests (full: unit + e2e + responsive)
+======================================================================
+........................................................................ [ 12%]
+........................................................................ [ 25%]
+........................................................................ [ 37%]
+........................................................................ [ 50%]
+........................................................................ [ 63%]
+........................................................................ [ 75%]
+........................................................................ [ 88%]
+...................................................s..............       [100%]
+569 passed, 1 skipped in 289.93s (0:04:49)
+  [OK  ] 569 passed, 1 skipped in 289.93s (0:04:49)
+  -> OK in 292s
+
+======================================================================
+  Summary
+======================================================================
+  [WARN] 1. Environment checks  (0s)
+  [OK  ] 2. Local database copy (SQLite)  (0s)
+  [SKIP] 3. Install dependencies  (0s) - use -Install
+  [OK  ] 4. Django check + migrate (settings_local)  (13.9s)
+  [OK  ] 5. Build CSS (Tailwind)  (1s)
+  [OK  ] 6. Tests (full: unit + e2e + responsive)  (292s)
+  Tests: 569 passed, 0 failed
+  RESULT: OK   (total 307.1s before server start)
+  Log: C:\Users\dania\Desktop\Projects\second_brain_ai\logs\runs\run_2026-11-10_22-41-49.log
+Windows PowerShell transcript end
+End time: 20261110224656

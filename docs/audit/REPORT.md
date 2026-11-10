@@ -72,3 +72,79 @@ Dev dependencies are in `requirements-dev.txt` (pytest-django, pytest-playwright
 
 ## 8. Commits (feature/audit, oldest → newest)
 b31dff8 phase-0 setup · 3a7faec site map + questions · 6992209 site map corrections · 1f27a36 unit/integration tests · 0899869 e2e + test plan + baseline · d2d433d B-15 · bebe9db B-07 · 8a0d2b9 B-10/B-08 · e61c88f B-02 · 04f1c45 tests from mutation review · f26e5e8 B-04 · bd761e3 B-03 · e528431 B-11/B-17/B-22/B-16 · 8ec5812 B-12/B-05/B-20 · cd993b9 B-01/B-19 · ae5d8c8 B-09/B-18 · 788b4e4 BUGS docs · 2fc5f6c B-23/B-24/B-25 · f0bf76c docs · faf211a B-24 round 2 + screenshot tooling · fc09c1f responsive R1–R11 · 8183112 docs · 9fb9437 responsive R12–R15 · f7ca375 final run + report · (last commit: audit remarks)
+
+---
+
+# Round 2
+
+Branch `feature/audit` (continues Round 1; nothing merged into `main`). Date: 2026-11-10. Task: `docs/audit/PROMPT_ROUND2.md`.
+
+## R2.1 What was done
+
+**Owner answers (section 1) — all 14 implemented, plus B-14:**
+
+| Q | Result |
+|---|---|
+| 1 DEBUG | `DEBUG = os.getenv('DEBUG', 'False') == 'True'`; `settings_local` forces `True`. With DEBUG off, WhiteNoise serves files after `collectstatic` and the new 404/500 pages render (tests). |
+| 2 Chat memory | The last `CHAT_HISTORY_MESSAGES` (6) messages of the **same** user are sent, cut to a token budget; system notices are not fed back. |
+| 3 Status report | Sent with `mode: "report"`: SMART model, no memory, **not** stored in the chat history. |
+| 4 Back to Dashboard | Goes to `/`. |
+| 5 app_config.json | Deleted (grep: only referenced by audit docs). |
+| 6 Display name | Separate from the login (the field already existed; data migration fills empty values). Shown in the sidebar, greeting and the AI system prompt. The login changes only via Core Matrix. |
+| 7 PAT in HTML | The field is always empty; "Token saved — leave empty to keep it"; empty = keep; a "Delete the saved token" checkbox. Test: the token is not in the page source. |
+| 8 Model label | Labels come from `core/ai_models.py` with the same IDs the code uses (section 3). |
+| 9 OLLAMA_HOST | Env only, default `http://localhost:11434`; no LAN IP anywhere (test). In `.env.example`/README. |
+| 10 In Progress | To Do / In Progress / Done select on the Tasks page and on Home board cards. Unchecking "done" → To Do (D10). |
+| 11 Superuser guard | Cannot remove your own superuser flag or delete your own account (backend 400 + disabled controls). Found and fixed on the way: a save without the `is_superuser` key demoted the user (B-26). |
+| 12 Whole vault | Nothing is pre-checked; "Searching the whole vault" / "Selected: N notes" + Reset. |
+| 13 PAT not in .git/config | The token reaches git only through per-process env (`http.extraHeader`); the origin URL is always the plain URL (also cleans old tokenised URLs, also on errors). Tested with real local repos. |
+| 14 Clear sync error | "Could not sync your vault with GitHub — check the repository URL and token in Settings." / "Your vault index is empty…" instead of "Empty Response". |
+| B-14 | Migration 0007: `github_token` `max_length=500`; a 200-character token round-trips (test). |
+
+**Launcher (section 2):** `start.bat` → `start.ps1` (details in R2.3).
+
+**Gemini models (section 3):**
+- `GEMINI_MODEL_DEFAULT` = `gemini-3.5-flash-lite`, `GEMINI_MODEL_SMART` = `gemini-3.8-flash`, `GEMINI_FALLBACK_MODELS` = `gemini-3.1-flash-lite,gemma-4-31b-it`. IDs come from Google's docs, except `gemini-3.1-flash-lite`, which is **not confirmed** (D13). Run `scripts/list_gemini_models.py` (not executed by me) and adjust `.env`.
+- On 429 / `RESOURCE_EXHAUSTED` / unavailable model, the next model in the chain is tried. After the whole chain fails: Auto-Hybrid → Ollama; Cloud Only → "The daily limit of the cloud models is exhausted — try again later or switch to local mode". Other errors are not masked.
+- The model that answered is logged and stored per user. It is shown on Home, in Chat (under each answer) and in Settings, with no extra calls to Google.
+- Gemma: prompt ≈ 8K tokens (top-k 3, history trimmed), and the system prompt is placed inside the first user message.
+- The settings dropdown shows real names and daily limits, e.g. "Fast: Gemini 3.5 Flash Lite (~500/day)".
+
+**Responsive & visual (section 4):** design system, mobile menu backdrop / Esc / scroll lock, Core Matrix as cards on phones, 44 px tap zones, safe areas, `dvh` chat with a pinned composer, 16 px inputs, AA contrast in both themes, focus ring, skip link, reduced motion, no theme flash. Checked at 11 sizes; see `docs/audit/RESPONSIVE.md` (R16–R26) and `responsive/round2/before|after/`.
+
+## R2.2 Tests
+TESTS_PLACEHOLDER
+
+## R2.3 How to run
+From the repository root: **`start.bat`** (double-click works). The steps are: environment checks → local DB copy (only if missing) → `check` + `migrate` (settings_local) → `npm run build` → fast tests → server on http://127.0.0.1:8000 + browser.
+
+| Switch | Effect |
+|---|---|
+| `-Install` | `pip install -r requirements.txt -r requirements-dev.txt` + `npm install` |
+| `-FullTests` / `-SkipTests` | all tests incl. Playwright / no tests |
+| `-Force` | start the server even if tests failed (and skip the `-Docker` confirmation) |
+| `-Port N` | server port (default 8000) |
+| `-Watch` / `-Tunnel` | Tailwind watch / cloudflared tunnel in separate windows |
+| `-Docker` | `docker compose up --build` instead of the local mode (**production** config, asks for YES) |
+| `-NoBrowser` / `-NoServer` | do not open the browser / only checks + tests |
+
+Logs: `logs/runs/run_YYYY-MM-DD_HH-mm-ss.log` (last 30 kept) and `logs/runs/history.csv`. `.env` is never read. Verified by real runs: `-SkipTests` + server, fast tests, failing tests (server not started), and tests + server. **Not run:** `-Install`, `-Watch`, `-Tunnel`, `-Docker`.
+
+## R2.4 New environment variables
+`DEBUG` (now honoured), `OLLAMA_HOST` (default localhost), `OLLAMA_MODEL`, `GEMINI_MODEL_DEFAULT`, `GEMINI_MODEL_SMART`, `GEMINI_FALLBACK_MODELS`, `CHAT_HISTORY_MESSAGES`, `PROMPT_TOKEN_BUDGET_GEMMA` / `_GEMINI` / `_LOCAL`. All are listed in `.env.example`. New migrations: 0007 (token length), 0008 (fill display_name), 0009 (last model). They must be applied on Postgres with `migrate` when deploying.
+
+## R2.5 What is left / for you
+VERIFIER_PLACEHOLDER
+- Check the Gemini model IDs with `scripts/list_gemini_models.py`, especially `gemini-3.1-flash-lite`.
+- Production: compose already sets `DEBUG=False`, which is now honoured. `collectstatic` runs in the compose command. Apply migrations 0007–0009 on Postgres.
+- Token budgets are estimates (≈ 4 characters per token); a real tokenizer is not used.
+- The chat still shows AI answers as plain text (Markdown is not rendered; this is unchanged).
+
+## R2.6 Safety
+- The production DB was not touched (Docker not started). `ai_manager/db.sqlite3` is unchanged (sha256 5ea89448…). Migrations 0007–0009 were applied only to `audit_copy_db.sqlite3` and the in-memory test DBs.
+- `.env` was not read or committed. The launcher only checks whether it exists. `scripts/list_gemini_models.py` was not executed.
+- Gemini, Ollama, GitHub and HuggingFace are mocked in all tests. Two web searches on ai.google.dev were made to look up model IDs; no project data was sent.
+- `main` is unchanged. The leftover worktree `.claude/worktrees/agent-a75bfa6f39eb5319d` and the branch `worktree-agent-a75bfa6f39eb5319d` were removed (clean, at the `main` commit).
+
+## R2.7 Commits (Round 2)
+COMMITS_PLACEHOLDER
