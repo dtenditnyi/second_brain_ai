@@ -31,7 +31,7 @@ Bug ids (B-xx) refer to `docs/BUGS.md`.
 | `/notes/` | notes | `pages.notes_view` | `notes.html` + `notes.js` | login | On first visit clones the vault if URL configured and no `.git`; 3 panes: file explorer, rendered note, backlinks. `?file=<name>` auto-opens a note | OK (sync is blocking on first visit) |
 | `/tasks/` | tasks | `pages.tasks_view` | `tasks.html` + `tasks.js` | login | Active tasks (not done, ordered by due date) with priority/date/tags; Completed (last 10); "+ Add New Task" modal | OK |
 | `/settings/` | settings | `pages.settings_view` | `settings.html` + `settings.js` | login | Profile (Display Name bound to **username**!, email), theme, accent, GitHub URL + PAT (PAT rendered into page HTML), AI strategy, temperature; JS appends "Save System Configuration" button | PARTIAL: B-03 empty/duplicate username, B-13 PAT echoed |
-| `/system-matrix/` | admin_dashboard | `admin.admin_dashboard_view` | `admin_dashboard.html` (standalone) + `admin.js` | superuser (else → `/login/`) | "Core Matrix": tabs Users / Settings / Tasks / Chat log (last 100); inline edit (Commit) and delete (Drop) per row; "Back to Dashboard" link | PARTIAL: "Back to Dashboard" goes to `/notes/` (UNCLEAR, Q4); no mobile layout |
+| `/system-matrix/` | admin_dashboard | `admin.admin_dashboard_view` | `admin_dashboard.html` (standalone) + `admin.js` | superuser. Anonymous → `/login/?next=…`; logged-in non-superuser → `/login/?next=…` → silently `/` (login_view sends authenticated users home) | "Core Matrix": tabs Users / Settings / Tasks / Chat log (last 100); inline edit (Commit) and delete (Drop) per row; "Back to Dashboard" link; "Disengage" = logout | PARTIAL: "Back to Dashboard" goes to `/notes/` (UNCLEAR, Q4); stray literal text "Anti-corruption layer code entry point" in each Settings-tab row (B-16); empty temperature → 500 (B-17); a superuser can un-superuser/delete themself; no mobile layout |
 
 ### JSON API
 
@@ -57,15 +57,17 @@ All mutating endpoints are `@csrf_exempt` (B-01). Bodies are JSON (`application/
 | sidebar (all base pages) | nav links, Log Out, Core Matrix (superuser only), "Neural Sync" bar (fetch `/api/sidebar-stats/`), mobile ☰ / × | navigation | — |
 | home | search input (Enter) | stores query in `sessionStorage.pending_ai_query`, goes to `/chat/`, chat auto-submits it | ChatMessage ×2 |
 | home | Recent Tasks checkbox | `/api/update-task/` done/todo, reload | Task.status |
-| home | Generate Status Report | `/api/send-message/` with fixed prompt; reply shown in card | ChatMessage ×2 (prompt is stored in chat history — UNCLEAR whether intended, Q3) |
-| home | Kanban cards | display only (cursor-pointer but no handler) | — |
+| home | Generate Status Report | `/api/send-message/` with fixed prompt; reply shown in card via `innerHTML` (same raw-HTML issue as B-09) | ChatMessage ×2 (prompt is stored in chat history — UNCLEAR whether intended, Q3) |
+| home | Kanban cards | display only (cursor-pointer but no handler). No user-facing control sets `in_progress` — only Core Matrix can | — |
+| home | "View All" | link to /tasks/ | — |
+| login / register | "Create an Identity" / "Access Terminal" | cross links | — |
 | chat | + Add Documents / modal checkboxes / Select All / Apply / × / backdrop / Esc | choose notes used as retrieval filter (client state only) | — |
 | chat | composer (Enter / ➤) | `/api/send-message/` | ChatMessage ×2 |
 | chat | context list items | link to `/notes/?file=<name>` | — |
 | notes | file item / wiki link / backlink card | `/api/get-note/` and render | — |
 | tasks | + Add New Task → modal form (title required, priority, date, tags) → Save / Cancel | `/api/add-task/` then reload | Task |
 | tasks | checkbox | `/api/update-task/` (checked → done, unchecked → todo; an in_progress task becomes done/todo) | Task.status |
-| settings | theme select / accent radios | live preview only | — |
+| settings | theme select / accent radios / temperature slider | live preview only (slider updates its label) | — |
 | settings | Save System Configuration (created by JS) | `/api/save-settings/` | User.username, User.email, UserSettings.* |
 | system-matrix | tab buttons | switch visible table | — |
 | system-matrix | Commit | `/api/admin/update-row/` | any row of 4 tables |
@@ -80,7 +82,7 @@ All mutating endpoints are `@csrf_exempt` (B-01). Bodies are JSON (`application/
 | `Task` | user FK, title (255), status (todo/in_progress/done), priority (low/medium/high/urgent), due_date, tags (comma-separated string, 100), created_at | choices are not enforced by API (B-04) |
 | `ChatMessage` | user FK, role (`user`/`ai`, free text 10), content, created_at; ordering created_at | |
 
-Migrations 0001–0006, no data migrations.
+Migrations 0001–0006. **0006 contains a data migration** (`RunPython migrate_ai_model_to_strategy`): old field `UserSettings.ai_model` (0001) mapped gemini→cloud_only, llama3/phi3→local_only, else auto, then `ai_model` removed. Related names: `user.settings`, `user.tasks`, `user.chat_messages`.
 
 ## 5. Background work / integrations
 
@@ -111,4 +113,6 @@ Migrations 0001–0006, no data migrations.
 - `get_user_config()` anonymous branch is unreachable (all callers are `login_required`).
 - `app_config.json` (repo root of ai_manager) is not read by any code — UNCLEAR (Q5).
 - `cloudflared.exe` (55 MB) is committed to git.
-- `tasks.js` checkbox handler: only a network exception reverts the checkbox; HTTP errors are silently ignored.
+- JS error handling (B-18): `tasks.js` checkbox and add-task ignore HTTP errors (modal stays open, no message); `settings.js` on a 400 `{status:'error'}` leaves the button on "Saving Cores..." forever; `chat.js` on a 400 calls `updateMessage(id, undefined)` → TypeError → generic "Connection ... failed".
+- `base.html`: `#app-wrapper` never closed; `</body>` before the `<script>` tags (B-19).
+- No favicon → 404 `/favicon.ico` on every page (cosmetic).

@@ -11,3 +11,5 @@ Format: question · default chosen · where in code
 7. **GitHub PAT is rendered back into the settings page HTML** (`value="{{ config.github_token }}"`), so it is visible in page source. Keep (convenient) or show blank/placeholder and keep existing token when field left empty? · Default: unchanged (changing needs a UX decision) · `templates/settings.html:83`
 8. **Cloud model label mismatch**: settings dropdown says "Gemini 2.5 Flash", code uses `gemini-3.6-flash`. Which is right? · Default: unchanged · `templates/settings.html:93`, `core/rag_engine.py:149`
 9. **Default `OLLAMA_HOST` is a LAN IP `192.168.1.128`.** Should it be configurable only via env? · Default: unchanged · `core/rag_engine.py:29`
+10. **No UI to move a task to "In Progress"** (only Core Matrix can), although Home shows an "In Progress" column, and unchecking a done task sets it to `todo`. Add a control? · Default: unchanged (feature, not a bug) · `static/js/tasks.js`, `templates/home.html`
+11. **Superuser can remove own superuser flag / delete own account in Core Matrix** (locks themself out). Add a guard? · Default: unchanged · `core/views/admin.py`
