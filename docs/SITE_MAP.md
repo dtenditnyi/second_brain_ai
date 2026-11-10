@@ -89,6 +89,10 @@ Migrations 0001–0006. **0006 contains a data migration** (`RunPython migrate_a
 - No Celery/cron. All work is synchronous inside requests:
   - `notes_view` → `git_sync.sync_obsidian_repo` (first visit only).
   - `ask_second_brain` → on first message per process: git clone/pull, build or refresh Chroma index (embedding all notes), choose LLM; then `engine.chat()`. Cached per user in process memory (`_user_chat_engines`, `_user_indexes`), so with 3 gunicorn workers each worker keeps its own cache.
+- No GitHub URL configured → `ask_second_brain` returns "System Notification: Please configure your GitHub link." without calling an LLM; any exception → `"System Error: <exception text>"`. In both cases the API answers `{status:'ok'}` and stores the text as an AI ChatMessage (exception details reach the user and the history).
+- **Default retrieval scope = first 10 notes only**: the chat page pre-checks the first 10 notes (alphabetically) and `chat.js` always sends them as `selected_files` → OR metadata filter. Whole-vault search happens only if the user unchecks everything. UNCLEAR (Q12).
+- The GitHub PAT is embedded in the remote URL (`https://<token>@github.com/...`) and therefore stored **in plain text** in `obsidian_data/user_<id>/.git/config`; the DB encryption covers only the DB copy. A vault folder without `.git` is deleted (`shutil.rmtree`) before re-cloning.
+- Home "pending tasks" count = `status='todo'` only (in_progress not counted).
 - `is_local_ai_ready()` probes `OLLAMA_HOST/api/tags` (3 s timeout) on **every** message.
 - Strategy: `local_only` + offline → error text; `auto` → Ollama if online else Gemini; `cloud_only` → Gemini.
 - A new chat engine is built for every message, so conversational memory between turns is not kept (only retrieval context) — UNCLEAR whether intended (Q2).

@@ -13,3 +13,5 @@ Format: question · default chosen · where in code
 9. **Default `OLLAMA_HOST` is a LAN IP `192.168.1.128`.** Should it be configurable only via env? · Default: unchanged · `core/rag_engine.py:29`
 10. **No UI to move a task to "In Progress"** (only Core Matrix can), although Home shows an "In Progress" column, and unchecking a done task sets it to `todo`. Add a control? · Default: unchanged (feature, not a bug) · `static/js/tasks.js`, `templates/home.html`
 11. **Superuser can remove own superuser flag / delete own account in Core Matrix** (locks themself out). Add a guard? · Default: unchanged · `core/views/admin.py`
+12. **Chat searches only the first 10 notes by default** (they are pre-checked; whole-vault search only when nothing is checked). With >10 notes, answers silently ignore the rest. Intended? · Default: unchanged, pinned by test · `core/views/pages.py:74`, `templates/ai-chat.html:115`, `static/js/chat.js:19`
+13. **PAT stored in plain text in the vault's `.git/config`** (token embedded in remote URL). Use a credential helper / strip the token after pull? · Default: unchanged (needs design choice; tests document it) · `core/git_sync.py:28-40`
