@@ -192,11 +192,15 @@ def test_ask_selected_files_filter_restricts_context(configured_user, llms, fake
     assert "DROP-THIS-FACT" in out2 and "KEEP-THIS-FACT" not in out2
 
 
-def test_ask_sync_failure_still_answers(configured_user, llms, fake_sync, monkeypatch):
+def test_ask_sync_failure_still_answers(configured_user, llms, fake_sync, monkeypatch, note_writer):
+    """If git sync fails, an empty collection is not filled from disk, but the LLM still answers."""
     fake_sync.return_value = False
     set_local_online(monkeypatch, False)
-    out = rag_engine.ask_second_brain("q", configured_user)
-    assert not out.startswith("System Error")
+    note_writer(configured_user, "Local", "NOT-INDEXED-WHEN-SYNC-FAILS")
+    out = rag_engine.ask_second_brain("my question", configured_user)
+    assert len(llms[1].calls) == 1
+    assert "my question" in out and not out.startswith("System Error")
+    assert "NOT-INDEXED-WHEN-SYNC-FAILS" not in out
 
 
 def test_ask_exception_is_reported_as_text(configured_user, fake_sync, monkeypatch):

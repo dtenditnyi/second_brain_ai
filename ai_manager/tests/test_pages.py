@@ -196,6 +196,25 @@ def test_tasks_page_groups(auth_client, user, other_user):
     assert "FOREIGN" not in html
 
 
+def test_tasks_active_ordered_by_due_date(auth_client, user):
+    Task.objects.create(user=user, title="ZZ_LATE", due_date="2026-03-01")
+    Task.objects.create(user=user, title="ZZ_EARLY", due_date="2026-01-01")
+    Task.objects.create(user=user, title="ZZ_MID", due_date="2026-02-01")
+    titles = [t.title for t in auth_client.get("/tasks/").context["active_tasks"]]
+    assert titles == ["ZZ_EARLY", "ZZ_MID", "ZZ_LATE"]
+    html = auth_client.get("/tasks/").content.decode()
+    assert html.index("ZZ_EARLY") < html.index("ZZ_MID") < html.index("ZZ_LATE")
+
+
+def test_home_analytics_numbers(auth_client, user, note_writer):
+    Task.objects.create(user=user, title="a")
+    Task.objects.create(user=user, title="b")
+    Task.objects.create(user=user, title="c", status="in_progress")
+    note_writer(user, "n1", "x")
+    html = auth_client.get("/").content.decode()
+    assert "2 pending tasks" in html and "1 core notes" in html
+
+
 def test_tasks_completed_limited_to_ten(auth_client, user):
     for i in range(12):
         Task.objects.create(user=user, title=f"d{i}", status="done")

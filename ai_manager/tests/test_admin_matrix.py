@@ -65,7 +65,7 @@ def test_admin_update_unknown_table_400(admin_client_, post_json):
 
 def test_admin_update_missing_row_is_error(admin_client_, post_json):
     r = post_json(admin_client_, "/api/admin/update-row/", {"table": "tasks", "id": 9999, "fields": {}})
-    assert r.status_code >= 400 and r.json()["status"] == "error"
+    assert r.status_code == 404 and r.json()["status"] == "error"
 
 
 @pytest.mark.parametrize("table", ["users", "tasks", "messages"])
@@ -110,3 +110,11 @@ def test_admin_update_settings_empty_temperature_is_not_500(superuser, user, pos
     assert r.status_code in (200, 400)
     user.settings.refresh_from_db()
     assert user.settings.temperature == 0.7
+
+
+def test_admin_delete_settings_row_then_user_pages_still_work(admin_client_, user, post_json):
+    sid = user.settings.id
+    assert post_json(admin_client_, "/api/admin/delete-row/", {"table": "settings", "id": sid}).json()["status"] == "ok"
+    c = Client()
+    c.force_login(User.objects.get(id=user.id))
+    assert c.get("/").status_code == 200

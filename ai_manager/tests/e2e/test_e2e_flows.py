@@ -179,3 +179,58 @@ def test_mobile_menu_opens_and_closes(logged_page, live_server):
     p.click("#mobile-menu-close")
     p.wait_for_timeout(400)
     assert sidebar.bounding_box()["x"] < 0
+
+
+def test_chat_sends_selected_context_files_to_api(logged_page, live_server, e2e_user, isolated_vault):
+    for n in ["Alpha", "Beta", "Gamma"]:
+        write_note(isolated_vault, e2e_user, n, "x")
+    p = logged_page
+    with mock.patch("core.rag_engine.ask_second_brain", return_value="ok-answer") as ask:
+        p.goto(f"{live_server.url}/chat/")
+        # default: first 10 notes are pre-selected and sent (Q12)
+        p.fill("#chat-input", "first")
+        p.keyboard.press("Enter")
+        expect(p.get_by_text("ok-answer")).to_have_count(1)
+        assert ask.call_args[0][2] == ["Alpha", "Beta", "Gamma"]
+        p.click("#add-documents-button")
+        p.uncheck("#select-all-checkbox")
+        p.check('.file-checkbox[value="Gamma"]')
+        p.click("#apply-context-button")
+        p.fill("#chat-input", "second")
+        p.keyboard.press("Enter")
+        expect(p.get_by_text("ok-answer")).to_have_count(2)
+        assert ask.call_args[0][2] == ["Gamma"]
+
+
+def test_chat_shift_enter_inserts_newline(logged_page, live_server):
+    p = logged_page
+    with mock.patch("core.rag_engine.ask_second_brain", return_value="x") as ask:
+        p.goto(f"{live_server.url}/chat/")
+        p.fill("#chat-input", "line1")
+        p.keyboard.press("Shift+Enter")
+        p.keyboard.type("line2")
+        assert p.input_value("#chat-input") == "line1\nline2"
+        ask.assert_not_called()
+
+
+def test_home_generate_status_report(logged_page, live_server, e2e_user):
+    p = logged_page
+    with mock.patch("core.rag_engine.ask_second_brain", return_value="Daily briefing text") as ask:
+        p.click("#generate-report-btn")
+        expect(p.locator("#ai-report-output")).to_contain_text("Daily briefing text")
+        expect(p.locator("#generate-report-btn")).to_have_text("Report Updated")
+    assert "motivational daily briefing" in ask.call_args[0][0]
+
+
+def test_home_recent_task_checkbox_toggles_both_ways(logged_page, live_server, e2e_user):
+    t = Task.objects.create(user=e2e_user, title="toggle-me", status="in_progress")
+    p = logged_page
+    p.reload()
+    with p.expect_navigation():
+        p.locator(f'.task-checkbox[data-id="{t.id}"]').check()
+    t.refresh_from_db()
+    assert t.status == "done"
+    with p.expect_navigation():
+        p.locator(f'.task-checkbox[data-id="{t.id}"]').uncheck()
+    t.refresh_from_db()
+    assert t.status == "todo"
