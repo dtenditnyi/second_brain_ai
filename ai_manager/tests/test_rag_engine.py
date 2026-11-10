@@ -205,6 +205,16 @@ def test_ask_sync_failure_explains_instead_of_empty_response(configured_user, ll
     assert llms[1].calls == []  # no LLM request is wasted
 
 
+def test_failed_sync_is_retried_on_next_message(configured_user, llms, fake_sync, monkeypatch, note_writer):
+    set_local_online(monkeypatch, False)
+    fake_sync.return_value = False
+    assert rag_engine.ask_second_brain("q", configured_user) == rag_engine.MSG_SYNC_FAILED
+    fake_sync.return_value = True  # e.g. the token was fixed / network is back
+    note_writer(configured_user, "N", "NOW-INDEXED")
+    assert "NOW-INDEXED" in rag_engine.ask_second_brain("q", configured_user)
+    assert fake_sync.call_count == 2
+
+
 def test_ask_empty_vault_after_successful_sync(configured_user, llms, fake_sync, monkeypatch):
     set_local_online(monkeypatch, False)
     out = rag_engine.ask_second_brain("q", configured_user)

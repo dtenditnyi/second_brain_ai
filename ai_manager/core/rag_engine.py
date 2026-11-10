@@ -359,7 +359,10 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
             _user_chat_engines[user.id] = session
 
         # Q14: explain an empty index instead of LlamaIndex's "Empty Response".
+        # The empty session is not kept: the next message syncs again (the
+        # network or the repository may have been fixed in the meantime).
         if session.vectors == 0:
+            reset_chat_engine(user.id)
             return MSG_SYNC_FAILED if not session.sync_ok else MSG_INDEX_EMPTY
 
         if use_local_ai:
