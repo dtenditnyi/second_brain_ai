@@ -30,7 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 console.error('Error updating task:', error);
-                e.target.checked = !e.target.checked; // Restore the previous checkbox state if persistence failed.
+                // Restore the previous state on network errors too (the HTTP-error branch already does).
+                e.target.checked = !e.target.checked;
             }
         });
     });

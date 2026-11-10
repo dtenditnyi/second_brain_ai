@@ -65,3 +65,27 @@ def test_home_report_is_rendered_as_text(logged_page, live_server):
         p.click("#generate-report-btn")
         expect(p.locator("#ai-report-output")).to_contain_text("<b>bold</b>")
     assert p.evaluate("window.__xss") is None
+
+
+def test_note_names_and_backlinks_are_rendered_as_text(logged_page, live_server, e2e_user, isolated_vault):
+    from tests.conftest import write_note
+    write_note(isolated_vault, e2e_user, "Start", '[[<img src=x onerror="window.__xss=1">]]')
+    write_note(isolated_vault, e2e_user, "Other", 'mentions [[Start]] <img src=y onerror="window.__xss=2">')
+    p = logged_page
+    p.goto(f"{live_server.url}/notes/")
+    p.locator('.file-item[data-filename="Start"]').click()
+    expect(p.locator(".backlink-card")).to_have_count(1)
+    p.locator("#workspace-content-area .wiki-link").click()
+    expect(p.locator("#workspace-content-area")).to_contain_text("onerror")
+    p.wait_for_timeout(300)
+    assert p.evaluate("window.__xss") is None
+
+
+def test_task_checkbox_reverts_on_server_error(logged_page, live_server, e2e_user):
+    t = Task.objects.create(user=e2e_user, title="revert-me")
+    p = logged_page
+    p.goto(f"{live_server.url}/tasks/")
+    p.route("**/api/update-task/", lambda route: route.fulfill(status=500, body="boom"))
+    box = p.locator(f'.task-checkbox[data-id="{t.id}"]')
+    box.check()
+    expect(box).not_to_be_checked()

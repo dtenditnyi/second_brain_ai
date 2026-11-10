@@ -96,9 +96,11 @@ def test_reset_chat_engine_for_uncached_user_keeps_other_users_cache():
     """Saving settings for a user without a cached engine must not wipe everybody's cache."""
     rag_engine._user_chat_engines.update({2: "e2"})
     rag_engine._user_indexes.update({2: "i2", 3: "i3"})
+    rag_engine._user_llms.update({2: "l2", 3: "l3"})
     rag_engine.reset_chat_engine(3)
     assert rag_engine._user_chat_engines == {2: "e2"}
     assert rag_engine._user_indexes == {2: "i2"}
+    assert rag_engine._user_llms == {2: "l2"}
 
 
 def test_reset_chat_engine_all():

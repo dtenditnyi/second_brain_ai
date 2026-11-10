@@ -57,6 +57,9 @@ def test_add_task_get_not_allowed(auth_client):
     {"title": "x", "due_date": "not-a-date"},
     {"title": "x", "priority": "galactic"},
     {"title": "x" * 300},
+    {"title": "x", "priority": ["high"]},
+    {"title": {"a": 1}},
+    {"title": "x", "tags": ["a", "b"]},
 ])
 def test_add_task_invalid_payload_returns_400(no_raise_client, payload, post_json):
     r = post_json(no_raise_client, "/api/add-task/", payload)
@@ -99,6 +102,11 @@ def test_update_task_get_returns_400_not_500(no_raise_client):
 def test_update_task_bad_id_returns_4xx(no_raise_client, payload, post_json):
     r = post_json(no_raise_client, "/api/update-task/", payload)
     assert r.status_code in (400, 404)
+
+
+def test_update_task_rejects_non_string_status(no_raise_client, user, post_json):
+    t = Task.objects.create(user=user, title="a")
+    assert post_json(no_raise_client, "/api/update-task/", {"task_id": t.id, "status": ["done"]}).status_code == 400
 
 
 def test_update_task_rejects_unknown_status(no_raise_client, user, post_json):
@@ -171,9 +179,22 @@ def test_save_settings_taken_username_rejected(no_raise_client, user, other_user
     assert user.username == "alice"
 
 
-def test_save_settings_null_values_do_not_crash(no_raise_client, post_json):
-    r = post_json(no_raise_client, "/api/save-settings/", {"github_repo_url": None, "github_token": None})
-    assert r.status_code in (200, 400)
+def test_save_settings_null_values_do_not_crash(no_raise_client, user, post_json):
+    s = user.settings
+    s.github_repo_url, s.github_token = "https://github.com/u/v.git", "tok"
+    s.save()
+    r = post_json(no_raise_client, "/api/save-settings/", {"github_repo_url": None, "github_token": None, "display_name": None})
+    assert r.status_code == 200
+    s = UserSettings.objects.get(user=user)
+    assert (s.github_repo_url, s.github_token, s.display_name) == ("https://github.com/u/v.git", "tok", "alice")
+
+
+def test_save_settings_name_longer_than_display_name_field_rejected(no_raise_client, user, post_json):
+    """display_name is max 100 chars (Postgres would raise DataError); user row must stay unchanged."""
+    r = post_json(no_raise_client, "/api/save-settings/", {"username": "n" * 120, "display_name": "n" * 120})
+    assert r.status_code == 400
+    user.refresh_from_db()
+    assert user.username == "alice"
 
 
 def test_save_settings_malformed_json_400(no_raise_client, post_json):

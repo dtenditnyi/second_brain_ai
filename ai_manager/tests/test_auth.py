@@ -77,3 +77,12 @@ def test_register_duplicate_username_rejected(client, user):
     r = client.post("/register/", {"username": "alice", "password1": "Qwerty-Long-9876", "password2": "Qwerty-Long-9876"})
     assert r.status_code == 200
     assert User.objects.filter(username="alice").count() == 1
+
+
+@pytest.mark.parametrize("nxt", ["foo", "logout", "//evil.example/x", "https://evil.example/"])
+def test_login_with_odd_next_values_is_safe(client, user, password, nxt):
+    """B-23: next must be treated as a URL, never as a URL-pattern name (was 500 / instant logout)."""
+    r = client.post(f"/login/?next={nxt}", {"username": "alice", "password": password})
+    assert r.status_code == 302
+    assert r.url == "/"
+    assert client.get("/").status_code == 200  # still logged in

@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         contentArea.innerHTML = `
             <div class="flex items-center justify-center h-full">
                 <p class="text-[var(--active-accent)] animate-pulse font-mono text-sm uppercase tracking-widest">
-                    Defragmenting Vault Node Content: ${noteName}...
+                    Defragmenting Vault Node Content: ${window.escapeHtml(noteName)}...
                 </p>
             </div>
         `;
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // The API returns rendered Markdown plus backlink metadata for this note.
                 contentArea.innerHTML = `
                     <header class="mb-8 border-b border-[var(--border-glass)] pb-6">
-                        <h1 class="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] mb-2 tracking-tight">${noteName}</h1>
+                        <h1 class="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] mb-2 tracking-tight">${window.escapeHtml(noteName)}</h1>
                         <p class="text-xs text-[var(--active-accent)] opacity-80 uppercase tracking-widest font-mono font-semibold">
                             Secure Sandbox Node Sync Matrix
                         </p>
@@ -64,9 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (totalBacklinks > 0) {
                     data.backlinks.forEach(mention => {
                         const cardHtml = `
-                            <article class="backlink-card p-4 rounded-xl border border-[var(--border-glass)] hover:border-[var(--active-accent)] hover:shadow-[var(--glow-active)] transition-all cursor-pointer bg-[var(--bg-base)] bg-opacity-40 hover:-translate-y-0.5" data-target="${mention.title}">
-                                <h4 class="font-medium text-[var(--text-primary)] text-sm mb-1 truncate">${mention.title}</h4>
-                                <p class="text-[11px] opacity-60 leading-relaxed font-serif italic">${mention.snippet}</p>
+                            <article class="backlink-card p-4 rounded-xl border border-[var(--border-glass)] hover:border-[var(--active-accent)] hover:shadow-[var(--glow-active)] transition-all cursor-pointer bg-[var(--bg-base)] bg-opacity-40 hover:-translate-y-0.5" data-target="${window.escapeHtml(mention.title)}">
+                                <h4 class="font-medium text-[var(--text-primary)] text-sm mb-1 truncate">${window.escapeHtml(mention.title)}</h4>
+                                <p class="text-[11px] opacity-60 leading-relaxed font-serif italic">${window.escapeHtml(mention.snippet)}</p>
                             </article>
                         `;
                         mentionsFeed.insertAdjacentHTML('beforeend', cardHtml);
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 contentArea.innerHTML = `
                     <div class="p-5 bg-red-500 bg-opacity-10 border border-red-500 border-opacity-20 rounded-xl text-red-400">
                         <h4 class="font-bold mb-1">Core Link Interrupted</h4>
-                        <p class="text-xs opacity-80">${data.msg}</p>
+                        <p class="text-xs opacity-80">${window.escapeHtml(data.msg)}</p>
                     </div>
                 `;
             }

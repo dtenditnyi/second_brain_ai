@@ -5,12 +5,13 @@ import os
 import re
 import markdown
 from html import escape
+from django.db import transaction
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from ..models import Task, ChatMessage, get_user_settings
+from ..models import Task, ChatMessage, UserSettings, get_user_settings
 from .. import rag_engine
 from .utils import parse_json_body
 
@@ -45,6 +46,7 @@ def api_chat_message(request):
     return JsonResponse({'status': 'error'}, status=400)
 
 @login_required(login_url='login')
+@transaction.atomic  # user + settings rows are saved together
 def api_save_settings(request):
     # Persist account identity separately from per-user application preferences.
     # Parameters: request.body is JSON produced by settings.js.
@@ -65,7 +67,9 @@ def api_save_settings(request):
         # value locked the user out and a taken one raised IntegrityError (B-03).
         if not username:
             return JsonResponse({'status': 'error', 'msg': 'Display name / username cannot be empty.'}, status=400)
-        if len(username) > User._meta.get_field('username').max_length:
+        # The same value is stored in UserSettings.display_name (max 100 chars).
+        if len(username) > min(User._meta.get_field('username').max_length,
+                               UserSettings._meta.get_field('display_name').max_length):
             return JsonResponse({'status': 'error', 'msg': 'Username is too long.'}, status=400)
         if User.objects.filter(username=username).exclude(pk=request.user.pk).exists():
             return JsonResponse({'status': 'error', 'msg': 'This username is already taken.'}, status=400)
@@ -111,10 +115,12 @@ def api_add_task(request):
         if data is None:
             return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
         # Validate before writing so bad input yields 400 instead of a 500 (B-04).
-        title = str(data.get('title') or '').strip()
+        raw_title, raw_tags = data.get('title') or '', data.get('tags') or ''
         priority = data.get('priority') or 'medium'
-        tags = str(data.get('tags') or '')
         raw_due = data.get('due_date') or None
+        if not all(isinstance(v, str) for v in (raw_title, raw_tags, priority)):
+            return _task_error('Title, priority and tags must be strings.')
+        title, tags = raw_title.strip(), raw_tags
         if not title:
             return _task_error('Task title is required.')
         if len(title) > Task._meta.get_field('title').max_length:
@@ -150,7 +156,7 @@ def api_update_task_status(request):
         if data is None:
             return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
         new_status = data.get('status')
-        if new_status not in dict(Task.STATUS_CHOICES):
+        if not isinstance(new_status, str) or new_status not in dict(Task.STATUS_CHOICES):
             return _task_error('Unknown task status.')
         try:
             task_id = int(data.get('task_id'))
