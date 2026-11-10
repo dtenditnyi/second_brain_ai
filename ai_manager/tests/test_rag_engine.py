@@ -245,3 +245,33 @@ def test_import_does_not_load_embedding_model_eagerly():
         assert calls == []
     finally:
         importlib.reload(rag_engine)
+
+
+def test_each_user_keeps_own_llm(configured_user, other_user, monkeypatch, fake_sync):
+    """B-10: the LLM must be per user, not the process-global Settings.llm."""
+    created = {"ollama": [], "gemini": []}
+
+    def make(kind):
+        def factory(**kw):
+            llm = MockLLM()
+            created[kind].append(llm)
+            return llm
+        return factory
+
+    monkeypatch.setattr(rag_engine, "Ollama", make("ollama"))
+    monkeypatch.setattr(rag_engine, "GoogleGenAI", make("gemini"))
+    set_local_online(monkeypatch, True)
+    a = configured_user
+    sa = a.settings
+    sa.ai_strategy = "cloud_only"
+    sa.save()
+    b = other_user
+    sb = b.settings
+    sb.ai_strategy, sb.github_repo_url = "local_only", "https://github.com/b/v.git"
+    sb.save()
+
+    rag_engine.ask_second_brain("q", a)
+    rag_engine.ask_second_brain("q", b)
+    rag_engine.ask_second_brain("q again", a)
+    assert rag_engine._user_chat_engines[a.id]._llm is created["gemini"][0]
+    assert rag_engine._user_chat_engines[b.id]._llm is created["ollama"][0]

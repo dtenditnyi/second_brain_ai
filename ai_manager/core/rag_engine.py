@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 # for every message; reset_chat_engine invalidates these entries after settings change.
 _user_chat_engines = {}
 _user_indexes = {}
+# Per-user LLM instances (B-10): the global Settings.llm is shared by every
+# user of the process, so it must not decide which provider answers a user.
+_user_llms = {}
 LOCAL_OLLAMA_URL = os.getenv("OLLAMA_HOST", "http://192.168.1.128:11434")
 
 # Use the same 384-dimensional embedding model for indexing and query vectors.
@@ -63,13 +66,16 @@ def is_local_ai_ready(timeout=3.0):
 # Parameters: user_id optionally identifies the account whose cache must be reset.
 # Returns: None; subsequent requests rebuild the affected runtime objects.
 def reset_chat_engine(user_id=None):
-    global _user_chat_engines, _user_indexes
-    if user_id and user_id in _user_chat_engines:
-        del _user_chat_engines[user_id]
+    global _user_chat_engines, _user_indexes, _user_llms
+    if user_id:
+        # Only this user's entries; other users keep their caches (B-08).
+        _user_chat_engines.pop(user_id, None)
         _user_indexes.pop(user_id, None)
+        _user_llms.pop(user_id, None)
     else:
         _user_chat_engines.clear()
         _user_indexes.clear()
+        _user_llms.clear()
 
 # Derive filesystem and Chroma collection locations from the authenticated user ID.
 # Parameters: user is the Django User whose private vault is being accessed.
@@ -136,7 +142,7 @@ def ask_second_brain(user_query, user, selected_files=None):
             # model: Ollama serves local mode, while Gemini serves cloud mode.
             if use_local_ai:
                 logger.info("Local LLM ready: engine=Ollama, model=llama3:latest.")
-                Settings.llm = Ollama(
+                user_llm = Ollama(
                     model="llama3:latest",
                     base_url=LOCAL_OLLAMA_URL,
                     temperature=temp,
@@ -145,12 +151,15 @@ def ask_second_brain(user_query, user, selected_files=None):
             else:
                 logger.info("Cloud LLM ready: engine=Gemini, model=gemini-3.6-flash.")
                 gemini_key = os.getenv("GEMINI_API_KEY")
-                Settings.llm = GoogleGenAI(
+                user_llm = GoogleGenAI(
                     model="gemini-3.6-flash",
                     api_key=gemini_key,
                     temperature=temp,
                 )
             
+            _user_llms[user.id] = user_llm
+            Settings.llm = user_llm  # kept for backwards compatibility; engines use _user_llms
+
             # Attach the user's isolated Chroma collection to a LlamaIndex store.
             db = chromadb.PersistentClient(path=DB_DIR)
             
@@ -211,6 +220,7 @@ def ask_second_brain(user_query, user, selected_files=None):
         # evidence but also consume prompt tokens and may introduce noise.
         engine = _user_indexes[user.id].as_chat_engine(
             chat_mode="context",
+            llm=_user_llms[user.id],
             similarity_top_k=5,
             system_prompt=(
                 f"You are the secure personal AI Assistant of {user.username}. "
