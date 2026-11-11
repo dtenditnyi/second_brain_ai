@@ -64,7 +64,12 @@ class UserSettings(models.Model):
     temperature = models.FloatField(default=0.7)
 
     github_repo_url = models.URLField(max_length=500, blank=True, default="")
-    github_token = EncryptedCharField(max_length=255, blank=True, default="")
+    # 500: a Fernet-encrypted 128+ character token is longer than 255 (B-14).
+    github_token = EncryptedCharField(max_length=500, blank=True, default="")
+
+    # Which model answered last (Round 2 indicator on Home/Settings).
+    last_model_used = models.CharField(max_length=100, blank=True, default="")
+    last_model_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         # Provide a concise identifier for Django admin and diagnostic output.
@@ -126,3 +131,19 @@ def create_user_settings(sender, instance, created, **kwargs):
             github_repo_url="",
             github_token=""
         )
+
+def get_user_settings(user):
+    """Return the user's settings row, recreating it with defaults if it is missing (B-07).
+
+    The row can be missing for accounts created before the post_save signal
+    existed, or after an administrator deleted it in Core Matrix; previously
+    every page then crashed with RelatedObjectDoesNotExist.
+    """
+    try:
+        return user.settings
+    except UserSettings.DoesNotExist:
+        settings_row, _ = UserSettings.objects.get_or_create(
+            user=user, defaults={'display_name': user.username}
+        )
+        user.settings = settings_row
+        return settings_row

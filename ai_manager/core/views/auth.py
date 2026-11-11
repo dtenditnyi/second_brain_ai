@@ -2,6 +2,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.http import HttpResponseRedirect
 
 # Register a new account, establish its authenticated session, or redisplay errors.
 # Parameters: request contains registration form data on POST.
@@ -37,6 +39,14 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            # Honour ?next= for same-site targets only (B-12).
+            # Only absolute same-site paths; never pass it to redirect(), which would
+            # try to reverse() bare words like "foo"/"logout" (B-23).
+            next_url = request.POST.get('next') or request.GET.get('next')
+            if next_url and next_url.startswith('/') and url_has_allowed_host_and_scheme(
+                next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+            ):
+                return HttpResponseRedirect(next_url)
             return redirect('home')
         else:
             error_message = "Authentication failed. Invalid username or security credentials."

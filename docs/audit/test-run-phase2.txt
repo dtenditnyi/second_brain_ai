@@ -1,0 +1,1833 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Scripts\python.exe
+django: version: 6.1, settings: ai_manager.settings_test (from ini)
+rootdir: c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.14.2, asyncio-1.4.0, django-4.14.0, playwright-0.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 177 items
+
+tests/test_admin_matrix.py::test_dashboard_requires_superuser PASSED     [  0%]
+tests/test_admin_matrix.py::test_dashboard_lists_all_tables PASSED       [  1%]
+tests/test_admin_matrix.py::test_admin_api_forbidden_for_normal_user[/api/admin/update-row/] FAILED [  1%]
+tests/test_admin_matrix.py::test_admin_api_forbidden_for_normal_user[/api/admin/delete-row/] FAILED [  2%]
+tests/test_admin_matrix.py::test_admin_update_user PASSED                [  2%]
+tests/test_admin_matrix.py::test_admin_update_settings PASSED            [  3%]
+tests/test_admin_matrix.py::test_admin_update_task_and_message PASSED    [  3%]
+tests/test_admin_matrix.py::test_admin_update_unknown_table_400 PASSED   [  4%]
+tests/test_admin_matrix.py::test_admin_update_missing_row_is_error PASSED [  5%]
+tests/test_admin_matrix.py::test_admin_delete_row[users] PASSED          [  5%]
+tests/test_admin_matrix.py::test_admin_delete_row[tasks] PASSED          [  6%]
+tests/test_admin_matrix.py::test_admin_delete_row[messages] PASSED       [  6%]
+tests/test_admin_matrix.py::test_admin_delete_invalid_table PASSED       [  7%]
+tests/test_admin_matrix.py::test_admin_get_methods_400 PASSED            [  7%]
+tests/test_admin_matrix.py::test_admin_delete_requires_csrf FAILED       [  8%]
+tests/test_admin_matrix.py::test_django_admin_accessible_for_superuser PASSED [  9%]
+tests/test_admin_matrix.py::test_dashboard_has_no_stray_debug_text FAILED [  9%]
+tests/test_admin_matrix.py::test_admin_update_settings_empty_temperature_is_not_500 FAILED [ 10%]
+tests/test_api.py::test_sidebar_stats_counts_only_own_tasks PASSED       [ 10%]
+tests/test_api.py::test_sidebar_stats_no_tasks PASSED                    [ 11%]
+tests/test_api.py::test_add_task_valid PASSED                            [ 11%]
+tests/test_api.py::test_add_task_empty_due_date_is_null PASSED           [ 12%]
+tests/test_api.py::test_add_task_get_not_allowed PASSED                  [ 12%]
+tests/test_api.py::test_add_task_invalid_payload_returns_400[payload0] FAILED [ 13%]
+tests/test_api.py::test_add_task_invalid_payload_returns_400[payload1] FAILED [ 14%]
+tests/test_api.py::test_add_task_invalid_payload_returns_400[payload2] FAILED [ 14%]
+tests/test_api.py::test_add_task_invalid_payload_returns_400[payload3] FAILED [ 15%]
+tests/test_api.py::test_add_task_invalid_payload_returns_400[payload4] FAILED [ 15%]
+tests/test_api.py::test_add_task_invalid_payload_returns_400[payload5] FAILED [ 16%]
+tests/test_api.py::test_add_task_malformed_json_returns_400 FAILED       [ 16%]
+tests/test_api.py::test_update_task_status_own PASSED                    [ 17%]
+tests/test_api.py::test_update_task_of_other_user_is_404 PASSED          [ 18%]
+tests/test_api.py::test_update_task_get_returns_400_not_500 FAILED       [ 18%]
+tests/test_api.py::test_update_task_bad_id_returns_4xx[payload0] FAILED  [ 19%]
+tests/test_api.py::test_update_task_bad_id_returns_4xx[payload1] PASSED  [ 19%]
+tests/test_api.py::test_update_task_rejects_unknown_status FAILED        [ 20%]
+tests/test_api.py::test_save_settings_full PASSED                        [ 20%]
+tests/test_api.py::test_save_settings_temperature_clamped[5-1.0] PASSED  [ 21%]
+tests/test_api.py::test_save_settings_temperature_clamped[-3-0.0] PASSED [ 22%]
+tests/test_api.py::test_save_settings_temperature_clamped[abc-0.7] PASSED [ 22%]
+tests/test_api.py::test_save_settings_temperature_clamped[None-0.7] PASSED [ 23%]
+tests/test_api.py::test_save_settings_invalid_strategy_ignored PASSED    [ 23%]
+tests/test_api.py::test_save_settings_partial_keeps_other_values PASSED  [ 24%]
+tests/test_api.py::test_save_settings_display_name_renames_login_username PASSED [ 24%]
+tests/test_api.py::test_save_settings_empty_username_rejected FAILED     [ 25%]
+tests/test_api.py::test_save_settings_taken_username_rejected FAILED     [ 25%]
+tests/test_api.py::test_save_settings_null_values_do_not_crash FAILED    [ 26%]
+tests/test_api.py::test_save_settings_malformed_json_400 FAILED          [ 27%]
+tests/test_api.py::test_save_settings_get_400 PASSED                     [ 27%]
+tests/test_api.py::test_send_message_persists_both_turns PASSED          [ 28%]
+tests/test_api.py::test_send_message_legacy_key_and_bad_type PASSED      [ 28%]
+tests/test_api.py::test_send_message_empty_is_400 PASSED                 [ 29%]
+tests/test_api.py::test_send_message_malformed_json_400 FAILED           [ 29%]
+tests/test_api.py::test_get_note_renders_markdown_wikilinks_backlinks PASSED [ 30%]
+tests/test_api.py::test_get_note_in_subfolder PASSED                     [ 31%]
+tests/test_api.py::test_get_note_missing_name_400 PASSED                 [ 31%]
+tests/test_api.py::test_get_note_not_found_404 PASSED                    [ 32%]
+tests/test_api.py::test_get_note_cannot_read_other_users_vault PASSED    [ 32%]
+tests/test_api.py::test_get_note_path_traversal_blocked PASSED           [ 33%]
+tests/test_api.py::test_get_note_wikilink_target_is_attribute_escaped FAILED [ 33%]
+tests/test_api.py::test_state_changing_api_requires_csrf_token[/api/add-task/-payload0] FAILED [ 34%]
+tests/test_api.py::test_state_changing_api_requires_csrf_token[/api/save-settings/-payload1] FAILED [ 35%]
+tests/test_api.py::test_state_changing_api_requires_csrf_token[/api/send-message/-payload2] FAILED [ 35%]
+tests/test_api.py::test_state_changing_api_accepts_csrf_header FAILED    [ 36%]
+tests/test_auth.py::test_login_page_renders PASSED                       [ 36%]
+tests/test_auth.py::test_login_valid_credentials_redirects_home PASSED   [ 37%]
+tests/test_auth.py::test_login_invalid_credentials_shows_error PASSED    [ 37%]
+tests/test_auth.py::test_login_respects_next_parameter FAILED            [ 38%]
+tests/test_auth.py::test_login_ignores_external_next PASSED              [ 38%]
+tests/test_auth.py::test_logged_in_user_is_redirected_from_login_and_register PASSED [ 39%]
+tests/test_auth.py::test_logout_ends_session PASSED                      [ 40%]
+tests/test_auth.py::test_register_page_renders_all_fields PASSED         [ 40%]
+tests/test_auth.py::test_register_creates_user_settings_and_logs_in PASSED [ 41%]
+tests/test_auth.py::test_register_invalid_data_shows_error[data0] PASSED [ 41%]
+tests/test_auth.py::test_register_invalid_data_shows_error[data1] PASSED [ 42%]
+tests/test_auth.py::test_register_invalid_data_shows_error[data2] PASSED [ 42%]
+tests/test_auth.py::test_register_duplicate_username_rejected PASSED     [ 43%]
+tests/test_models.py::test_signal_creates_default_settings PASSED        [ 44%]
+tests/test_models.py::test_signal_does_not_duplicate_on_resave PASSED    [ 44%]
+tests/test_models.py::test_github_token_encrypted_at_rest_and_decrypted_on_read PASSED [ 45%]
+tests/test_models.py::test_encrypted_field_does_not_double_encrypt PASSED [ 45%]
+tests/test_models.py::test_encrypted_field_legacy_plaintext_is_returned_as_is PASSED [ 46%]
+tests/test_models.py::test_task_defaults_and_str PASSED                  [ 46%]
+tests/test_models.py::test_chat_message_ordering_and_str PASSED          [ 47%]
+tests/test_models.py::test_user_delete_cascades PASSED                   [ 48%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/] PASSED     [ 48%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/chat/] PASSED [ 49%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/notes/] PASSED [ 49%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/tasks/] PASSED [ 50%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/settings/] PASSED [ 50%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/api/sidebar-stats/] PASSED [ 51%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/api/get-note/?name=x] PASSED [ 51%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/api/send-message/] PASSED [ 52%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/api/save-settings/] PASSED [ 53%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/api/add-task/] PASSED [ 53%]
+tests/test_pages.py::test_anonymous_is_redirected_to_login[/api/update-task/] PASSED [ 54%]
+tests/test_pages.py::test_public_pages_ok[/login/] PASSED                [ 54%]
+tests/test_pages.py::test_public_pages_ok[/register/] PASSED             [ 55%]
+tests/test_pages.py::test_private_pages_render_for_user[/-Second Brain - Home] PASSED [ 55%]
+tests/test_pages.py::test_private_pages_render_for_user[/chat/-AI Chat] PASSED [ 56%]
+tests/test_pages.py::test_private_pages_render_for_user[/notes/-Synced Knowledge Base Vault] PASSED [ 57%]
+tests/test_pages.py::test_private_pages_render_for_user[/tasks/-Second Brain - Tasks] PASSED [ 57%]
+tests/test_pages.py::test_private_pages_render_for_user[/settings/-Settings] PASSED [ 58%]
+tests/test_pages.py::test_templates_use_debug_false_without_errors PASSED [ 58%]
+tests/test_pages.py::test_superuser_link_only_for_superuser PASSED       [ 59%]
+tests/test_pages.py::test_base_layout_html_is_well_formed FAILED         [ 59%]
+tests/test_pages.py::test_home_dashboard_context PASSED                  [ 60%]
+tests/test_pages.py::test_home_without_tasks_and_notes PASSED            [ 61%]
+tests/test_pages.py::test_home_recent_tasks_limited_to_four PASSED       [ 61%]
+tests/test_pages.py::test_home_escapes_task_title PASSED                 [ 62%]
+tests/test_pages.py::test_chat_page_lists_notes_and_history PASSED       [ 62%]
+tests/test_pages.py::test_chat_history_limited_to_last_50 PASSED         [ 63%]
+tests/test_pages.py::test_chat_greeting_shown_when_history_empty FAILED  [ 63%]
+tests/test_pages.py::test_chat_greeting_hidden_when_history_exists PASSED [ 64%]
+tests/test_pages.py::test_chat_page_context_preselects_first_ten PASSED  [ 64%]
+tests/test_pages.py::test_notes_page_lists_md_only PASSED                [ 65%]
+tests/test_pages.py::test_notes_page_triggers_sync_only_when_not_cloned PASSED [ 66%]
+tests/test_pages.py::test_notes_page_without_repo_does_not_sync PASSED   [ 66%]
+tests/test_pages.py::test_tasks_page_groups PASSED                       [ 67%]
+tests/test_pages.py::test_tasks_completed_limited_to_ten PASSED          [ 67%]
+tests/test_pages.py::test_settings_page_reflects_saved_values PASSED     [ 68%]
+tests/test_pages.py::test_settings_page_echoes_github_token_into_html PASSED [ 68%]
+tests/test_pages.py::test_pages_work_for_user_without_settings_row[/] FAILED [ 69%]
+tests/test_pages.py::test_pages_work_for_user_without_settings_row[/chat/] FAILED [ 70%]
+tests/test_pages.py::test_pages_work_for_user_without_settings_row[/notes/] FAILED [ 70%]
+tests/test_pages.py::test_pages_work_for_user_without_settings_row[/tasks/] FAILED [ 71%]
+tests/test_pages.py::test_pages_work_for_user_without_settings_row[/settings/] FAILED [ 71%]
+tests/test_pages.py::test_pages_work_for_user_without_settings_row[/api/sidebar-stats/] PASSED [ 72%]
+tests/test_rag_engine.py::test_get_user_paths PASSED                     [ 72%]
+tests/test_rag_engine.py::test_is_local_ai_ready_true_on_200 PASSED      [ 73%]
+tests/test_rag_engine.py::test_is_local_ai_ready_false_on_error_status[429] PASSED [ 74%]
+tests/test_rag_engine.py::test_is_local_ai_ready_false_on_error_status[500] PASSED [ 74%]
+tests/test_rag_engine.py::test_is_local_ai_ready_false_on_error_status[404] PASSED [ 75%]
+tests/test_rag_engine.py::test_is_local_ai_ready_false_when_offline PASSED [ 75%]
+tests/test_rag_engine.py::test_is_local_ai_ready_uses_timeout PASSED     [ 76%]
+tests/test_rag_engine.py::test_reset_chat_engine_only_affects_that_user PASSED [ 76%]
+tests/test_rag_engine.py::test_reset_chat_engine_for_uncached_user_keeps_other_users_cache FAILED [ 77%]
+tests/test_rag_engine.py::test_reset_chat_engine_all PASSED              [ 77%]
+tests/test_rag_engine.py::test_ask_without_repo_returns_notice PASSED    [ 78%]
+tests/test_rag_engine.py::test_ask_local_only_offline_returns_error PASSED [ 79%]
+tests/test_rag_engine.py::test_ask_routes_to_provider[auto-True-ollama] PASSED [ 79%]
+tests/test_rag_engine.py::test_ask_routes_to_provider[auto-False-gemini] PASSED [ 80%]
+tests/test_rag_engine.py::test_ask_routes_to_provider[local_only-True-ollama] PASSED [ 80%]
+tests/test_rag_engine.py::test_ask_routes_to_provider[cloud_only-True-gemini] PASSED [ 81%]
+tests/test_rag_engine.py::test_ask_routes_to_provider[cloud_only-False-gemini] PASSED [ 81%]
+tests/test_rag_engine.py::test_ask_builds_index_once_and_caches PASSED   [ 82%]
+tests/test_rag_engine.py::test_ask_provider_change_rebuilds_engine PASSED [ 83%]
+tests/test_rag_engine.py::test_ask_existing_collection_is_refreshed PASSED [ 83%]
+tests/test_rag_engine.py::test_ask_selected_files_filter_restricts_context PASSED [ 84%]
+tests/test_rag_engine.py::test_ask_sync_failure_still_answers PASSED     [ 84%]
+tests/test_rag_engine.py::test_ask_exception_is_reported_as_text PASSED  [ 85%]
+tests/test_rag_engine.py::test_ask_bad_temperature_falls_back PASSED     [ 85%]
+tests/test_rag_engine.py::test_ask_creates_new_engine_each_message PASSED [ 86%]
+tests/test_rag_engine.py::test_import_does_not_load_embedding_model_eagerly FAILED [ 87%]
+tests/e2e/test_e2e_flows.py::test_register_then_land_on_home[chromium] PASSED [ 87%]
+tests/e2e/test_e2e_flows.py::test_login_failure_shows_message[chromium] PASSED [ 88%]
+tests/e2e/test_e2e_flows.py::test_pages_have_no_browser_errors[chromium-/] PASSED [ 88%]
+tests/e2e/test_e2e_flows.py::test_pages_have_no_browser_errors[chromium-/chat/] PASSED [ 89%]
+tests/e2e/test_e2e_flows.py::test_pages_have_no_browser_errors[chromium-/notes/] PASSED [ 89%]
+tests/e2e/test_e2e_flows.py::test_pages_have_no_browser_errors[chromium-/tasks/] PASSED [ 90%]
+tests/e2e/test_e2e_flows.py::test_pages_have_no_browser_errors[chromium-/settings/] PASSED [ 90%]
+tests/e2e/test_e2e_flows.py::test_add_task_and_complete_it[chromium] PASSED [ 91%]
+tests/e2e/test_e2e_flows.py::test_settings_save_persists_and_applies_theme[chromium] PASSED [ 92%]
+tests/e2e/test_e2e_flows.py::test_chat_send_message_with_mocked_ai[chromium] PASSED [ 92%]
+tests/e2e/test_e2e_flows.py::test_home_search_hands_query_to_chat[chromium] PASSED [ 93%]
+tests/e2e/test_e2e_flows.py::test_chat_context_modal_select_all_and_apply[chromium] PASSED [ 93%]
+tests/e2e/test_e2e_flows.py::test_notes_open_note_follow_wikilink_and_backlink[chromium] PASSED [ 94%]
+tests/e2e/test_e2e_flows.py::test_notes_deep_link_from_chat[chromium] PASSED [ 94%]
+tests/e2e/test_e2e_flows.py::test_logout[chromium] PASSED                [ 95%]
+tests/e2e/test_e2e_flows.py::test_admin_matrix_edit_and_drop[chromium] PASSED [ 96%]
+tests/e2e/test_e2e_flows.py::test_mobile_menu_opens_and_closes[chromium] PASSED [ 96%]
+tests/test_git_sync.py::test_no_url_returns_false PASSED                 [ 97%]
+tests/test_git_sync.py::test_clone_injects_token_and_creates_parent PASSED [ 97%]
+tests/test_git_sync.py::test_clone_without_token_uses_plain_url PASSED   [ 98%]
+tests/test_git_sync.py::test_incomplete_clone_dir_is_removed_before_clone PASSED [ 98%]
+tests/test_git_sync.py::test_existing_clone_is_pulled PASSED             [ 99%]
+tests/test_git_sync.py::test_git_error_returns_false_and_does_not_log_token PASSED [100%]
+
+================================== FAILURES ===================================
+______ test_admin_api_forbidden_for_normal_user[/api/admin/update-row/] _______
+
+auth_client = <django.test.client.Client object at 0x000001FCCF207770>
+user = <User: alice>, url = '/api/admin/update-row/'
+post_json = <function post_json.<locals>._post at 0x000001FCCFBD2DA0>
+
+    @pytest.mark.parametrize("url", ["/api/admin/update-row/", "/api/admin/delete-row/"])
+    def test_admin_api_forbidden_for_normal_user(auth_client, user, url, post_json):
+        r = post_json(auth_client, url, {"table": "users", "id": user.id, "fields": {"is_superuser": "true"}})
+        assert r.status_code in (302, 403)
+        if r.status_code == 302:
+            # must point at an existing login page (not Django's default /accounts/login/)
+>           assert r.url.startswith("/login/"), r.url
+E           AssertionError: /accounts/login/?next=/api/admin/update-row/
+E           assert False
+E            +  where False = <built-in method startswith of str object at 0x000001FCCFBF8030>('/login/')
+E            +    where <built-in method startswith of str object at 0x000001FCCFBF8030> = '/accounts/login/?next=/api/admin/update-row/'.startswith
+E            +      where '/accounts/login/?next=/api/admin/update-row/' = <HttpResponseRedirect status_code=302, "text/html; charset=utf-8", url="/accounts/login/?next=/api/admin/update-row/">.url
+
+tests\test_admin_matrix.py:32: AssertionError
+______ test_admin_api_forbidden_for_normal_user[/api/admin/delete-row/] _______
+
+auth_client = <django.test.client.Client object at 0x000001FCCEB219D0>
+user = <User: alice>, url = '/api/admin/delete-row/'
+post_json = <function post_json.<locals>._post at 0x000001FCCFCC49E0>
+
+    @pytest.mark.parametrize("url", ["/api/admin/update-row/", "/api/admin/delete-row/"])
+    def test_admin_api_forbidden_for_normal_user(auth_client, user, url, post_json):
+        r = post_json(auth_client, url, {"table": "users", "id": user.id, "fields": {"is_superuser": "true"}})
+        assert r.status_code in (302, 403)
+        if r.status_code == 302:
+            # must point at an existing login page (not Django's default /accounts/login/)
+>           assert r.url.startswith("/login/"), r.url
+E           AssertionError: /accounts/login/?next=/api/admin/delete-row/
+E           assert False
+E            +  where False = <built-in method startswith of str object at 0x000001FCCFBF8B10>('/login/')
+E            +    where <built-in method startswith of str object at 0x000001FCCFBF8B10> = '/accounts/login/?next=/api/admin/delete-row/'.startswith
+E            +      where '/accounts/login/?next=/api/admin/delete-row/' = <HttpResponseRedirect status_code=302, "text/html; charset=utf-8", url="/accounts/login/?next=/api/admin/delete-row/">.url
+
+tests\test_admin_matrix.py:32: AssertionError
+_______________________ test_admin_delete_requires_csrf _______________________
+
+superuser = <User: root>, user = <User: alice>
+
+    def test_admin_delete_requires_csrf(superuser, user):
+        c = Client(enforce_csrf_checks=True)
+        c.force_login(superuser)
+        r = c.post("/api/admin/delete-row/", data={"table": "users", "id": user.id}, content_type="application/json")
+>       assert r.status_code == 403
+E       assert 200 == 403
+E        +  where 200 = <JsonResponse status_code=200, "application/json">.status_code
+
+tests\test_admin_matrix.py:94: AssertionError
+___________________ test_dashboard_has_no_stray_debug_text ____________________
+
+admin_client_ = <django.test.client.Client object at 0x000001FCCF916A30>
+user = <User: alice>
+
+    def test_dashboard_has_no_stray_debug_text(admin_client_, user):
+>       assert b"Anti-corruption layer code entry point" not in admin_client_.get("/system-matrix/").content
+E       assert b'Anti-corruption layer code entry point' not in b'<!DOCTYPE html>\n<!-- Standalone superuser console for inspecting and editing application records. -->\n<html lang="en" data-theme="cyberpunk" data-accent="purple">\n<head>\n    \n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Global Core Control Matrix Engine</title>\n    <link rel="stylesheet" href="/static/css/styles.css">\n</head>\n<body class="bg-[#07070a] text-gray-300 font-sans h-screen flex flex-col overflow-hidden">\n\n    <!-- Administrative identity, operator label, and session exit action. -->\n    <header class="bg-[#0d0d14] border-b border-purple-500 border-opacity-20 px-8 py-4 flex items-center justify-between shadow-[0_0_30px_rgba(176,38,255,0.05)]">\n        <div class="flex items-center gap-4">\n            <span class="text-2xl animate-pulse text-purple-500">\xf0\x9f\x8c\x8c</span>\n            <div>\n                <h1 class="text-xl font-extrabold tracking-widest text-white uppercase">Central Control Panel</h1>\n                <p class="text-[10px] text-purple-400 font-mono tracking-wider uppercase">Administrative Sandbox System</p>\n            </div>\n        </div>\n        <div class=...     <table class="w-full border-collapse text-left text-sm" data-model="messages">\n                        <thead>\n                            <tr class="bg-[#11111a] text-xs font-mono text-purple-400 uppercase border-b border-white border-opacity-5">\n                                <th class="p-4 w-12">ID</th>\n                                <th class="p-4 w-32">Sender Engine</th>\n                                <th class="p-4 w-28">Identity Context</th>\n                                <th class="p-4">Message Log Content Vector String</th>\n                                <th class="p-4 w-44 text-center">Runtime Actions</th>\n                            </tr>\n                        </thead>\n                        <tbody class="divide-y divide-white divide-opacity-5">\n                            <!-- Message role and content are editable per persisted turn. -->\n                            \n                        </tbody>\n                    </table>\n                </div>\n            </section>\n\n        </main>\n    </div>\n\n    <!-- Tab switching and privileged row update/delete requests. -->\n    <script src="/static/js/admin.js"></script>\n</body>\n</html>'
+E        +  where b'<!DOCTYPE html>\n<!-- Standalone superuser console for inspecting and editing application records. -->\n<html lang="en" data-theme="cyberpunk" data-accent="purple">\n<head>\n    \n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Global Core Control Matrix Engine</title>\n    <link rel="stylesheet" href="/static/css/styles.css">\n</head>\n<body class="bg-[#07070a] text-gray-300 font-sans h-screen flex flex-col overflow-hidden">\n\n    <!-- Administrative identity, operator label, and session exit action. -->\n    <header class="bg-[#0d0d14] border-b border-purple-500 border-opacity-20 px-8 py-4 flex items-center justify-between shadow-[0_0_30px_rgba(176,38,255,0.05)]">\n        <div class="flex items-center gap-4">\n            <span class="text-2xl animate-pulse text-purple-500">\xf0\x9f\x8c\x8c</span>\n            <div>\n                <h1 class="text-xl font-extrabold tracking-widest text-white uppercase">Central Control Panel</h1>\n                <p class="text-[10px] text-purple-400 font-mono tracking-wider uppercase">Administrative Sandbox System</p>\n            </div>\n        </div>\n        <div class=...     <table class="w-full border-collapse text-left text-sm" data-model="messages">\n                        <thead>\n                            <tr class="bg-[#11111a] text-xs font-mono text-purple-400 uppercase border-b border-white border-opacity-5">\n                                <th class="p-4 w-12">ID</th>\n                                <th class="p-4 w-32">Sender Engine</th>\n                                <th class="p-4 w-28">Identity Context</th>\n                                <th class="p-4">Message Log Content Vector String</th>\n                                <th class="p-4 w-44 text-center">Runtime Actions</th>\n                            </tr>\n                        </thead>\n                        <tbody class="divide-y divide-white divide-opacity-5">\n                            <!-- Message role and content are editable per persisted turn. -->\n                            \n                        </tbody>\n                    </table>\n                </div>\n            </section>\n\n        </main>\n    </div>\n\n    <!-- Tab switching and privileged row update/delete requests. -->\n    <script src="/static/js/admin.js"></script>\n</body>\n</html>' = <HttpResponse status_code=200, "text/html; charset=utf-8">.content
+E        +    where <HttpResponse status_code=200, "text/html; charset=utf-8"> = get('/system-matrix/')
+E        +      where get = <django.test.client.Client object at 0x000001FCCF916A30>.get
+
+tests\test_admin_matrix.py:103: AssertionError
+___________ test_admin_update_settings_empty_temperature_is_not_500 ___________
+
+superuser = <User: root>, user = <User: alice>
+post_json = <function post_json.<locals>._post at 0x000001FCCFAAEE50>
+
+    def test_admin_update_settings_empty_temperature_is_not_500(superuser, user, post_json):
+        c = Client(raise_request_exception=False)
+        c.force_login(superuser)
+        r = post_json(c, "/api/admin/update-row/", {"table": "settings", "id": user.settings.id, "fields": {"temperature": ""}})
+>       assert r.status_code in (200, 400)
+E       assert 500 in (200, 400)
+E        +  where 500 = <JsonResponse status_code=500, "application/json">.status_code
+
+tests\test_admin_matrix.py:110: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /api/admin/update-row/
+_____________ test_add_task_invalid_payload_returns_400[payload0] _____________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFD1BB10>
+payload = {}
+post_json = <function post_json.<locals>._post at 0x000001FCCFD3C250>
+
+    @pytest.mark.parametrize("payload", [
+        {},                                   # no title
+        {"title": ""},                        # empty title
+        {"title": "   "},                     # blank title
+        {"title": "x", "due_date": "not-a-date"},
+        {"title": "x", "priority": "galactic"},
+        {"title": "x" * 300},
+    ])
+    def test_add_task_invalid_payload_returns_400(no_raise_client, payload, post_json):
+        r = post_json(no_raise_client, "/api/add-task/", payload)
+>       assert r.status_code == 400, r.content
+E       AssertionError: b'
+E         <!doctype html>
+E         <html lang="en">
+E         <head>
+E           <title>Server Error (500)</title>
+E         </head>
+E         <body>
+E           <h1>Server Error (500)</h1><p></p>
+E         </body>
+E         </html>
+E         '
+E       assert 500 == 400
+E        +  where 500 = <HttpResponseServerError status_code=500, "text/html; charset=utf-8">.status_code
+
+tests\test_api.py:63: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /api/add-task/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: NOT NULL constraint failed: core_task.title
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\views\decorators\csrf.py", line 64, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\api.py", line 89, in api_add_task
+    task = Task.objects.create(
+        user=request.user,
+    ...<3 lines>...
+        tags=data.get('tags', '')
+    )
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\query.py", line 713, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 904, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 996, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 1201, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, insert_fields, returning_fields, raw
+    )
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 1253, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\query.py", line 2118, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1935, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: NOT NULL constraint failed: core_task.title
+_____________ test_add_task_invalid_payload_returns_400[payload1] _____________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFD1A850>
+payload = {'title': ''}
+post_json = <function post_json.<locals>._post at 0x000001FCCFCD1B10>
+
+    @pytest.mark.parametrize("payload", [
+        {},                                   # no title
+        {"title": ""},                        # empty title
+        {"title": "   "},                     # blank title
+        {"title": "x", "due_date": "not-a-date"},
+        {"title": "x", "priority": "galactic"},
+        {"title": "x" * 300},
+    ])
+    def test_add_task_invalid_payload_returns_400(no_raise_client, payload, post_json):
+        r = post_json(no_raise_client, "/api/add-task/", payload)
+>       assert r.status_code == 400, r.content
+E       AssertionError: b'{"status": "ok", "task_id": 1}'
+E       assert 200 == 400
+E        +  where 200 = <JsonResponse status_code=200, "application/json">.status_code
+
+tests\test_api.py:63: AssertionError
+_____________ test_add_task_invalid_payload_returns_400[payload2] _____________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFD19B30>
+payload = {'title': '   '}
+post_json = <function post_json.<locals>._post at 0x000001FCCFCD0250>
+
+    @pytest.mark.parametrize("payload", [
+        {},                                   # no title
+        {"title": ""},                        # empty title
+        {"title": "   "},                     # blank title
+        {"title": "x", "due_date": "not-a-date"},
+        {"title": "x", "priority": "galactic"},
+        {"title": "x" * 300},
+    ])
+    def test_add_task_invalid_payload_returns_400(no_raise_client, payload, post_json):
+        r = post_json(no_raise_client, "/api/add-task/", payload)
+>       assert r.status_code == 400, r.content
+E       AssertionError: b'{"status": "ok", "task_id": 1}'
+E       assert 200 == 400
+E        +  where 200 = <JsonResponse status_code=200, "application/json">.status_code
+
+tests\test_api.py:63: AssertionError
+_____________ test_add_task_invalid_payload_returns_400[payload3] _____________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFD38AF0>
+payload = {'title': 'x', 'due_date': 'not-a-date'}
+post_json = <function post_json.<locals>._post at 0x000001FCCFCC5590>
+
+    @pytest.mark.parametrize("payload", [
+        {},                                   # no title
+        {"title": ""},                        # empty title
+        {"title": "   "},                     # blank title
+        {"title": "x", "due_date": "not-a-date"},
+        {"title": "x", "priority": "galactic"},
+        {"title": "x" * 300},
+    ])
+    def test_add_task_invalid_payload_returns_400(no_raise_client, payload, post_json):
+        r = post_json(no_raise_client, "/api/add-task/", payload)
+>       assert r.status_code == 400, r.content
+E       AssertionError: b'
+E         <!doctype html>
+E         <html lang="en">
+E         <head>
+E           <title>Server Error (500)</title>
+E         </head>
+E         <body>
+E           <h1>Server Error (500)</h1><p></p>
+E         </body>
+E         </html>
+E         '
+E       assert 500 == 400
+E        +  where 500 = <HttpResponseServerError status_code=500, "text/html; charset=utf-8">.status_code
+
+tests\test_api.py:63: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /api/add-task/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\views\decorators\csrf.py", line 64, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\api.py", line 89, in api_add_task
+    task = Task.objects.create(
+        user=request.user,
+    ...<3 lines>...
+        tags=data.get('tags', '')
+    )
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\query.py", line 713, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 904, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 996, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 1201, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, insert_fields, returning_fields, raw
+    )
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 1253, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\query.py", line 2118, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1934, in execute_sql
+    for sql, params in self.as_sql():
+                       ~~~~~~~~~~~^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1823, in as_sql
+    value = field_prepare(value)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1746, in prepare_value
+    return field.get_db_prep_save(value, connection=self.connection)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\__init__.py", line 1051, in get_db_prep_save
+    return self.get_db_prep_value(value, connection=connection, prepared=False)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\__init__.py", line 1583, in get_db_prep_value
+    value = self.get_prep_value(value)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\__init__.py", line 1578, in get_prep_value
+    return self.to_python(value)
+           ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\__init__.py", line 1544, in to_python
+    raise exceptions.ValidationError(
+    ...<3 lines>...
+    )
+django.core.exceptions.ValidationError: ['“not-a-date” value has an invalid date format. It must be in YYYY-MM-DD format.']
+_____________ test_add_task_invalid_payload_returns_400[payload4] _____________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFD39270>
+payload = {'title': 'x', 'priority': 'galactic'}
+post_json = <function post_json.<locals>._post at 0x000001FCCFCC4720>
+
+    @pytest.mark.parametrize("payload", [
+        {},                                   # no title
+        {"title": ""},                        # empty title
+        {"title": "   "},                     # blank title
+        {"title": "x", "due_date": "not-a-date"},
+        {"title": "x", "priority": "galactic"},
+        {"title": "x" * 300},
+    ])
+    def test_add_task_invalid_payload_returns_400(no_raise_client, payload, post_json):
+        r = post_json(no_raise_client, "/api/add-task/", payload)
+>       assert r.status_code == 400, r.content
+E       AssertionError: b'{"status": "ok", "task_id": 1}'
+E       assert 200 == 400
+E        +  where 200 = <JsonResponse status_code=200, "application/json">.status_code
+
+tests\test_api.py:63: AssertionError
+_____________ test_add_task_invalid_payload_returns_400[payload5] _____________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFD39A90>
+payload = {'title': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}
+post_json = <function post_json.<locals>._post at 0x000001FCCFD3E6C0>
+
+    @pytest.mark.parametrize("payload", [
+        {},                                   # no title
+        {"title": ""},                        # empty title
+        {"title": "   "},                     # blank title
+        {"title": "x", "due_date": "not-a-date"},
+        {"title": "x", "priority": "galactic"},
+        {"title": "x" * 300},
+    ])
+    def test_add_task_invalid_payload_returns_400(no_raise_client, payload, post_json):
+        r = post_json(no_raise_client, "/api/add-task/", payload)
+>       assert r.status_code == 400, r.content
+E       AssertionError: b'{"status": "ok", "task_id": 1}'
+E       assert 200 == 400
+E        +  where 200 = <JsonResponse status_code=200, "application/json">.status_code
+
+tests\test_api.py:63: AssertionError
+__________________ test_add_task_malformed_json_returns_400 ___________________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFD3A2B0>
+post_json = <function post_json.<locals>._post at 0x000001FCCFD3F7F0>
+
+    def test_add_task_malformed_json_returns_400(no_raise_client, post_json):
+        r = post_json(no_raise_client, "/api/add-task/", raw="{not json")
+>       assert r.status_code == 400
+E       assert 500 == 400
+E        +  where 500 = <HttpResponseServerError status_code=500, "text/html; charset=utf-8">.status_code
+
+tests\test_api.py:70: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /api/add-task/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\views\decorators\csrf.py", line 64, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\api.py", line 88, in api_add_task
+    data = json.loads(request.body)
+  File "C:\Users\dania\AppData\Local\Python\pythoncore-3.14-64\Lib\json\__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "C:\Users\dania\AppData\Local\Python\pythoncore-3.14-64\Lib\json\decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\AppData\Local\Python\pythoncore-3.14-64\Lib\json\decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+__________________ test_update_task_get_returns_400_not_500 ___________________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFD3B930>
+
+    def test_update_task_get_returns_400_not_500(no_raise_client):
+>       assert no_raise_client.get("/api/update-task/").status_code == 400
+E       assert 500 == 400
+E        +  where 500 = <HttpResponseServerError status_code=500, "text/html; charset=utf-8">.status_code
+E        +    where <HttpResponseServerError status_code=500, "text/html; charset=utf-8"> = get('/api/update-task/')
+E        +      where get = <django.test.client.Client object at 0x000001FCCFD3B930>.get
+
+tests\test_api.py:92: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /api/update-task/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 206, in _get_response
+    self.check_response(response, callback)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 334, in check_response
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: The view core.views.api.api_update_task_status didn't return an HttpResponse object. It returned None instead.
+________________ test_update_task_bad_id_returns_4xx[payload0] ________________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFD3AD50>
+payload = {'task_id': 'abc', 'status': 'done'}
+post_json = <function post_json.<locals>._post at 0x000001FCCFE91DD0>
+
+    @pytest.mark.parametrize("payload", [
+        {"task_id": "abc", "status": "done"},
+        {"status": "done"},
+    ])
+    def test_update_task_bad_id_returns_4xx(no_raise_client, payload, post_json):
+        r = post_json(no_raise_client, "/api/update-task/", payload)
+>       assert r.status_code in (400, 404)
+E       assert 500 in (400, 404)
+E        +  where 500 = <HttpResponseServerError status_code=500, "text/html; charset=utf-8">.status_code
+
+tests\test_api.py:101: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /api/update-task/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\__init__.py", line 2207, in get_prep_value
+    return int(value)
+ValueError: invalid literal for int() with base 10: 'abc'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\views\decorators\csrf.py", line 64, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\api.py", line 107, in api_update_task_status
+    task = Task.objects.get(id=data.get('task_id'), user=request.user)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\query.py", line 669, in get
+    clone = self._chain() if self.query.combinator else self.filter(*args, **kwargs)
+                                                        ~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\query.py", line 1653, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\query.py", line 1671, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\query.py", line 1681, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\query.py", line 1680, in add_q
+    clause, _ = self._add_q(q_object, can_reuse)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\query.py", line 1712, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<7 lines>...
+        update_join_types=update_join_types,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\query.py", line 1612, in build_filter
+    condition = self.build_lookup(lookups, col, value)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\query.py", line 1439, in build_lookup
+    lookup = lookup_class(lhs, rhs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\lookups.py", line 35, in __init__
+    self.rhs = self.get_prep_lookup()
+               ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\lookups.py", line 391, in get_prep_lookup
+    return super().get_prep_lookup()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\lookups.py", line 93, in get_prep_lookup
+    return self.lhs.output_field.get_prep_value(self.rhs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\__init__.py", line 2209, in get_prep_value
+    raise e.__class__(
+        "Field '%s' expected a number but got %r." % (self.name, value),
+    ) from e
+ValueError: Field 'id' expected a number but got 'abc'.
+___________________ test_update_task_rejects_unknown_status ___________________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFA1EB70>
+user = <User: alice>
+post_json = <function post_json.<locals>._post at 0x000001FCCFCD2820>
+
+    def test_update_task_rejects_unknown_status(no_raise_client, user, post_json):
+        t = Task.objects.create(user=user, title="a")
+        r = post_json(no_raise_client, "/api/update-task/", {"task_id": t.id, "status": "exploded"})
+>       assert r.status_code == 400
+E       assert 200 == 400
+E        +  where 200 = <JsonResponse status_code=200, "application/json">.status_code
+
+tests\test_api.py:107: AssertionError
+_________________ test_save_settings_empty_username_rejected __________________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFF445F0>
+user = <User: alice>
+post_json = <function post_json.<locals>._post at 0x000001FCCFE90510>
+
+    def test_save_settings_empty_username_rejected(no_raise_client, user, post_json):
+        r = post_json(no_raise_client, "/api/save-settings/", {"username": "", "display_name": ""})
+>       assert r.status_code == 400
+E       assert 200 == 400
+E        +  where 200 = <JsonResponse status_code=200, "application/json">.status_code
+
+tests\test_api.py:162: AssertionError
+_________________ test_save_settings_taken_username_rejected __________________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFF44CD0>
+user = <User: alice>, other_user = <User: bob>
+post_json = <function post_json.<locals>._post at 0x000001FCCFE903B0>
+
+    def test_save_settings_taken_username_rejected(no_raise_client, user, other_user, post_json):
+        r = post_json(no_raise_client, "/api/save-settings/", {"username": "bob", "display_name": "bob"})
+>       assert r.status_code == 400
+E       assert 500 == 400
+E        +  where 500 = <HttpResponseServerError status_code=500, "text/html; charset=utf-8">.status_code
+
+tests\test_api.py:169: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /api/save-settings/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: UNIQUE constraint failed: auth_user.username
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\views\decorators\csrf.py", line 64, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\api.py", line 52, in api_save_settings
+    request.user.save()
+    ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 62, in save
+    super().save(**kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 904, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 996, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 1142, in _save_table
+    results = self._do_update(
+        base_qs,
+    ...<5 lines>...
+        returning_fields,
+    )
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\base.py", line 1246, in _do_update
+    return filtered._update(values, returning_fields)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\query.py", line 1425, in _update
+    return query.get_compiler(self.db).execute_returning_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 2149, in execute_returning_sql
+    row_count = self.execute_sql(ROW_COUNT)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 2120, in execute_sql
+    row_count = super().execute_sql(result_type)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: UNIQUE constraint failed: auth_user.username
+_________________ test_save_settings_null_values_do_not_crash _________________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFF456D0>
+post_json = <function post_json.<locals>._post at 0x000001FCCF936560>
+
+    def test_save_settings_null_values_do_not_crash(no_raise_client, post_json):
+        r = post_json(no_raise_client, "/api/save-settings/", {"github_repo_url": None, "github_token": None})
+>       assert r.status_code in (200, 400)
+E       assert 500 in (200, 400)
+E        +  where 500 = <HttpResponseServerError status_code=500, "text/html; charset=utf-8">.status_code
+
+tests\test_api.py:176: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /api/save-settings/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\views\decorators\csrf.py", line 64, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\api.py", line 69, in api_save_settings
+    settings.github_repo_url = data.get('github_repo_url', settings.github_repo_url).strip()
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
+____________________ test_save_settings_malformed_json_400 ____________________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFF46030>
+post_json = <function post_json.<locals>._post at 0x000001FCCFAAD220>
+
+    def test_save_settings_malformed_json_400(no_raise_client, post_json):
+>       assert post_json(no_raise_client, "/api/save-settings/", raw="]]").status_code == 400
+E       assert 500 == 400
+E        +  where 500 = <HttpResponseServerError status_code=500, "text/html; charset=utf-8">.status_code
+E        +    where <HttpResponseServerError status_code=500, "text/html; charset=utf-8"> = <function post_json.<locals>._post at 0x000001FCCFAAD220>(<django.test.client.Client object at 0x000001FCCFF46030>, '/api/save-settings/', raw=']]')
+
+tests\test_api.py:180: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /api/save-settings/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\views\decorators\csrf.py", line 64, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\api.py", line 46, in api_save_settings
+    data = json.loads(request.body)
+  File "C:\Users\dania\AppData\Local\Python\pythoncore-3.14-64\Lib\json\__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "C:\Users\dania\AppData\Local\Python\pythoncore-3.14-64\Lib\json\decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\AppData\Local\Python\pythoncore-3.14-64\Lib\json\decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+____________________ test_send_message_malformed_json_400 _____________________
+
+no_raise_client = <django.test.client.Client object at 0x000001FCCFF47ED0>
+post_json = <function post_json.<locals>._post at 0x000001FCCFF30670>
+
+    def test_send_message_malformed_json_400(no_raise_client, post_json):
+>       assert post_json(no_raise_client, "/api/send-message/", raw="nope").status_code == 400
+E       assert 500 == 400
+E        +  where 500 = <HttpResponseServerError status_code=500, "text/html; charset=utf-8">.status_code
+E        +    where <HttpResponseServerError status_code=500, "text/html; charset=utf-8"> = <function post_json.<locals>._post at 0x000001FCCFF30670>(<django.test.client.Client object at 0x000001FCCFF47ED0>, '/api/send-message/', raw='nope')
+
+tests\test_api.py:216: AssertionError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /api/send-message/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\views\decorators\csrf.py", line 64, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\api.py", line 23, in api_chat_message
+    data = json.loads(request.body)
+  File "C:\Users\dania\AppData\Local\Python\pythoncore-3.14-64\Lib\json\__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "C:\Users\dania\AppData\Local\Python\pythoncore-3.14-64\Lib\json\decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\AppData\Local\Python\pythoncore-3.14-64\Lib\json\decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+_____________ test_get_note_wikilink_target_is_attribute_escaped ______________
+
+auth_client = <django.test.client.Client object at 0x000001FCCFF527B0>
+user = <User: alice>
+note_writer = <function note_writer.<locals>.<lambda> at 0x000001FCCFF326C0>
+
+    def test_get_note_wikilink_target_is_attribute_escaped(auth_client, user, note_writer):
+        note_writer(user, "X", '[[a" onmouseover="alert(1)]]')
+        html = auth_client.get("/api/get-note/", {"name": "X"}).json()["html_content"]
+>       assert 'onmouseover="alert(1)"' not in html
+E       assert 'onmouseover="alert(1)"' not in '<p><a href=...t(1)</a></p>'
+E         
+E         'onmouseover="alert(1)"' is contained here:
+E         ?                                                                                                                                                                    ^^^
+E           <p><a href="#" class="wiki-link text-[var(--active-accent)] border-b border-dashed border-[var(--active-accent)] hover:text-white transition-colors" data-note="a" onmouseover="alert(1)">a" onmouseover="alert(1)</a></p>
+E         ?                                                                                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_api.py:261: AssertionError
+____ test_state_changing_api_requires_csrf_token[/api/add-task/-payload0] _____
+
+user = <User: alice>, url = '/api/add-task/', payload = {'title': 'csrf'}
+
+    @pytest.mark.parametrize("url,payload", [
+        ("/api/add-task/", {"title": "csrf"}),
+        ("/api/save-settings/", {"theme": "light"}),
+        ("/api/send-message/", {"message": "hi"}),
+    ])
+    def test_state_changing_api_requires_csrf_token(user, url, payload):
+        c = Client(enforce_csrf_checks=True)
+        c.force_login(user)
+        with mock.patch("core.rag_engine.ask_second_brain", return_value="x"):
+            r = c.post(url, data=payload, content_type="application/json")
+>       assert r.status_code == 403
+E       assert 200 == 403
+E        +  where 200 = <JsonResponse status_code=200, "application/json">.status_code
+
+tests\test_api.py:276: AssertionError
+__ test_state_changing_api_requires_csrf_token[/api/save-settings/-payload1] __
+
+user = <User: alice>, url = '/api/save-settings/', payload = {'theme': 'light'}
+
+    @pytest.mark.parametrize("url,payload", [
+        ("/api/add-task/", {"title": "csrf"}),
+        ("/api/save-settings/", {"theme": "light"}),
+        ("/api/send-message/", {"message": "hi"}),
+    ])
+    def test_state_changing_api_requires_csrf_token(user, url, payload):
+        c = Client(enforce_csrf_checks=True)
+        c.force_login(user)
+        with mock.patch("core.rag_engine.ask_second_brain", return_value="x"):
+            r = c.post(url, data=payload, content_type="application/json")
+>       assert r.status_code == 403
+E       assert 200 == 403
+E        +  where 200 = <JsonResponse status_code=200, "application/json">.status_code
+
+tests\test_api.py:276: AssertionError
+__ test_state_changing_api_requires_csrf_token[/api/send-message/-payload2] ___
+
+user = <User: alice>, url = '/api/send-message/', payload = {'message': 'hi'}
+
+    @pytest.mark.parametrize("url,payload", [
+        ("/api/add-task/", {"title": "csrf"}),
+        ("/api/save-settings/", {"theme": "light"}),
+        ("/api/send-message/", {"message": "hi"}),
+    ])
+    def test_state_changing_api_requires_csrf_token(user, url, payload):
+        c = Client(enforce_csrf_checks=True)
+        c.force_login(user)
+        with mock.patch("core.rag_engine.ask_second_brain", return_value="x"):
+            r = c.post(url, data=payload, content_type="application/json")
+>       assert r.status_code == 403
+E       assert 200 == 403
+E        +  where 200 = <JsonResponse status_code=200, "application/json">.status_code
+
+tests\test_api.py:276: AssertionError
+_________________ test_state_changing_api_accepts_csrf_header _________________
+
+user = <User: alice>
+
+    def test_state_changing_api_accepts_csrf_header(user):
+        c = Client(enforce_csrf_checks=True)
+        c.force_login(user)
+        c.get("/tasks/")  # sets csrftoken cookie
+>       token = c.cookies["csrftoken"].value
+                ^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'csrftoken'
+
+tests\test_api.py:283: KeyError
+_____________________ test_login_respects_next_parameter ______________________
+
+client = <django.test.client.Client object at 0x000001FCCFF202D0>
+user = <User: alice>, password = 'Str0ng-Pass-123!'
+
+    def test_login_respects_next_parameter(client, user, password):
+        """After login the user should land on the page they asked for (?next=)."""
+        r = client.post("/login/?next=/tasks/", {"username": "alice", "password": password})
+>       assert r.status_code == 302 and r.url == "/tasks/"
+E       assert (302 == 302 and '/' == '/tasks/'
+E        +  where 302 = <HttpResponseRedirect status_code=302, "text/html; charset=utf-8", url="/">.status_code
+E         
+E         - /tasks/
+E         + /)
+
+tests\test_auth.py:30: AssertionError
+____________________ test_base_layout_html_is_well_formed _____________________
+
+auth_client = <django.test.client.Client object at 0x000001FCD00C6F30>
+
+    def test_base_layout_html_is_well_formed(auth_client):
+        """#app-wrapper must be closed before </body>; scripts belong inside <body>."""
+        html = auth_client.get("/").content.decode()
+        body_close = html.index("</body>")
+>       assert html.rfind("<script", 0, len(html)) < body_close, "script tags after </body>"
+E       AssertionError: script tags after </body>
+E       assert 12998 < 12866
+E        +  where 12998 = <built-in method rfind of str object at 0x000001FCCE597D50>('<script', 0, 13783)
+E        +    where <built-in method rfind of str object at 0x000001FCCE597D50> = '<!DOCTYPE html>\n<html lang="en" data-theme="cyberpunk" data-accent="cyan">\n<head>\n    \n    <!-- Shared document metadata and compiled application styles. -->\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Second Brain - Home</title>\n    <link rel="stylesheet" href="/static/css/styles.css">\n</head>\n<body class="bg-[var(--bg-base)] text-[var(--text-secondary)] font-sans h-screen overflow-hidden transition-colors duration-300">\n    <!-- Application shell: persistent sidebar plus the active page content region. -->\n    <div id="app-wrapper" class="flex h-screen w-screen min-h-0 overflow-hidden">\n        <!-- Persistent primary navigation, account actions, and task synchronization status. -->\n<aside id="main-sidebar" class="fixed inset-y-0 left-0 w-64 lg:w-72 bg-[var(--bg-sidebar)] border-r border-[var(--border-glass)] flex flex-col h-full min-h-0 shrink-0 overflow-hidden backdrop-blur-md z-50 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0">\n    \n    <!-- Brand and mobile close control. -->\n    <header class="p-6 border-b border-[var(--border-glas.../div>\n    </section>\n</main>\n\n<!-- Dashboard interactions are split between shared task controls and report/search behavior. -->\n<script src="/static/js/tasks.js"></script>\n<script src="/static/js/home.js"></script> \n\n        </div>\n    </body>\n    <!-- Shared responsive navigation behavior for the base shell. -->\n    <script src="/static/js/layout.js"></script>\n    <script>\n        // Mirror the external layout controller so the shared shell remains usable\n        // on pages where these base-template controls are present.\n        document.addEventListener(\'DOMContentLoaded\', () => {\n            const sidebar = document.getElementById(\'main-sidebar\');\n            const openBtn = document.getElementById(\'mobile-menu-open\');\n            const closeBtn = document.getElementById(\'mobile-menu-close\');\n\n            if (openBtn && sidebar) {\n                openBtn.addEventListener(\'click\', () => sidebar.classList.remove(\'-translate-x-full\'));\n            }\n            if (closeBtn && sidebar) {\n                closeBtn.addEventListener(\'click\', () => sidebar.classList.add(\'-translate-x-full\'));\n            }\n        });\n    </script>\n</html>'.rfind
+E        +    and   13783 = len('<!DOCTYPE html>\n<html lang="en" data-theme="cyberpunk" data-accent="cyan">\n<head>\n    \n    <!-- Shared document metadata and compiled application styles. -->\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Second Brain - Home</title>\n    <link rel="stylesheet" href="/static/css/styles.css">\n</head>\n<body class="bg-[var(--bg-base)] text-[var(--text-secondary)] font-sans h-screen overflow-hidden transition-colors duration-300">\n    <!-- Application shell: persistent sidebar plus the active page content region. -->\n    <div id="app-wrapper" class="flex h-screen w-screen min-h-0 overflow-hidden">\n        <!-- Persistent primary navigation, account actions, and task synchronization status. -->\n<aside id="main-sidebar" class="fixed inset-y-0 left-0 w-64 lg:w-72 bg-[var(--bg-sidebar)] border-r border-[var(--border-glass)] flex flex-col h-full min-h-0 shrink-0 overflow-hidden backdrop-blur-md z-50 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0">\n    \n    <!-- Brand and mobile close control. -->\n    <header class="p-6 border-b border-[var(--border-glas.../div>\n    </section>\n</main>\n\n<!-- Dashboard interactions are split between shared task controls and report/search behavior. -->\n<script src="/static/js/tasks.js"></script>\n<script src="/static/js/home.js"></script> \n\n        </div>\n    </body>\n    <!-- Shared responsive navigation behavior for the base shell. -->\n    <script src="/static/js/layout.js"></script>\n    <script>\n        // Mirror the external layout controller so the shared shell remains usable\n        // on pages where these base-template controls are present.\n        document.addEventListener(\'DOMContentLoaded\', () => {\n            const sidebar = document.getElementById(\'main-sidebar\');\n            const openBtn = document.getElementById(\'mobile-menu-open\');\n            const closeBtn = document.getElementById(\'mobile-menu-close\');\n\n            if (openBtn && sidebar) {\n                openBtn.addEventListener(\'click\', () => sidebar.classList.remove(\'-translate-x-full\'));\n            }\n            if (closeBtn && sidebar) {\n                closeBtn.addEventListener(\'click\', () => sidebar.classList.add(\'-translate-x-full\'));\n            }\n        });\n    </script>\n</html>')
+
+tests\test_pages.py:67: AssertionError
+_________________ test_chat_greeting_shown_when_history_empty _________________
+
+auth_client = <django.test.client.Client object at 0x000001FCD01213B0>
+
+    def test_chat_greeting_shown_when_history_empty(auth_client):
+>       assert b"Hello! I'm your AI assistant" in auth_client.get("/chat/").content
+E       assert b"Hello! I'm your AI assistant" in b'<!DOCTYPE html>\n<html lang="en" data-theme="cyberpunk" data-accent="cyan">\n<head>\n    \n    <!-- Shared document metadata and compiled application styles. -->\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>\n  Second Brain - AI Chat\n</title>\n    <link rel="stylesheet" href="/static/css/styles.css">\n</head>\n<body class="bg-[var(--bg-base)] text-[var(--text-secondary)] font-sans h-screen overflow-hidden transition-colors duration-300">\n    <!-- Application shell: persistent sidebar plus the active page content region. -->\n    <div id="app-wrapper" class="flex h-screen w-screen min-h-0 overflow-hidden">\n        <!-- Persistent primary navigation, account actions, and task synchronization status. -->\n<aside id="main-sidebar" class="fixed inset-y-0 left-0 w-64 lg:w-72 bg-[var(--bg-sidebar)] border-r border-[var(--border-glass)] flex flex-col h-full min-h-0 shrink-0 overflow-hidden backdrop-blur-md z-50 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0">\n    \n    <!-- Brand and mobile close control. -->\n    <header class="p-6 border-b border-[var(--b...font-bold">Apply Context</button>\n      </footer>\n    </section>\n  </div>\n\n  </main>\n\n  <!-- Handles modal selection state, context rendering, and chat API requests. -->\n  <script src="/static/js/chat.js"></script>\n\n        </div>\n    </body>\n    <!-- Shared responsive navigation behavior for the base shell. -->\n    <script src="/static/js/layout.js"></script>\n    <script>\n        // Mirror the external layout controller so the shared shell remains usable\n        // on pages where these base-template controls are present.\n        document.addEventListener(\'DOMContentLoaded\', () => {\n            const sidebar = document.getElementById(\'main-sidebar\');\n            const openBtn = document.getElementById(\'mobile-menu-open\');\n            const closeBtn = document.getElementById(\'mobile-menu-close\');\n\n            if (openBtn && sidebar) {\n                openBtn.addEventListener(\'click\', () => sidebar.classList.remove(\'-translate-x-full\'));\n            }\n            if (closeBtn && sidebar) {\n                closeBtn.addEventListener(\'click\', () => sidebar.classList.add(\'-translate-x-full\'));\n            }\n        });\n    </script>\n</html>'
+E        +  where b'<!DOCTYPE html>\n<html lang="en" data-theme="cyberpunk" data-accent="cyan">\n<head>\n    \n    <!-- Shared document metadata and compiled application styles. -->\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>\n  Second Brain - AI Chat\n</title>\n    <link rel="stylesheet" href="/static/css/styles.css">\n</head>\n<body class="bg-[var(--bg-base)] text-[var(--text-secondary)] font-sans h-screen overflow-hidden transition-colors duration-300">\n    <!-- Application shell: persistent sidebar plus the active page content region. -->\n    <div id="app-wrapper" class="flex h-screen w-screen min-h-0 overflow-hidden">\n        <!-- Persistent primary navigation, account actions, and task synchronization status. -->\n<aside id="main-sidebar" class="fixed inset-y-0 left-0 w-64 lg:w-72 bg-[var(--bg-sidebar)] border-r border-[var(--border-glass)] flex flex-col h-full min-h-0 shrink-0 overflow-hidden backdrop-blur-md z-50 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0">\n    \n    <!-- Brand and mobile close control. -->\n    <header class="p-6 border-b border-[var(--b...font-bold">Apply Context</button>\n      </footer>\n    </section>\n  </div>\n\n  </main>\n\n  <!-- Handles modal selection state, context rendering, and chat API requests. -->\n  <script src="/static/js/chat.js"></script>\n\n        </div>\n    </body>\n    <!-- Shared responsive navigation behavior for the base shell. -->\n    <script src="/static/js/layout.js"></script>\n    <script>\n        // Mirror the external layout controller so the shared shell remains usable\n        // on pages where these base-template controls are present.\n        document.addEventListener(\'DOMContentLoaded\', () => {\n            const sidebar = document.getElementById(\'main-sidebar\');\n            const openBtn = document.getElementById(\'mobile-menu-open\');\n            const closeBtn = document.getElementById(\'mobile-menu-close\');\n\n            if (openBtn && sidebar) {\n                openBtn.addEventListener(\'click\', () => sidebar.classList.remove(\'-translate-x-full\'));\n            }\n            if (closeBtn && sidebar) {\n                closeBtn.addEventListener(\'click\', () => sidebar.classList.add(\'-translate-x-full\'));\n            }\n        });\n    </script>\n</html>' = <HttpResponse status_code=200, "text/html; charset=utf-8">.content
+E        +    where <HttpResponse status_code=200, "text/html; charset=utf-8"> = get('/chat/')
+E        +      where get = <django.test.client.Client object at 0x000001FCD01213B0>.get
+
+tests\test_pages.py:134: AssertionError
+______________ test_pages_work_for_user_without_settings_row[/] _______________
+
+auth_client = <django.test.client.Client object at 0x000001FCD0120D70>
+user = <User: alice>, url = '/'
+
+    @pytest.mark.parametrize("url", PRIVATE_PAGES + ["/api/sidebar-stats/"])
+    def test_pages_work_for_user_without_settings_row(auth_client, user, url):
+        """A user whose UserSettings row was deleted (e.g. via Core Matrix 'Drop') must not get a 500."""
+        UserSettings.objects.filter(user=user).delete()
+        user.refresh_from_db()
+>       r = auth_client.get(url)
+            ^^^^^^^^^^^^^^^^^^^^
+
+tests\test_pages.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\test\client.py:1128: in get
+    response = super().get(
+..\venv\Lib\site-packages\django\test\client.py:475: in get
+    return self.generic(
+..\venv\Lib\site-packages\django\test\client.py:671: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\test\client.py:1091: in request
+    self.check_exception(response)
+..\venv\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+..\venv\Lib\site-packages\django\core\handlers\exception.py:56: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\core\handlers\base.py:199: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+core\views\pages.py:46: in home_view
+    'config': get_user_config(request.user),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+core\views\utils.py:8: in get_user_config
+    return user.settings
+           ^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\utils\functional.py:253: in inner
+    return func(_wrapped, *args)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.db.models.fields.related_descriptors.ReverseOneToOneDescriptor object at 0x000001FCB9ABF4D0>
+instance = <User: alice>, cls = <class 'django.contrib.auth.models.User'>
+
+    def __get__(self, instance, cls=None):
+        """
+        Get the related instance through the reverse relation.
+    
+        With the example above, when getting ``place.restaurant``:
+    
+        - ``self`` is the descriptor managing the ``restaurant`` attribute
+        - ``instance`` is the ``place`` instance
+        - ``cls`` is the ``Place`` class (unused)
+    
+        Keep in mind that ``Restaurant`` holds the foreign key to ``Place``.
+        """
+        if instance is None:
+            return self
+    
+        # The related instance is loaded from the database and then cached
+        # by the field on the model instance state. It can also be pre-cached
+        # by the forward accessor (ForwardManyToOneDescriptor).
+        try:
+            rel_obj = self.related.get_cached_value(instance)
+        except KeyError:
+            if not instance._is_pk_set():
+                rel_obj = None
+            else:
+                instance._state.fetch_mode.fetch(self, instance)
+                rel_obj = self.related.get_cached_value(instance)
+            self.related.set_cached_value(instance, rel_obj)
+    
+        if rel_obj is None:
+>           raise self.RelatedObjectDoesNotExist(
+                "%s has no %s."
+                % (instance.__class__.__name__, self.related.accessor_name)
+            )
+E           django.contrib.auth.models.User.settings.RelatedObjectDoesNotExist: User has no settings.
+
+..\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py:542: RelatedObjectDoesNotExist
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\pages.py", line 46, in home_view
+    'config': get_user_config(request.user),
+              ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\utils.py", line 8, in get_user_config
+    return user.settings
+           ^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\utils\functional.py", line 253, in inner
+    return func(_wrapped, *args)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 542, in __get__
+    raise self.RelatedObjectDoesNotExist(
+    ...<2 lines>...
+    )
+django.contrib.auth.models.User.settings.RelatedObjectDoesNotExist: User has no settings.
+____________ test_pages_work_for_user_without_settings_row[/chat/] ____________
+
+auth_client = <django.test.client.Client object at 0x000001FCD0121950>
+user = <User: alice>, url = '/chat/'
+
+    @pytest.mark.parametrize("url", PRIVATE_PAGES + ["/api/sidebar-stats/"])
+    def test_pages_work_for_user_without_settings_row(auth_client, user, url):
+        """A user whose UserSettings row was deleted (e.g. via Core Matrix 'Drop') must not get a 500."""
+        UserSettings.objects.filter(user=user).delete()
+        user.refresh_from_db()
+>       r = auth_client.get(url)
+            ^^^^^^^^^^^^^^^^^^^^
+
+tests\test_pages.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\test\client.py:1128: in get
+    response = super().get(
+..\venv\Lib\site-packages\django\test\client.py:475: in get
+    return self.generic(
+..\venv\Lib\site-packages\django\test\client.py:671: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\test\client.py:1091: in request
+    self.check_exception(response)
+..\venv\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+..\venv\Lib\site-packages\django\core\handlers\exception.py:56: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\core\handlers\base.py:199: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+core\views\pages.py:74: in ai_chat_view
+    'config': get_user_config(request.user),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+core\views\utils.py:8: in get_user_config
+    return user.settings
+           ^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\utils\functional.py:253: in inner
+    return func(_wrapped, *args)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.db.models.fields.related_descriptors.ReverseOneToOneDescriptor object at 0x000001FCB9ABF4D0>
+instance = <User: alice>, cls = <class 'django.contrib.auth.models.User'>
+
+    def __get__(self, instance, cls=None):
+        """
+        Get the related instance through the reverse relation.
+    
+        With the example above, when getting ``place.restaurant``:
+    
+        - ``self`` is the descriptor managing the ``restaurant`` attribute
+        - ``instance`` is the ``place`` instance
+        - ``cls`` is the ``Place`` class (unused)
+    
+        Keep in mind that ``Restaurant`` holds the foreign key to ``Place``.
+        """
+        if instance is None:
+            return self
+    
+        # The related instance is loaded from the database and then cached
+        # by the field on the model instance state. It can also be pre-cached
+        # by the forward accessor (ForwardManyToOneDescriptor).
+        try:
+            rel_obj = self.related.get_cached_value(instance)
+        except KeyError:
+            if not instance._is_pk_set():
+                rel_obj = None
+            else:
+                instance._state.fetch_mode.fetch(self, instance)
+                rel_obj = self.related.get_cached_value(instance)
+            self.related.set_cached_value(instance, rel_obj)
+    
+        if rel_obj is None:
+>           raise self.RelatedObjectDoesNotExist(
+                "%s has no %s."
+                % (instance.__class__.__name__, self.related.accessor_name)
+            )
+E           django.contrib.auth.models.User.settings.RelatedObjectDoesNotExist: User has no settings.
+
+..\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py:542: RelatedObjectDoesNotExist
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /chat/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\pages.py", line 74, in ai_chat_view
+    'config': get_user_config(request.user),
+              ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\utils.py", line 8, in get_user_config
+    return user.settings
+           ^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\utils\functional.py", line 253, in inner
+    return func(_wrapped, *args)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 542, in __get__
+    raise self.RelatedObjectDoesNotExist(
+    ...<2 lines>...
+    )
+django.contrib.auth.models.User.settings.RelatedObjectDoesNotExist: User has no settings.
+___________ test_pages_work_for_user_without_settings_row[/notes/] ____________
+
+auth_client = <django.test.client.Client object at 0x000001FCD0121DB0>
+user = <User: alice>, url = '/notes/'
+
+    @pytest.mark.parametrize("url", PRIVATE_PAGES + ["/api/sidebar-stats/"])
+    def test_pages_work_for_user_without_settings_row(auth_client, user, url):
+        """A user whose UserSettings row was deleted (e.g. via Core Matrix 'Drop') must not get a 500."""
+        UserSettings.objects.filter(user=user).delete()
+        user.refresh_from_db()
+>       r = auth_client.get(url)
+            ^^^^^^^^^^^^^^^^^^^^
+
+tests\test_pages.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\test\client.py:1128: in get
+    response = super().get(
+..\venv\Lib\site-packages\django\test\client.py:475: in get
+    return self.generic(
+..\venv\Lib\site-packages\django\test\client.py:671: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\test\client.py:1091: in request
+    self.check_exception(response)
+..\venv\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+..\venv\Lib\site-packages\django\core\handlers\exception.py:56: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\core\handlers\base.py:199: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+core\views\pages.py:90: in notes_view
+    settings = request.user.settings
+               ^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\utils\functional.py:253: in inner
+    return func(_wrapped, *args)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.db.models.fields.related_descriptors.ReverseOneToOneDescriptor object at 0x000001FCB9ABF4D0>
+instance = <User: alice>, cls = <class 'django.contrib.auth.models.User'>
+
+    def __get__(self, instance, cls=None):
+        """
+        Get the related instance through the reverse relation.
+    
+        With the example above, when getting ``place.restaurant``:
+    
+        - ``self`` is the descriptor managing the ``restaurant`` attribute
+        - ``instance`` is the ``place`` instance
+        - ``cls`` is the ``Place`` class (unused)
+    
+        Keep in mind that ``Restaurant`` holds the foreign key to ``Place``.
+        """
+        if instance is None:
+            return self
+    
+        # The related instance is loaded from the database and then cached
+        # by the field on the model instance state. It can also be pre-cached
+        # by the forward accessor (ForwardManyToOneDescriptor).
+        try:
+            rel_obj = self.related.get_cached_value(instance)
+        except KeyError:
+            if not instance._is_pk_set():
+                rel_obj = None
+            else:
+                instance._state.fetch_mode.fetch(self, instance)
+                rel_obj = self.related.get_cached_value(instance)
+            self.related.set_cached_value(instance, rel_obj)
+    
+        if rel_obj is None:
+>           raise self.RelatedObjectDoesNotExist(
+                "%s has no %s."
+                % (instance.__class__.__name__, self.related.accessor_name)
+            )
+E           django.contrib.auth.models.User.settings.RelatedObjectDoesNotExist: User has no settings.
+
+..\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py:542: RelatedObjectDoesNotExist
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /notes/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\pages.py", line 90, in notes_view
+    settings = request.user.settings
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\utils\functional.py", line 253, in inner
+    return func(_wrapped, *args)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 542, in __get__
+    raise self.RelatedObjectDoesNotExist(
+    ...<2 lines>...
+    )
+django.contrib.auth.models.User.settings.RelatedObjectDoesNotExist: User has no settings.
+___________ test_pages_work_for_user_without_settings_row[/tasks/] ____________
+
+auth_client = <django.test.client.Client object at 0x000001FCD0122DF0>
+user = <User: alice>, url = '/tasks/'
+
+    @pytest.mark.parametrize("url", PRIVATE_PAGES + ["/api/sidebar-stats/"])
+    def test_pages_work_for_user_without_settings_row(auth_client, user, url):
+        """A user whose UserSettings row was deleted (e.g. via Core Matrix 'Drop') must not get a 500."""
+        UserSettings.objects.filter(user=user).delete()
+        user.refresh_from_db()
+>       r = auth_client.get(url)
+            ^^^^^^^^^^^^^^^^^^^^
+
+tests\test_pages.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\test\client.py:1128: in get
+    response = super().get(
+..\venv\Lib\site-packages\django\test\client.py:475: in get
+    return self.generic(
+..\venv\Lib\site-packages\django\test\client.py:671: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\test\client.py:1091: in request
+    self.check_exception(response)
+..\venv\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+..\venv\Lib\site-packages\django\core\handlers\exception.py:56: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\core\handlers\base.py:199: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+core\views\pages.py:115: in tasks_view
+    'config': get_user_config(request.user),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+core\views\utils.py:8: in get_user_config
+    return user.settings
+           ^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\utils\functional.py:253: in inner
+    return func(_wrapped, *args)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.db.models.fields.related_descriptors.ReverseOneToOneDescriptor object at 0x000001FCB9ABF4D0>
+instance = <User: alice>, cls = <class 'django.contrib.auth.models.User'>
+
+    def __get__(self, instance, cls=None):
+        """
+        Get the related instance through the reverse relation.
+    
+        With the example above, when getting ``place.restaurant``:
+    
+        - ``self`` is the descriptor managing the ``restaurant`` attribute
+        - ``instance`` is the ``place`` instance
+        - ``cls`` is the ``Place`` class (unused)
+    
+        Keep in mind that ``Restaurant`` holds the foreign key to ``Place``.
+        """
+        if instance is None:
+            return self
+    
+        # The related instance is loaded from the database and then cached
+        # by the field on the model instance state. It can also be pre-cached
+        # by the forward accessor (ForwardManyToOneDescriptor).
+        try:
+            rel_obj = self.related.get_cached_value(instance)
+        except KeyError:
+            if not instance._is_pk_set():
+                rel_obj = None
+            else:
+                instance._state.fetch_mode.fetch(self, instance)
+                rel_obj = self.related.get_cached_value(instance)
+            self.related.set_cached_value(instance, rel_obj)
+    
+        if rel_obj is None:
+>           raise self.RelatedObjectDoesNotExist(
+                "%s has no %s."
+                % (instance.__class__.__name__, self.related.accessor_name)
+            )
+E           django.contrib.auth.models.User.settings.RelatedObjectDoesNotExist: User has no settings.
+
+..\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py:542: RelatedObjectDoesNotExist
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /tasks/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\pages.py", line 115, in tasks_view
+    'config': get_user_config(request.user),
+              ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\utils.py", line 8, in get_user_config
+    return user.settings
+           ^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\utils\functional.py", line 253, in inner
+    return func(_wrapped, *args)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 542, in __get__
+    raise self.RelatedObjectDoesNotExist(
+    ...<2 lines>...
+    )
+django.contrib.auth.models.User.settings.RelatedObjectDoesNotExist: User has no settings.
+__________ test_pages_work_for_user_without_settings_row[/settings/] __________
+
+auth_client = <django.test.client.Client object at 0x000001FCD0123750>
+user = <User: alice>, url = '/settings/'
+
+    @pytest.mark.parametrize("url", PRIVATE_PAGES + ["/api/sidebar-stats/"])
+    def test_pages_work_for_user_without_settings_row(auth_client, user, url):
+        """A user whose UserSettings row was deleted (e.g. via Core Matrix 'Drop') must not get a 500."""
+        UserSettings.objects.filter(user=user).delete()
+        user.refresh_from_db()
+>       r = auth_client.get(url)
+            ^^^^^^^^^^^^^^^^^^^^
+
+tests\test_pages.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\venv\Lib\site-packages\django\test\client.py:1128: in get
+    response = super().get(
+..\venv\Lib\site-packages\django\test\client.py:475: in get
+    return self.generic(
+..\venv\Lib\site-packages\django\test\client.py:671: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\test\client.py:1091: in request
+    self.check_exception(response)
+..\venv\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+..\venv\Lib\site-packages\django\core\handlers\exception.py:56: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\core\handlers\base.py:199: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+core\views\pages.py:123: in settings_view
+    return render(request, 'settings.html', {'active_page': 'settings', 'config': get_user_config(request.user)})
+                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+core\views\utils.py:8: in get_user_config
+    return user.settings
+           ^^^^^^^^^^^^^
+..\venv\Lib\site-packages\django\utils\functional.py:253: in inner
+    return func(_wrapped, *args)
+           ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.db.models.fields.related_descriptors.ReverseOneToOneDescriptor object at 0x000001FCB9ABF4D0>
+instance = <User: alice>, cls = <class 'django.contrib.auth.models.User'>
+
+    def __get__(self, instance, cls=None):
+        """
+        Get the related instance through the reverse relation.
+    
+        With the example above, when getting ``place.restaurant``:
+    
+        - ``self`` is the descriptor managing the ``restaurant`` attribute
+        - ``instance`` is the ``place`` instance
+        - ``cls`` is the ``Place`` class (unused)
+    
+        Keep in mind that ``Restaurant`` holds the foreign key to ``Place``.
+        """
+        if instance is None:
+            return self
+    
+        # The related instance is loaded from the database and then cached
+        # by the field on the model instance state. It can also be pre-cached
+        # by the forward accessor (ForwardManyToOneDescriptor).
+        try:
+            rel_obj = self.related.get_cached_value(instance)
+        except KeyError:
+            if not instance._is_pk_set():
+                rel_obj = None
+            else:
+                instance._state.fetch_mode.fetch(self, instance)
+                rel_obj = self.related.get_cached_value(instance)
+            self.related.set_cached_value(instance, rel_obj)
+    
+        if rel_obj is None:
+>           raise self.RelatedObjectDoesNotExist(
+                "%s has no %s."
+                % (instance.__class__.__name__, self.related.accessor_name)
+            )
+E           django.contrib.auth.models.User.settings.RelatedObjectDoesNotExist: User has no settings.
+
+..\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py:542: RelatedObjectDoesNotExist
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:283 Internal Server Error: /settings/
+Traceback (most recent call last):
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py", line 199, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\pages.py", line 123, in settings_view
+    return render(request, 'settings.html', {'active_page': 'settings', 'config': get_user_config(request.user)})
+                                                                                  ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "c:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\core\views\utils.py", line 8, in get_user_config
+    return user.settings
+           ^^^^^^^^^^^^^
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\utils\functional.py", line 253, in inner
+    return func(_wrapped, *args)
+  File "C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 542, in __get__
+    raise self.RelatedObjectDoesNotExist(
+    ...<2 lines>...
+    )
+django.contrib.auth.models.User.settings.RelatedObjectDoesNotExist: User has no settings.
+______ test_reset_chat_engine_for_uncached_user_keeps_other_users_cache _______
+
+    def test_reset_chat_engine_for_uncached_user_keeps_other_users_cache():
+        """Saving settings for a user without a cached engine must not wipe everybody's cache."""
+        rag_engine._user_chat_engines.update({2: "e2"})
+        rag_engine._user_indexes.update({2: "i2", 3: "i3"})
+        rag_engine.reset_chat_engine(3)
+>       assert rag_engine._user_chat_engines == {2: "e2"}
+E       AssertionError: assert {} == {2: 'e2'}
+E         
+E         Right contains 1 more item:
+E         {2: 'e2'}
+E         
+E         Full diff:
+E         + {}
+E         - {
+E         -     2: 'e2',
+E         - }
+
+tests\test_rag_engine.py:100: AssertionError
+______________ test_import_does_not_load_embedding_model_eagerly ______________
+
+    def test_import_does_not_load_embedding_model_eagerly():
+        """Importing core.rag_engine must not download/load the HF model (slow start, network)."""
+        import importlib
+        import sys
+        calls = []
+    
+        class Spy:
+            def __init__(self, *a, **k):
+                calls.append(1)
+    
+        with mock.patch.object(sys.modules["llama_index.embeddings.huggingface"], "HuggingFaceEmbedding", Spy):
+>           importlib.reload(rag_engine)
+
+tests\test_rag_engine.py:243: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\importlib\__init__.py:129: in reload
+    _bootstrap._exec(spec, module)
+<frozen importlib._bootstrap>:869: in _exec
+    ???
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+core\rag_engine.py:32: in <module>
+    Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+    ^^^^^^^^^^^^^^^^^^^^
+..\venv\Lib\site-packages\llama_index\core\settings.py:76: in embed_model
+    self._embed_model = resolve_embed_model(embed_model)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+embed_model = <test_rag_engine.test_import_does_not_load_embedding_model_eagerly.<locals>.Spy object at 0x000001FCCF8D6BA0>
+callback_manager = None
+
+    def resolve_embed_model(
+        embed_model: Optional[EmbedType] = None,
+        callback_manager: Optional[CallbackManager] = None,
+    ) -> BaseEmbedding:
+        """Resolve embed model."""
+        from llama_index.core.settings import Settings
+    
+        try:
+            from llama_index.core.bridge.langchain import Embeddings as LCEmbeddings
+        except ImportError:
+            LCEmbeddings = None  # type: ignore
+    
+        if embed_model == "default":
+            if os.getenv("IS_TESTING"):
+                embed_model = MockEmbedding(embed_dim=8)
+                embed_model.callback_manager = callback_manager or Settings.callback_manager
+                return embed_model
+    
+            try:
+                from llama_index.embeddings.openai import (
+                    OpenAIEmbedding,
+                )  # pants: no-infer-dep
+    
+                from llama_index.embeddings.openai.utils import (
+                    validate_openai_api_key,
+                )  # pants: no-infer-dep
+    
+                embed_model = OpenAIEmbedding()
+                validate_openai_api_key(embed_model.api_key)  # type: ignore
+            except ImportError:
+                raise ImportError(
+                    "`llama-index-embeddings-openai` package not found, "
+                    "please run `pip install llama-index-embeddings-openai`"
+                )
+            except ValueError as e:
+                raise ValueError(
+                    "\n******\n"
+                    "Could not load OpenAI embedding model. "
+                    "If you intended to use OpenAI, please check your OPENAI_API_KEY.\n"
+                    "Original error:\n"
+                    f"{e!s}"
+                    "\nConsider using embed_model='local'.\n"
+                    "Visit our documentation for more embedding options: "
+                    "https://developers.llamaindex.ai/python/framework/module_guides/"
+                    "models/embeddings/"
+                    "\n******"
+                )
+        # for image multi-modal embeddings
+        elif isinstance(embed_model, str) and embed_model.startswith("clip"):
+            try:
+                from llama_index.embeddings.clip import ClipEmbedding  # pants: no-infer-dep
+    
+                clip_model_name = (
+                    embed_model.split(":")[1] if ":" in embed_model else "ViT-B/32"
+                )
+                embed_model = ClipEmbedding(model_name=clip_model_name)
+            except ImportError as e:
+                raise ImportError(
+                    "`llama-index-embeddings-clip` package not found, "
+                    "please run `pip install llama-index-embeddings-clip` and `pip install git+https://github.com/openai/CLIP.git`"
+                )
+    
+        if isinstance(embed_model, str):
+            try:
+                from llama_index.embeddings.huggingface import (
+                    HuggingFaceEmbedding,
+                )  # pants: no-infer-dep
+    
+                splits = embed_model.split(":", 1)
+                is_local = splits[0]
+                model_name = splits[1] if len(splits) > 1 else None
+                if is_local != "local":
+                    raise ValueError(
+                        "embed_model must start with str 'local' or of type BaseEmbedding"
+                    )
+    
+                cache_folder = os.path.join(get_cache_dir(), "models")
+                os.makedirs(cache_folder, exist_ok=True)
+    
+                embed_model = HuggingFaceEmbedding(
+                    model_name=model_name, cache_folder=cache_folder
+                )
+            except ImportError:
+                raise ImportError(
+                    "`llama-index-embeddings-huggingface` package not found, "
+                    "please run `pip install llama-index-embeddings-huggingface`"
+                )
+    
+        if LCEmbeddings is not None and isinstance(embed_model, LCEmbeddings):
+            try:
+                from llama_index.embeddings.langchain import (
+                    LangchainEmbedding,
+                )  # pants: no-infer-dep
+    
+                embed_model = LangchainEmbedding(embed_model)
+            except ImportError as e:
+                raise ImportError(
+                    "`llama-index-embeddings-langchain` package not found, "
+                    "please run `pip install llama-index-embeddings-langchain`"
+                )
+    
+        if embed_model is None:
+            print("Embeddings have been explicitly disabled. Using MockEmbedding.")
+            embed_model = MockEmbedding(embed_dim=1)
+    
+>       assert isinstance(embed_model, BaseEmbedding)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError
+
+..\venv\Lib\site-packages\llama_index\core\embeddings\utils.py:135: AssertionError
+============================== warnings summary ===============================
+tests/test_admin_matrix.py: 18 warnings
+tests/test_api.py: 46 warnings
+tests/test_auth.py: 13 warnings
+tests/test_pages.py: 43 warnings
+tests/e2e/test_e2e_flows.py: 1 warning
+  C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py:63: UserWarning: No directory at: C:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\staticfiles\
+    mw_instance = middleware(adapted_handler)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_admin_matrix.py::test_admin_api_forbidden_for_normal_user[/api/admin/update-row/]
+FAILED tests/test_admin_matrix.py::test_admin_api_forbidden_for_normal_user[/api/admin/delete-row/]
+FAILED tests/test_admin_matrix.py::test_admin_delete_requires_csrf - assert 2...
+FAILED tests/test_admin_matrix.py::test_dashboard_has_no_stray_debug_text - a...
+FAILED tests/test_admin_matrix.py::test_admin_update_settings_empty_temperature_is_not_500
+FAILED tests/test_api.py::test_add_task_invalid_payload_returns_400[payload0]
+FAILED tests/test_api.py::test_add_task_invalid_payload_returns_400[payload1]
+FAILED tests/test_api.py::test_add_task_invalid_payload_returns_400[payload2]
+FAILED tests/test_api.py::test_add_task_invalid_payload_returns_400[payload3]
+FAILED tests/test_api.py::test_add_task_invalid_payload_returns_400[payload4]
+FAILED tests/test_api.py::test_add_task_invalid_payload_returns_400[payload5]
+FAILED tests/test_api.py::test_add_task_malformed_json_returns_400 - assert 5...
+FAILED tests/test_api.py::test_update_task_get_returns_400_not_500 - assert 5...
+FAILED tests/test_api.py::test_update_task_bad_id_returns_4xx[payload0] - ass...
+FAILED tests/test_api.py::test_update_task_rejects_unknown_status - assert 20...
+FAILED tests/test_api.py::test_save_settings_empty_username_rejected - assert...
+FAILED tests/test_api.py::test_save_settings_taken_username_rejected - assert...
+FAILED tests/test_api.py::test_save_settings_null_values_do_not_crash - asser...
+FAILED tests/test_api.py::test_save_settings_malformed_json_400 - assert 500 ...
+FAILED tests/test_api.py::test_send_message_malformed_json_400 - assert 500 =...
+FAILED tests/test_api.py::test_get_note_wikilink_target_is_attribute_escaped
+FAILED tests/test_api.py::test_state_changing_api_requires_csrf_token[/api/add-task/-payload0]
+FAILED tests/test_api.py::test_state_changing_api_requires_csrf_token[/api/save-settings/-payload1]
+FAILED tests/test_api.py::test_state_changing_api_requires_csrf_token[/api/send-message/-payload2]
+FAILED tests/test_api.py::test_state_changing_api_accepts_csrf_header - KeyEr...
+FAILED tests/test_auth.py::test_login_respects_next_parameter - assert (302 =...
+FAILED tests/test_pages.py::test_base_layout_html_is_well_formed - AssertionE...
+FAILED tests/test_pages.py::test_chat_greeting_shown_when_history_empty - ass...
+FAILED tests/test_pages.py::test_pages_work_for_user_without_settings_row[/]
+FAILED tests/test_pages.py::test_pages_work_for_user_without_settings_row[/chat/]
+FAILED tests/test_pages.py::test_pages_work_for_user_without_settings_row[/notes/]
+FAILED tests/test_pages.py::test_pages_work_for_user_without_settings_row[/tasks/]
+FAILED tests/test_pages.py::test_pages_work_for_user_without_settings_row[/settings/]
+FAILED tests/test_rag_engine.py::test_reset_chat_engine_for_uncached_user_keeps_other_users_cache
+FAILED tests/test_rag_engine.py::test_import_does_not_load_embedding_model_eagerly
+================ 35 failed, 142 passed, 121 warnings in 13.72s ================

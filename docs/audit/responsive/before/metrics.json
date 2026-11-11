@@ -1,0 +1,1269 @@
+{
+ "login_360": {
+  "vw": 360,
+  "docScroll": 474,
+  "bodyScroll": 474,
+  "overflowing": [
+   "div.absolute.top-1/4.left-1/4 right=474"
+  ],
+  "smallTargets": [
+   "label.text-xs.uppercase.tracking-wider 262x16",
+   "label.text-xs.uppercase.tracking-wider 262x16",
+   "a.text-[#00F0FF].font-semibold.hover:underline 134x39"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_390": {
+  "vw": 390,
+  "docScroll": 482,
+  "bodyScroll": 482,
+  "overflowing": [
+   "div.absolute.top-1/4.left-1/4 right=482"
+  ],
+  "smallTargets": [
+   "label.text-xs.uppercase.tracking-wider 292x16",
+   "label.text-xs.uppercase.tracking-wider 292x16",
+   "a.text-[#00F0FF].font-semibold.hover:underline 113x19"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "a.text-[#00F0FF].font-semibold.hover:underline 113x19"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "a.text-[#00F0FF].font-semibold.hover:underline 113x19"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "a.text-[#00F0FF].font-semibold.hover:underline 113x19"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_360": {
+  "vw": 360,
+  "docScroll": 474,
+  "bodyScroll": 474,
+  "overflowing": [
+   "div.absolute.top-1/4.left-1/4 right=474"
+  ],
+  "smallTargets": [
+   "label.text-xs.uppercase.tracking-wider 262x16",
+   "input#id_username.input-field.rounded-xl.px-4 262x42",
+   "label.text-xs.uppercase.tracking-wider 262x16",
+   "input#id_password1.input-field.rounded-xl.px-4 262x42",
+   "label.text-xs.uppercase.tracking-wider 262x16",
+   "input#id_password2.input-field.rounded-xl.px-4 262x42",
+   "a.text-[#00F0FF].font-semibold.hover:underline 100x19"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "register_390": {
+  "vw": 390,
+  "docScroll": 482,
+  "bodyScroll": 482,
+  "overflowing": [
+   "div.absolute.top-1/4.left-1/4 right=482"
+  ],
+  "smallTargets": [
+   "label.text-xs.uppercase.tracking-wider 292x16",
+   "input#id_username.input-field.rounded-xl.px-4 292x42",
+   "label.text-xs.uppercase.tracking-wider 292x16",
+   "input#id_password1.input-field.rounded-xl.px-4 292x42",
+   "label.text-xs.uppercase.tracking-wider 292x16",
+   "input#id_password2.input-field.rounded-xl.px-4 292x42",
+   "a.text-[#00F0FF].font-semibold.hover:underline 100x19"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "register_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "input#id_username.input-field.rounded-xl.px-4 350x42",
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "input#id_password1.input-field.rounded-xl.px-4 350x42",
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "input#id_password2.input-field.rounded-xl.px-4 350x42",
+   "a.text-[#00F0FF].font-semibold.hover:underline 100x19"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "register_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "input#id_username.input-field.rounded-xl.px-4 350x42",
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "input#id_password1.input-field.rounded-xl.px-4 350x42",
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "input#id_password2.input-field.rounded-xl.px-4 350x42",
+   "a.text-[#00F0FF].font-semibold.hover:underline 100x19"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "register_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "input#id_username.input-field.rounded-xl.px-4 350x42",
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "input#id_password1.input-field.rounded-xl.px-4 350x42",
+   "label.text-xs.uppercase.tracking-wider 350x16",
+   "input#id_password2.input-field.rounded-xl.px-4 350x42",
+   "a.text-[#00F0FF].font-semibold.hover:underline 100x19"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "home_360": {
+  "vw": 360,
+  "docScroll": 360,
+  "bodyScroll": 360,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "input#global-search-input.input-field.rounded-full.pl-10 296x42",
+   "a.text-xs.text-[var(--active-accent)].hover:underline 46x16",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "input.task-checkbox.cursor-pointer 13x19",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "button#generate-report-btn.btn-primary.w-full.py-2 246x34"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "input#global-search-input.input-field.rounded-full.pl-10 326x42",
+   "a.text-xs.text-[var(--active-accent)].hover:underline 46x16",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "input.task-checkbox.cursor-pointer 13x19",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "button#generate-report-btn.btn-primary.w-full.py-2 276x34"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "input#global-search-input.input-field.rounded-full.pl-10 339x42",
+   "a.text-xs.text-[var(--active-accent)].hover:underline 46x16",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "input.task-checkbox.cursor-pointer 16x19",
+   "input.task-checkbox.cursor-pointer 13x19",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "button#generate-report-btn.btn-primary.w-full.py-2 169x34"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "input#global-search-input.input-field.rounded-full.pl-10 307x42",
+   "a.text-xs.text-[var(--active-accent)].hover:underline 44x32",
+   "input.task-checkbox.cursor-pointer 18x19",
+   "input.task-checkbox.cursor-pointer 14x19",
+   "input.task-checkbox.cursor-pointer 13x19",
+   "input.task-checkbox.cursor-pointer 19x19"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "home_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "input#global-search-input.input-field.rounded-full.pl-10 384x42",
+   "a.text-xs.text-[var(--active-accent)].hover:underline 46x16",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "input.task-checkbox.cursor-pointer 13x19",
+   "input.task-checkbox.cursor-pointer 19x19",
+   "button#generate-report-btn.btn-primary.w-full.py-2 286x34"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat_360": {
+  "vw": 360,
+  "docScroll": 360,
+  "bodyScroll": 360,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button#add-documents-button.btn-primary.w-full.py-2 328x38",
+   "button.absolute.right-2.bottom-2 40x40"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button#add-documents-button.btn-primary.w-full.py-2 358x38",
+   "button.absolute.right-2.bottom-2 40x40"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button#add-documents-button.btn-primary.w-full.py-2 736x38",
+   "button.absolute.right-2.bottom-2 40x40"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn-primary.w-full.py-2 320x38",
+   "button.absolute.right-2.bottom-2 40x40"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn-primary.w-full.py-2 320x38",
+   "button.absolute.right-2.bottom-2 40x40"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat-modal_360": {
+  "vw": 360,
+  "docScroll": 360,
+  "bodyScroll": 360,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button#add-documents-button.btn-primary.w-full.py-2 328x38",
+   "button.absolute.right-2.bottom-2 40x40",
+   "button#close-context-modal.text-2xl.leading-none.text-[var(--active-accent)] 16x24",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "label.flex.items-center.gap-2 67x40",
+   "input#select-all-checkbox.cursor-pointer.accent-[var(--active-accent)] 15x19"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat-modal_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button#add-documents-button.btn-primary.w-full.py-2 358x38",
+   "button.absolute.right-2.bottom-2 40x40",
+   "button#close-context-modal.text-2xl.leading-none.text-[var(--active-accent)] 16x24",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 13x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "label.flex.items-center.gap-2 77x40",
+   "input#select-all-checkbox.cursor-pointer.accent-[var(--active-accent)] 18x19"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat-modal_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button#add-documents-button.btn-primary.w-full.py-2 736x38",
+   "button.absolute.right-2.bottom-2 40x40",
+   "button#close-context-modal.text-2xl.leading-none.text-[var(--active-accent)] 16x24",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "label.flex.items-center.gap-2 84x20",
+   "input#select-all-checkbox.cursor-pointer.accent-[var(--active-accent)] 19x19",
+   "button#apply-context-button.btn-primary.rounded-lg.px-5 137x38"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat-modal_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn-primary.w-full.py-2 320x38",
+   "button.absolute.right-2.bottom-2 40x40",
+   "button#close-context-modal.text-2xl.leading-none.text-[var(--active-accent)] 16x24",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "label.flex.items-center.gap-2 84x20",
+   "input#select-all-checkbox.cursor-pointer.accent-[var(--active-accent)] 19x19",
+   "button#apply-context-button.btn-primary.rounded-lg.px-5 137x38"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat-modal_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn-primary.w-full.py-2 320x38",
+   "button.absolute.right-2.bottom-2 40x40",
+   "button#close-context-modal.text-2xl.leading-none.text-[var(--active-accent)] 16x24",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "input.file-checkbox 19x19",
+   "label.flex.items-center.gap-2 84x20",
+   "input#select-all-checkbox.cursor-pointer.accent-[var(--active-accent)] 19x19",
+   "button#apply-context-button.btn-primary.rounded-lg.px-5 137x38"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "notes_360": {
+  "vw": 360,
+  "docScroll": 360,
+  "bodyScroll": 360,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "a.wiki-link.text-[var(--active-accent)].border-b 37x22"
+  ],
+  "tinyText": 1,
+  "scrollers": [
+   "article#workspace-content-area.flex-1.min-h-[60vh].lg:min-h-0"
+  ]
+ },
+ "notes_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "a.wiki-link.text-[var(--active-accent)].border-b 37x22"
+  ],
+  "tinyText": 1,
+  "scrollers": [
+   "article#workspace-content-area.flex-1.min-h-[60vh].lg:min-h-0"
+  ]
+ },
+ "notes_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "a.wiki-link.text-[var(--active-accent)].border-b 37x22"
+  ],
+  "tinyText": 1,
+  "scrollers": [
+   "article#workspace-content-area.flex-1.min-h-[60vh].lg:min-h-0"
+  ]
+ },
+ "notes_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "a.wiki-link.text-[var(--active-accent)].border-b 37x22"
+  ],
+  "tinyText": 3,
+  "scrollers": [
+   "article#workspace-content-area.flex-1.min-h-[60vh].lg:min-h-0"
+  ]
+ },
+ "notes_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "a.wiki-link.text-[var(--active-accent)].border-b 37x22"
+  ],
+  "tinyText": 3,
+  "scrollers": [
+   "article#workspace-content-area.flex-1.min-h-[60vh].lg:min-h-0"
+  ]
+ },
+ "tasks_360": {
+  "vw": 360,
+  "docScroll": 360,
+  "bodyScroll": 360,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button.btn-primary.px-6.py-2 296x42",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button.btn-primary.px-6.py-2 326x42",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button.btn-primary.px-6.py-2 176x42",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "button.btn-primary.px-6.py-2 176x42",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "tasks_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "button.btn-primary.px-6.py-2 176x42",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "tasks-modal_360": {
+  "vw": 360,
+  "docScroll": 360,
+  "bodyScroll": 360,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button.btn-primary.px-6.py-2 296x42",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input#task-title.input-field.rounded-lg.px-4 262x42",
+   "select#task-priority.input-field.rounded-lg.px-4 262x41",
+   "input#task-date.input-field.rounded-lg.px-4 262x42",
+   "input#task-tags.input-field.rounded-lg.px-4 262x42",
+   "button.flex-1.py-2.rounded-lg 123x42",
+   "button.flex-1.btn-primary.py-2 123x42"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button.btn-primary.px-6.py-2 326x42",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input#task-title.input-field.rounded-lg.px-4 292x42",
+   "select#task-priority.input-field.rounded-lg.px-4 292x41",
+   "input#task-date.input-field.rounded-lg.px-4 292x42",
+   "input#task-tags.input-field.rounded-lg.px-4 292x42",
+   "button.flex-1.py-2.rounded-lg 138x42",
+   "button.flex-1.btn-primary.py-2 138x42"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "button.btn-primary.px-6.py-2 176x42",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input#task-title.input-field.rounded-lg.px-4 382x42",
+   "select#task-priority.input-field.rounded-lg.px-4 382x41",
+   "input#task-date.input-field.rounded-lg.px-4 382x42",
+   "input#task-tags.input-field.rounded-lg.px-4 382x42",
+   "button.flex-1.py-2.rounded-lg 183x42",
+   "button.flex-1.btn-primary.py-2 183x42"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "button.btn-primary.px-6.py-2 176x42",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input#task-title.input-field.rounded-lg.px-4 382x42",
+   "select#task-priority.input-field.rounded-lg.px-4 382x41",
+   "input#task-date.input-field.rounded-lg.px-4 382x42",
+   "input#task-tags.input-field.rounded-lg.px-4 382x42",
+   "button.flex-1.py-2.rounded-lg 183x42",
+   "button.flex-1.btn-primary.py-2 183x42"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "tasks-modal_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "button.btn-primary.px-6.py-2 176x42",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input.mt-1.w-5.h-5 19x19",
+   "input#task-title.input-field.rounded-lg.px-4 382x42",
+   "select#task-priority.input-field.rounded-lg.px-4 382x41",
+   "input#task-date.input-field.rounded-lg.px-4 382x42",
+   "input#task-tags.input-field.rounded-lg.px-4 382x42",
+   "button.flex-1.py-2.rounded-lg 183x42",
+   "button.flex-1.btn-primary.py-2 183x42"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "settings_360": {
+  "vw": 360,
+  "docScroll": 360,
+  "bodyScroll": 360,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "label.text-sm.font-medium 246x20",
+   "input#display-name.input-field.rounded-lg.px-4 246x42",
+   "label.text-sm.font-medium 246x20",
+   "input#email-address.input-field.rounded-lg.px-4 246x42",
+   "select#theme-select.input-field.rounded-lg.px-4 246x41",
+   "input 19x19",
+   "input 19x19",
+   "input 19x19",
+   "label.text-sm.font-medium 246x20",
+   "input#github-repo.input-field.rounded-lg.px-4 246x42",
+   "label.text-sm.font-medium 246x20",
+   "input#github-token.input-field.rounded-lg.px-4 246x42",
+   "label.text-sm.font-medium 246x20",
+   "select#ai-strategy.input-field.rounded-lg.px-4 246x41",
+   "label.text-sm.font-medium.flex 246x20",
+   "input#ai-temperature.w-full.cursor-pointer.accent-[var(--active-accent)] 246x16"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "label.text-sm.font-medium 276x20",
+   "input#display-name.input-field.rounded-lg.px-4 276x42",
+   "label.text-sm.font-medium 276x20",
+   "input#email-address.input-field.rounded-lg.px-4 276x42",
+   "select#theme-select.input-field.rounded-lg.px-4 276x41",
+   "input 19x19",
+   "input 19x19",
+   "input 19x19",
+   "label.text-sm.font-medium 276x20",
+   "input#github-repo.input-field.rounded-lg.px-4 276x42",
+   "label.text-sm.font-medium 276x20",
+   "input#github-token.input-field.rounded-lg.px-4 276x42",
+   "label.text-sm.font-medium 276x20",
+   "select#ai-strategy.input-field.rounded-lg.px-4 276x41",
+   "label.text-sm.font-medium.flex 276x20",
+   "input#ai-temperature.w-full.cursor-pointer.accent-[var(--active-accent)] 276x16"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [
+   "button#mobile-menu-open.text-[var(--active-accent)].p-2.bg-[var(--bg-glass)] 40x40",
+   "label.text-sm.font-medium 315x20",
+   "input#display-name.input-field.rounded-lg.px-4 315x42",
+   "label.text-sm.font-medium 315x20",
+   "input#email-address.input-field.rounded-lg.px-4 315x42",
+   "select#theme-select.input-field.rounded-lg.px-4 327x41",
+   "input 19x19",
+   "input 19x19",
+   "input 19x19",
+   "label.text-sm.font-medium 315x20",
+   "input#github-repo.input-field.rounded-lg.px-4 315x42",
+   "label.text-sm.font-medium 315x20",
+   "input#github-token.input-field.rounded-lg.px-4 315x42",
+   "label.text-sm.font-medium 654x20",
+   "select#ai-strategy.input-field.rounded-lg.px-4 327x41",
+   "label.text-sm.font-medium.flex 327x20",
+   "input#ai-temperature.w-full.cursor-pointer.accent-[var(--active-accent)] 327x16"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "label.text-sm.font-medium 283x20",
+   "input#display-name.input-field.rounded-lg.px-4 283x42",
+   "label.text-sm.font-medium 283x20",
+   "input#email-address.input-field.rounded-lg.px-4 283x42",
+   "select#theme-select.input-field.rounded-lg.px-4 295x41",
+   "input 19x19",
+   "input 19x19",
+   "input 19x19",
+   "label.text-sm.font-medium 283x20",
+   "input#github-repo.input-field.rounded-lg.px-4 283x42",
+   "label.text-sm.font-medium 283x20",
+   "input#github-token.input-field.rounded-lg.px-4 283x42",
+   "label.text-sm.font-medium 590x20",
+   "select#ai-strategy.input-field.rounded-lg.px-4 295x41",
+   "label.text-sm.font-medium.flex 295x20",
+   "input#ai-temperature.w-full.cursor-pointer.accent-[var(--active-accent)] 295x16"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "settings_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "label.text-sm.font-medium 427x20",
+   "input#display-name.input-field.rounded-lg.px-4 427x42",
+   "label.text-sm.font-medium 427x20",
+   "input#email-address.input-field.rounded-lg.px-4 427x42",
+   "select#theme-select.input-field.rounded-lg.px-4 439x41",
+   "input 19x19",
+   "input 19x19",
+   "input 19x19",
+   "label.text-sm.font-medium 427x20",
+   "input#github-repo.input-field.rounded-lg.px-4 427x42",
+   "label.text-sm.font-medium 427x20",
+   "input#github-token.input-field.rounded-lg.px-4 427x42",
+   "label.text-sm.font-medium 878x20",
+   "select#ai-strategy.input-field.rounded-lg.px-4 439x41",
+   "label.text-sm.font-medium.flex 439x20",
+   "input#ai-temperature.w-full.cursor-pointer.accent-[var(--active-accent)] 439x16"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "system-matrix_360": {
+  "vw": 360,
+  "docScroll": 381,
+  "bodyScroll": 381,
+  "overflowing": [
+   "div.flex.items-center.gap-6 right=381",
+   "a.px-4.py-1.5.rounded right=381"
+  ],
+  "smallTargets": [
+   "a.px-4.py-1.5.rounded 106x30",
+   "input.input-field.rounded.px-3 53x34",
+   "input.input-field.rounded.px-3 46x34",
+   "select.input-field.rounded.px-3 59x35",
+   "button.save-row-btn.px-3.py-1.5 76x30",
+   "button.delete-row-btn.px-3.py-1.5 60x30",
+   "input.input-field.rounded.px-3 53x34",
+   "input.input-field.rounded.px-3 46x34",
+   "select.input-field.rounded.px-3 59x35",
+   "button.save-row-btn.px-3.py-1.5 76x30",
+   "button.delete-row-btn.px-3.py-1.5 60x30"
+  ],
+  "tinyText": 2,
+  "scrollers": [
+   "main.flex-1.p-8.overflow-y-auto"
+  ]
+ },
+ "system-matrix_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [
+   "a.px-4.py-1.5.rounded 106x30",
+   "input.input-field.rounded.px-3 53x34",
+   "input.input-field.rounded.px-3 46x34",
+   "select.input-field.rounded.px-3 59x35",
+   "button.save-row-btn.px-3.py-1.5 76x30",
+   "button.delete-row-btn.px-3.py-1.5 60x30",
+   "input.input-field.rounded.px-3 53x34",
+   "input.input-field.rounded.px-3 46x34",
+   "select.input-field.rounded.px-3 59x35",
+   "button.save-row-btn.px-3.py-1.5 76x30",
+   "button.delete-row-btn.px-3.py-1.5 60x30"
+  ],
+  "tinyText": 2,
+  "scrollers": [
+   "main.flex-1.p-8.overflow-y-auto"
+  ]
+ },
+ "system-matrix_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [
+   "a.px-4.py-1.5.rounded 106x30",
+   "input.input-field.rounded.px-3 53x34",
+   "input.input-field.rounded.px-3 46x34",
+   "select.input-field.rounded.px-3 59x35",
+   "button.save-row-btn.px-3.py-1.5 76x30",
+   "button.delete-row-btn.px-3.py-1.5 60x30",
+   "input.input-field.rounded.px-3 53x34",
+   "input.input-field.rounded.px-3 46x34",
+   "select.input-field.rounded.px-3 59x35",
+   "button.save-row-btn.px-3.py-1.5 76x30",
+   "button.delete-row-btn.px-3.py-1.5 60x30"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "system-matrix_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "a.px-4.py-1.5.rounded 106x30",
+   "input.input-field.rounded.px-3 113x34",
+   "input.input-field.rounded.px-3 109x34",
+   "select.input-field.rounded.px-3 128x35",
+   "button.save-row-btn.px-3.py-1.5 76x30",
+   "button.delete-row-btn.px-3.py-1.5 60x30",
+   "input.input-field.rounded.px-3 113x34",
+   "input.input-field.rounded.px-3 109x34",
+   "select.input-field.rounded.px-3 128x35",
+   "button.save-row-btn.px-3.py-1.5 76x30",
+   "button.delete-row-btn.px-3.py-1.5 60x30"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "system-matrix_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "a.px-4.py-1.5.rounded 106x30",
+   "input.input-field.rounded.px-3 319x34",
+   "input.input-field.rounded.px-3 319x34",
+   "select.input-field.rounded.px-3 128x35",
+   "button.save-row-btn.px-3.py-1.5 76x30",
+   "button.delete-row-btn.px-3.py-1.5 60x30",
+   "input.input-field.rounded.px-3 319x34",
+   "input.input-field.rounded.px-3 319x34",
+   "select.input-field.rounded.px-3 128x35",
+   "button.save-row-btn.px-3.py-1.5 76x30",
+   "button.delete-row-btn.px-3.py-1.5 60x30"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "system-matrix-tasks_360": {
+  "vw": 360,
+  "docScroll": 381,
+  "bodyScroll": 381,
+  "overflowing": [
+   "div.flex.items-center.gap-6 right=381",
+   "a.px-4.py-1.5.rounded right=381"
+  ],
+  "smallTargets": [
+   "a.px-4.py-1.5.rounded 106x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30"
+  ],
+  "tinyText": 2,
+  "scrollers": [
+   "main.flex-1.p-8.overflow-y-auto"
+  ]
+ },
+ "system-matrix-tasks_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [
+   "a.px-4.py-1.5.rounded 106x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30"
+  ],
+  "tinyText": 2,
+  "scrollers": [
+   "main.flex-1.p-8.overflow-y-auto"
+  ]
+ },
+ "system-matrix-tasks_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [
+   "table.w-full.border-collapse.text-left right=1027",
+   "thead right=1027",
+   "tr.bg-[#11111a].text-xs.font-mono right=1027",
+   "th.p-4.w-36 right=802",
+   "th.p-4.w-40 right=874",
+   "th.p-4.w-44.text-center right=1027",
+   "tbody.divide-y.divide-white.divide-opacity-5 right=1027",
+   "tr.hover:bg-white.hover:bg-opacity-5.transition-colors right=1027",
+   "td.p-4 right=802",
+   "input.input-field.rounded.px-2 right=786",
+   "td.p-4 right=874",
+   "input.input-field.rounded.px-2 right=858",
+   "td.p-4.text-center.flex right=1027",
+   "button.save-row-btn.px-2.py-1.5 right=956",
+   "button.delete-row-btn.px-2.py-1.5 right=1011"
+  ],
+  "smallTargets": [
+   "a.px-4.py-1.5.rounded 106x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "system-matrix-tasks_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [
+   "table.w-full.border-collapse.text-left right=1027",
+   "thead right=1027",
+   "tr.bg-[#11111a].text-xs.font-mono right=1027",
+   "th.p-4.w-44.text-center right=1027",
+   "tbody.divide-y.divide-white.divide-opacity-5 right=1027",
+   "tr.hover:bg-white.hover:bg-opacity-5.transition-colors right=1027",
+   "td.p-4.text-center.flex right=1027",
+   "tr.hover:bg-white.hover:bg-opacity-5.transition-colors right=1027",
+   "td.p-4.text-center.flex right=1027",
+   "tr.hover:bg-white.hover:bg-opacity-5.transition-colors right=1027",
+   "td.p-4.text-center.flex right=1027",
+   "tr.hover:bg-white.hover:bg-opacity-5.transition-colors right=1027",
+   "td.p-4.text-center.flex right=1027",
+   "tr.hover:bg-white.hover:bg-opacity-5.transition-colors right=1027",
+   "td.p-4.text-center.flex right=1027"
+  ],
+  "smallTargets": [
+   "a.px-4.py-1.5.rounded 106x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 40x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 40x30",
+   "select.input-field.rounded.px-2 40x31",
+   "select.input-field.rounded.px-2 53x31",
+   "input.input-field.rounded.px-2 143x30"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "system-matrix-tasks_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "a.px-4.py-1.5.rounded 106x30",
+   "input.input-field.rounded.px-2 127x30",
+   "select.input-field.rounded.px-2 112x31",
+   "select.input-field.rounded.px-2 96x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 128x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 127x30",
+   "select.input-field.rounded.px-2 112x31",
+   "select.input-field.rounded.px-2 96x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 128x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 127x30",
+   "select.input-field.rounded.px-2 112x31",
+   "select.input-field.rounded.px-2 96x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 128x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 127x30",
+   "select.input-field.rounded.px-2 112x31",
+   "select.input-field.rounded.px-2 96x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 128x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 127x30",
+   "select.input-field.rounded.px-2 112x31",
+   "select.input-field.rounded.px-2 96x31",
+   "input.input-field.rounded.px-2 143x30",
+   "input.input-field.rounded.px-2 128x30",
+   "button.save-row-btn.px-2.py-1.5 66x30",
+   "button.delete-row-btn.px-2.py-1.5 51x30",
+   "input.input-field.rounded.px-2 127x30",
+   "select.input-field.rounded.px-2 112x31",
+   "select.input-field.rounded.px-2 96x31",
+   "input.input-field.rounded.px-2 143x30"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ }
+}

@@ -1,0 +1,6 @@
+# Development / test-only dependencies (installed on top of requirements.txt).
+# Browsers are NOT downloaded: E2E tests use the installed MS Edge
+# (pytest --browser-channel msedge, configured in ai_manager/pytest.ini).
+pytest-django==4.14.0
+pytest-playwright==0.10.0
+playwright==1.65.0

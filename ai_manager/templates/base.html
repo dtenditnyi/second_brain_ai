@@ -1,49 +1,44 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ config.theme }}" data-accent="{{ config.accent_color|default:'cyan' }}">
+<html lang="en" data-theme="{{ config.theme|default:'cyberpunk' }}" data-accent="{{ config.accent_color|default:'cyan' }}">
 <head>
     {% load static %}
     <!-- Shared document metadata and compiled application styles. -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- viewport-fit=cover → safe-area insets on iPhone; resizes-content → the
+         chat input stays above the on-screen keyboard (Chrome/Android). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="{% if config.theme == 'light' %}light{% else %}dark{% endif %}">
+    <meta name="theme-color" content="{% if config.theme == 'light' %}#F8FAFC{% else %}#0D0D12{% endif %}">
     <title>{% block title %}Second Brain{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <!-- Background painted before the stylesheet arrives: no light/dark flash. -->
+    <style>html{background:{% if config.theme == 'light' %}#F8FAFC{% else %}#0D0D12{% endif %}}</style>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <!-- CSRF + HTML-escaping helpers used by every page controller. -->
+    <script src="{% static 'js/csrf.js' %}"></script>
 </head>
-<body class="bg-[var(--bg-base)] text-[var(--text-secondary)] font-sans h-screen overflow-hidden transition-colors duration-300">
+<body class="bg-base text-soft font-sans h-screen h-dvh overflow-hidden">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] btn btn-solid">Skip to content</a>
     <!-- Application shell: persistent sidebar plus the active page content region. -->
-    <div id="app-wrapper" class="flex h-screen w-screen min-h-0 overflow-hidden">
+    <div id="app-wrapper" class="flex h-full w-full min-h-0 overflow-hidden">
         {% include "sidebar.html" with active=active_page %}
-        
-        <div class="flex-1 flex flex-col h-full min-h-0 overflow-y-auto relative">            
-            <header class="lg:hidden flex items-center justify-between p-4 border-b border-[var(--border-glass)] bg-[var(--bg-sidebar)] z-40 shadow-md">
-                <div class="flex items-center gap-3">
-                    <button id="mobile-menu-open" class="text-[var(--active-accent)] p-2 bg-[var(--bg-glass)] rounded-lg focus:outline-none shadow-[var(--glow-active)]">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                    </button>
-                    <h1 class="font-bold text-[var(--text-primary)] tracking-widest uppercase text-sm">MENU</h1>
-                </div>
+        <!-- Tap outside the open mobile menu closes it. -->
+        <div id="menu-backdrop" class="menu-backdrop lg:hidden" aria-hidden="true"></div>
+
+        <div id="main-content" class="scroll-container flex-1 flex flex-col h-full min-h-0 min-w-0 overflow-y-auto relative" tabindex="-1">
+            <header class="mobile-header lg:hidden sticky top-0 flex items-center gap-3 px-3 pb-3 pt-safe border-b border-line bg-[var(--bg-sidebar)] backdrop-blur-md z-40 shadow-md" style="padding-left:max(0.75rem,var(--safe-left));padding-right:max(0.75rem,var(--safe-right))">
+                <button id="mobile-menu-open" type="button" aria-label="Open menu" aria-controls="main-sidebar" aria-expanded="false" class="icon-btn text-accent bg-surface border border-line">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <p class="font-bold text-fg tracking-wide text-base truncate">{% block mobile_title %}Second Brain{% endblock %}</p>
             </header>
 
             <!-- Child templates render their page-specific content inside this shell. -->
             {% block content %}
             {% endblock %}
         </div>
-    </body>
-    <!-- Shared responsive navigation behavior for the base shell. -->
+    </div>
+    <!-- Shared responsive navigation behaviour (menu, backdrop, Esc, scroll lock). -->
     <script src="{% static 'js/layout.js' %}"></script>
-    <script>
-        // Mirror the external layout controller so the shared shell remains usable
-        // on pages where these base-template controls are present.
-        document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.getElementById('main-sidebar');
-            const openBtn = document.getElementById('mobile-menu-open');
-            const closeBtn = document.getElementById('mobile-menu-close');
-
-            if (openBtn && sidebar) {
-                openBtn.addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
-            }
-            if (closeBtn && sidebar) {
-                closeBtn.addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
-            }
-        });
-    </script>
+</body>
 </html>

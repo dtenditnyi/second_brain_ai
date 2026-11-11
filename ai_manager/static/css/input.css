@@ -4,43 +4,86 @@
 @source "../../core/templates";
 @source "../js";
 
-
 /* ==========================================================================
-   1. GLOBAL VARIABLES & THEMES
+   Second Brain design system (Round 2)
+   --------------------------------------------------------------------------
+   1. Tokens: runtime theme/accent variables (switch via data-theme /
+      data-accent on <html>) exposed to Tailwind through @theme inline, so
+      utilities like bg-accent/20, text-fg, text-muted, border-line work.
+   2. Base: colour scheme, focus ring, safe areas, reduced motion, iOS inputs.
+   3. Components: .card .btn .field .badge .modal .empty-state .spinner …
+   4. Responsive helpers: markdown, tables → cards, scroll shadows, tap zones.
+   Contrast: every text/background pair below meets WCAG AA (≥ 4.5:1).
    ========================================================================== */
+
+/* ---------- 1. TOKENS ---------------------------------------------------- */
 :root {
+    color-scheme: dark;
     /* Default Cyberpunk Dark */
     --bg-base: #0D0D12;
-    --bg-sidebar: rgba(13, 13, 18, 0.85);
-    --bg-glass: rgba(20, 20, 30, 0.4);
+    --bg-sidebar: rgba(13, 13, 18, 0.92);
+    --bg-glass: rgba(20, 20, 30, 0.55);
+    --bg-elevated: #15151F;
+    --bg-input: rgba(0, 0, 0, 0.25);
     --text-primary: #FFFFFF;
-    --text-secondary: #A0A0B0;
-    
+    --text-secondary: #A0A0B0;   /* 8.3:1 on --bg-base */
+    --text-muted: #8B8B9B;       /* 5.9:1 on --bg-base — replaces opacity-50 text */
+
     --neon-cyan: #00F0FF;
     --neon-purple: #B026FF;
     --neon-green: #00FF41;
     --neon-red: #FF2A5F;
+    --danger: #F87171;
+    --warning: #FBBF24;
+    --success: #4ADE80;
+    --info: #60A5FA;
 
-    --border-glass: rgba(255, 255, 255, 0.08);
-    
-    /* Default Accent */
+    --border-glass: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.22);
+
     --active-accent: var(--neon-cyan);
+    --accent-contrast: #000000;  /* text on a solid accent background */
     --glow-active: 0 0 15px rgba(0, 240, 255, 0.3);
+
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+    --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+    --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.55);
+    --focus-ring: 0 0 0 3px color-mix(in srgb, var(--active-accent) 45%, transparent);
+
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
 }
 
 /* Light Theme Overrides */
 [data-theme="light"] {
+    color-scheme: light;
     --bg-base: #F8FAFC;
     --bg-sidebar: #FFFFFF;
-    --bg-glass: rgba(255, 255, 255, 0.8);
+    --bg-glass: rgba(255, 255, 255, 0.85);
+    --bg-elevated: #FFFFFF;
+    --bg-input: rgba(15, 23, 42, 0.04);
     --text-primary: #0F172A;
-    --text-secondary: #475569;
-    --border-glass: rgba(0, 0, 0, 0.1);
+    --text-secondary: #475569;   /* 7.2:1 on --bg-base */
+    --text-muted: #5B6B80;       /* 5.3:1 */
+    --border-glass: rgba(15, 23, 42, 0.12);
+    --border-strong: rgba(15, 23, 42, 0.25);
+    --danger: #B91C1C;
+    --warning: #92400E;
+    --success: #15803D;
+    --info: #1D4ED8;
+    --shadow-card: 0 8px 32px 0 rgba(15, 23, 42, 0.06);
 }
 
-/* Accent Color Overrides */
+/* Accent Color Overrides (neon on dark) */
 [data-accent="purple"] {
-    --active-accent: var(--neon-purple);
+    /* #B026FF is only 3.9:1 on the dark base; this lighter purple is 6.1:1. */
+    --active-accent: #C77DFF;
+    --accent-contrast: #000000;
     --glow-active: 0 0 15px rgba(176, 38, 255, 0.3);
 }
 [data-accent="green"] {
@@ -51,60 +94,550 @@
     --active-accent: var(--neon-cyan);
     --glow-active: 0 0 15px rgba(0, 240, 255, 0.3);
 }
+/* Neon accents are unreadable on white: darker variants in the light theme. */
+[data-theme="light"][data-accent="cyan"], [data-theme="light"]:not([data-accent]) {
+    --active-accent: #0E7490; --accent-contrast: #FFFFFF; --glow-active: 0 0 0 transparent;
+}
+[data-theme="light"][data-accent="purple"] {
+    --active-accent: #7E22CE; --accent-contrast: #FFFFFF; --glow-active: 0 0 0 transparent;
+}
+[data-theme="light"][data-accent="green"] {
+    --active-accent: #15803D; --accent-contrast: #FFFFFF; --glow-active: 0 0 0 transparent;
+}
 
-/* ==========================================================================
-   2. CUSTOM COMPONENTS (Used alongside Tailwind)
-   ========================================================================== */
+@theme inline {
+    --color-accent: var(--active-accent);
+    --color-accent-contrast: var(--accent-contrast);
+    --color-fg: var(--text-primary);
+    --color-soft: var(--text-secondary);
+    --color-muted: var(--text-muted);
+    --color-base: var(--bg-base);
+    --color-surface: var(--bg-glass);
+    --color-elevated: var(--bg-elevated);
+    --color-line: var(--border-glass);
+    --color-line-strong: var(--border-strong);
+    --color-danger: var(--danger);
+    --color-warning: var(--warning);
+    --color-success: var(--success);
+    --color-info: var(--info);
+    --radius-card: var(--radius-lg);
+    --shadow-card: var(--shadow-card);
+}
+
+/* ---------- 2. BASE ------------------------------------------------------ */
+@layer base {
+    html {
+        background: var(--bg-base);
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+    body {
+        background: var(--bg-base);
+    }
+    /* One visible keyboard focus style everywhere (mouse clicks stay clean). */
+    :focus-visible {
+        outline: 2px solid var(--active-accent);
+        outline-offset: 2px;
+        border-radius: 4px;
+    }
+    ::selection {
+        background: color-mix(in srgb, var(--active-accent) 35%, transparent);
+    }
+    button:disabled, [aria-disabled="true"] {
+        cursor: not-allowed;
+    }
+    kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.85em;
+    }
+}
+
+/* Respect "reduce motion": no animations, transitions or smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* iOS zooms into inputs with a font size below 16px: never let that happen on touch devices. */
+@media (max-width: 1023.98px), (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* ---------- 3. COMPONENTS ----------------------------------------------- */
+@layer components {
 .glass-card {
     background: var(--bg-glass);
     backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-glass);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-card);
     transition: transform 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
-
 .glass-card:hover {
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--border-strong);
+}
+.card {
+    border-radius: var(--radius-lg);
 }
 
-[data-theme="light"] .glass-card {
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
-}
-
+/* Form fields */
 .input-field {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-input);
     border: 1px solid var(--border-glass);
     color: var(--text-primary);
-    transition: 0.3s ease;
+    border-radius: var(--radius-sm);
+    min-height: 2.5rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-
-[data-theme="light"] .input-field {
-    background: rgba(0, 0, 0, 0.05);
+.input-field::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
 }
-
-.input-field:focus {
+.input-field:hover:not(:disabled) {
+    border-color: var(--border-strong);
+}
+.input-field:focus,
+.input-field:focus-visible {
     border-color: var(--active-accent);
-    box-shadow: var(--glow-active);
+    box-shadow: var(--focus-ring);
     outline: none;
 }
+.input-field:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+select.input-field option {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.field-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.field-hint {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+}
 
+/* Buttons: .btn + one variant (.btn-primary | .btn-solid | .btn-ghost | .btn-danger) */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    text-align: center;
+    border: 1px solid transparent;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+    user-select: none;
+}
+.btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+.btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+.btn-sm {
+    min-height: 2.25rem;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem;
+}
 .btn-primary {
     background: transparent;
     border: 1px solid var(--active-accent);
     color: var(--active-accent);
-    transition: 0.3s ease;
 }
-
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-primary:focus-visible {
     background: var(--active-accent);
-    color: #000;
+    color: var(--accent-contrast);
     box-shadow: var(--glow-active);
 }
+.btn-solid {
+    background: var(--active-accent);
+    color: var(--accent-contrast);
+    border-color: var(--active-accent);
+}
+.btn-solid:hover {
+    box-shadow: var(--glow-active);
+    filter: brightness(1.08);
+}
+.btn-ghost {
+    background: transparent;
+    border-color: var(--border-strong);
+    color: var(--text-secondary);
+}
+.btn-ghost:hover {
+    background: var(--bg-glass);
+    color: var(--text-primary);
+}
+.btn-danger {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+    color: var(--danger);
+}
+.btn-danger:hover {
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.icon-btn:hover {
+    background: var(--bg-glass);
+    color: var(--text-primary);
+}
 
-/* Custom Checkbox / Radio styling */
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+.badge-accent  { color: var(--active-accent); background: color-mix(in srgb, var(--active-accent) 14%, transparent); border-color: color-mix(in srgb, var(--active-accent) 35%, transparent); }
+.badge-danger  { color: var(--danger);  background: color-mix(in srgb, var(--danger) 14%, transparent);  border-color: color-mix(in srgb, var(--danger) 35%, transparent); }
+.badge-warning { color: var(--warning); background: color-mix(in srgb, var(--warning) 14%, transparent); border-color: color-mix(in srgb, var(--warning) 35%, transparent); }
+.badge-info    { color: var(--info);    background: color-mix(in srgb, var(--info) 14%, transparent);    border-color: color-mix(in srgb, var(--info) 35%, transparent); }
+.badge-success { color: var(--success); background: color-mix(in srgb, var(--success) 14%, transparent); border-color: color-mix(in srgb, var(--success) 35%, transparent); }
+.badge-muted   { color: var(--text-secondary); background: var(--bg-glass); border-color: var(--border-glass); text-transform: none; font-weight: 600; }
+
+/* Alerts / inline notices */
+.alert {
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    border: 1px solid;
+}
+.alert-danger  { color: var(--danger);  background: color-mix(in srgb, var(--danger) 10%, transparent);  border-color: color-mix(in srgb, var(--danger) 35%, transparent); }
+.alert-warning { color: var(--warning); background: color-mix(in srgb, var(--warning) 10%, transparent); border-color: color-mix(in srgb, var(--warning) 35%, transparent); }
+.alert-success { color: var(--success); background: color-mix(in srgb, var(--success) 10%, transparent); border-color: color-mix(in srgb, var(--success) 35%, transparent); }
+
+/* Modals: overlay above the mobile header (z-40) and the sidebar (z-50). */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(1rem, var(--safe-top)) max(1rem, var(--safe-right)) max(1rem, var(--safe-bottom)) max(1rem, var(--safe-left));
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    overscroll-behavior: contain;
+}
+.modal-overlay.hidden {
+    display: none;
+}
+.modal-panel {
+    position: relative;
+    width: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-modal);
+    overflow: hidden;
+    animation: modal-in 0.18s ease-out;
+}
+@keyframes modal-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* Empty states */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 1.25rem 1rem;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    text-align: center;
+}
+.empty-state .empty-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+/* Loading */
+.spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    border: 2px solid color-mix(in srgb, var(--active-accent) 25%, transparent);
+    border-top-color: var(--active-accent);
+    animation: spin 0.8s linear infinite;
+}
+.typing-dots {
+    display: inline-flex;
+    gap: 0.3rem;
+    align-items: center;
+}
+.typing-dots span {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 9999px;
+    background: var(--active-accent);
+    animation: typing 1.2s infinite ease-in-out;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing {
+    0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+    40% { opacity: 1; transform: translateY(-3px); }
+}
+.skeleton {
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--bg-glass) 25%, var(--border-strong) 50%, var(--bg-glass) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite linear;
+}
+@keyframes shimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+
+/* Chat bubbles: long words, URLs and code never widen the page. */
+.chat-bubble {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.chat-bubble.is-notice {
+    border-color: color-mix(in srgb, var(--warning) 45%, transparent) !important;
+    box-shadow: none !important;
+}
+.chat-feed {
+    overscroll-behavior: contain;
+}
+
+/* Segmented status control on task cards */
+.status-select {
+    min-height: 2.25rem;
+    padding: 0.25rem 2rem 0.25rem 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+} /* end @layer components */
+
+/* ---------- 4. RESPONSIVE HELPERS --------------------------------------- */
+/* Rendered Markdown: wide tables / code scroll inside their own box. */
+.markdown-body table,
+.markdown-body pre {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+.markdown-body img,
+.markdown-body video {
+    max-width: 100%;
+    height: auto;
+}
+.markdown-body {
+    overflow-wrap: anywhere;
+}
+.markdown-body th,
+.markdown-body td {
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--border-glass);
+}
+
+/* Horizontal scroll areas show a shadow on the side that has more content. */
+.scroll-shadows {
+    background-color: var(--bg-elevated);
+    background:
+        linear-gradient(to right, var(--bg-elevated) 30%, transparent) left center / 2.5rem 100% no-repeat local,
+        linear-gradient(to left, var(--bg-elevated) 30%, transparent) right center / 2.5rem 100% no-repeat local,
+        radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.55), transparent) left center / 1rem 100% no-repeat scroll,
+        radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.55), transparent) right center / 1rem 100% no-repeat scroll,
+        var(--bg-elevated);
+}
+
+/* Data tables become stacked cards below 768px (Core Matrix). Each <td>
+   carries data-label, shown as a small caption above its value. */
+@media (max-width: 767.98px) {
+    .responsive-table,
+    .responsive-table tbody {
+        display: block;
+        width: 100%;
+        min-width: 0 !important;
+    }
+    .responsive-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+    .responsive-table tr {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-glass);
+    }
+    .responsive-table td {
+        display: block;
+        padding: 0 !important;
+        min-width: 0;
+    }
+    .responsive-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.7rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+    }
+    .responsive-table td.row-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-start;
+    }
+    .responsive-table td.row-actions > * {
+        flex: 1;
+    }
+}
+
+/* Touch-friendly controls below the desktop breakpoint (>= 44px tap targets). */
+@media (max-width: 1023.98px) {
+    .input-field,
+    .btn,
+    .btn-sm {
+        min-height: 44px;
+    }
+    .status-select {
+        min-height: 44px;
+    }
+}
+
+/* Checkboxes / radios: 20–24px visual, 44px hit area through the wrapping .tap-zone. */
 input[type="radio"], input[type="checkbox"] {
     accent-color: var(--active-accent);
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.tap-zone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    margin: -0.625rem;
     cursor: pointer;
 }
+@media (max-width: 1023.98px) {
+    input[type="radio"],
+    input[type="checkbox"] {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+}
+
+/* Accent colour names in Settings: readable in both themes. */
+.swatch-cyan { color: #00D4E0; }
+.swatch-purple { color: #C77DFF; }
+.swatch-green { color: #22C55E; }
+[data-theme="light"] .swatch-cyan { color: #0E7490; }
+[data-theme="light"] .swatch-purple { color: #7E22CE; }
+[data-theme="light"] .swatch-green { color: #15803D; }
+
+/* Light theme: tinted badges need darker text and a lighter tint for 4.5:1. */
+[data-theme="light"] .badge-accent  { color: color-mix(in srgb, var(--active-accent) 80%, #000); background: color-mix(in srgb, var(--active-accent) 7%, transparent); }
+[data-theme="light"] .badge-success { color: color-mix(in srgb, var(--success) 80%, #000);       background: color-mix(in srgb, var(--success) 7%, transparent); }
+[data-theme="light"] .badge-info    { color: color-mix(in srgb, var(--info) 85%, #000);          background: color-mix(in srgb, var(--info) 7%, transparent); }
+[data-theme="light"] .badge-danger  { background: color-mix(in srgb, var(--danger) 7%, transparent); }
+[data-theme="light"] .badge-warning { background: color-mix(in srgb, var(--warning) 7%, transparent); }
+
+/* Touch screens (e.g. iPad landscape at 1024px+): 44px controls regardless of width. */
+@media (pointer: coarse) {
+    .btn, .btn-sm, .input-field, .status-select, .icon-btn,
+    .save-row-btn, .delete-row-btn, .tab-btn, .touch-44 {
+        min-height: 44px;
+    }
+}
+
+/* Short landscape phones: slimmer top bar so the chat feed keeps its height. */
+@media (max-height: 480px) and (max-width: 1023.98px) {
+    .mobile-header {
+        padding-top: max(0.25rem, var(--safe-top)) !important;
+        padding-bottom: 0.25rem !important;
+    }
+}
+
+/* Off-canvas menu backdrop and body scroll lock. */
+.menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+.menu-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+body.scroll-locked {
+    overflow: hidden;
+}
+body.scroll-locked .scroll-container {
+    overflow: hidden !important;
+}
+
+/* Safe-area padding helpers (iPhone notch / home indicator, landscape). */
+.pt-safe { padding-top: max(1rem, var(--safe-top)); }
+.pb-safe { padding-bottom: max(1rem, var(--safe-bottom)); }
+.px-safe { padding-left: max(1rem, var(--safe-left)); padding-right: max(1rem, var(--safe-right)); }

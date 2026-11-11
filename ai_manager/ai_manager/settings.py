@@ -81,7 +81,9 @@ LOGGING = {
 SECRET_KEY = os.getenv('SECRET_KEY', 'default-insecure-key-for-dev')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True # os.getenv('DEBUG') == 'True'
+# Off unless the environment explicitly says DEBUG=True (Round 2, Q1).
+# Local development turns it on in settings_local.py.
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -214,3 +216,37 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 WHITENOISE_MANIFEST_STRICT = False
+
+
+# --- AI configuration (Round 2) ---------------------------------------------
+# Every value comes from the environment with a safe default; labels and daily
+# limits shown in the UI are looked up for these IDs in core/ai_models.py.
+
+def _env_int(name, default):
+    try:
+        return int(os.getenv(name, default))
+    except (TypeError, ValueError):
+        return default
+
+# Local Ollama endpoint (Q9): env only, never a hard-coded LAN address.
+OLLAMA_HOST = os.getenv('OLLAMA_HOST') or 'http://localhost:11434'
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL') or 'llama3:latest'
+
+# Gemini model chain. IDs follow the official Gemini API docs; run
+# scripts/list_gemini_models.py to see what your key can really use.
+GEMINI_MODEL_DEFAULT = os.getenv('GEMINI_MODEL_DEFAULT') or 'gemini-3.5-flash-lite'
+GEMINI_MODEL_SMART = os.getenv('GEMINI_MODEL_SMART') or 'gemini-3.8-flash'
+GEMINI_FALLBACK_MODELS = [
+    model.strip()
+    for model in (os.getenv('GEMINI_FALLBACK_MODELS') or 'gemini-3.1-flash-lite,gemma-4-31b-it').split(',')
+    if model.strip()
+]
+
+# Conversation memory (Q2): how many previous messages of the same user are sent.
+CHAT_HISTORY_MESSAGES = _env_int('CHAT_HISTORY_MESSAGES', 6)
+
+# Approximate prompt budgets (system prompt + note chunks + history + question),
+# in tokens. Gemma on the free tier has only 16K tokens per minute.
+PROMPT_TOKEN_BUDGET_GEMMA = _env_int('PROMPT_TOKEN_BUDGET_GEMMA', 8000)
+PROMPT_TOKEN_BUDGET_GEMINI = _env_int('PROMPT_TOKEN_BUDGET_GEMINI', 30000)
+PROMPT_TOKEN_BUDGET_LOCAL = _env_int('PROMPT_TOKEN_BUDGET_LOCAL', 6000)

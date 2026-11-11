@@ -1,0 +1,1543 @@
+{
+ "login_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "login_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "input#id_username.input-field.rounded-xl.px-4 350x42",
+   "input#id_password1.input-field.rounded-xl.px-4 350x42",
+   "input#id_password2.input-field.rounded-xl.px-4 350x42"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [
+   "input#id_username.input-field.rounded-xl.px-4 350x42",
+   "input#id_password1.input-field.rounded-xl.px-4 350x42",
+   "input#id_password2.input-field.rounded-xl.px-4 350x42"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "input#id_username.input-field.rounded-xl.px-4 350x42",
+   "input#id_password1.input-field.rounded-xl.px-4 350x42",
+   "input#id_password2.input-field.rounded-xl.px-4 350x42"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [
+   "input#id_username.input-field.rounded-xl.px-4 350x42",
+   "input#id_password1.input-field.rounded-xl.px-4 350x42",
+   "input#id_password2.input-field.rounded-xl.px-4 350x42"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "register_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "input#global-search-input.input-field.rounded-full.pl-10 309x42",
+   "button#generate-report-btn.btn.btn-primary.w-full 590x40",
+   "select#status-1-x.task-status-select.status-select.input-field 130x36",
+   "select#status-2-x.task-status-select.status-select.input-field 130x36",
+   "select#status-3-x.task-status-select.status-select.input-field 130x36",
+   "select#status-4-x.task-status-select.status-select.input-field 130x36",
+   "select#status-5-x.task-status-select.status-select.input-field 130x36",
+   "select#status-6-x.task-status-select.status-select.input-field 130x36"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [
+   "input#global-search-input.input-field.rounded-full.pl-10 384x42",
+   "button#generate-report-btn.btn.btn-primary.w-full 233x40",
+   "select#status-1-x.task-status-select.status-select.input-field 130x36",
+   "select#status-2-x.task-status-select.status-select.input-field 130x36",
+   "select#status-3-x.task-status-select.status-select.input-field 130x36",
+   "select#status-4-x.task-status-select.status-select.input-field 130x36",
+   "select#status-5-x.task-status-select.status-select.input-field 130x36",
+   "select#status-6-x.task-status-select.status-select.input-field 130x36"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "input#global-search-input.input-field.rounded-full.pl-10 384x42",
+   "button#generate-report-btn.btn.btn-primary.w-full 286x40",
+   "select#status-1-x.task-status-select.status-select.input-field 130x36",
+   "select#status-2-x.task-status-select.status-select.input-field 130x36",
+   "select#status-3-x.task-status-select.status-select.input-field 130x36",
+   "select#status-4-x.task-status-select.status-select.input-field 130x36",
+   "select#status-5-x.task-status-select.status-select.input-field 130x36",
+   "select#status-6-x.task-status-select.status-select.input-field 130x36"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [
+   "input#global-search-input.input-field.rounded-full.pl-10 384x42",
+   "button#generate-report-btn.btn.btn-primary.w-full 329x40",
+   "select#status-1-x.task-status-select.status-select.input-field 130x36",
+   "select#status-2-x.task-status-select.status-select.input-field 130x36",
+   "select#status-3-x.task-status-select.status-select.input-field 130x36",
+   "select#status-4-x.task-status-select.status-select.input-field 130x36",
+   "select#status-5-x.task-status-select.status-select.input-field 130x36",
+   "select#status-6-x.task-status-select.status-select.input-field 130x36"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn.btn-primary.btn-sm 105x36"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn.btn-primary.btn-sm 105x36"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn.btn-primary.btn-sm 105x36"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn.btn-primary.btn-sm 105x36"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat-modal_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat-modal_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat-modal_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat-modal_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat-modal_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat-modal_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "chat-modal_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn.btn-primary.btn-sm 105x36",
+   "button#apply-context-button.btn.btn-solid 81x40"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat-modal_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn.btn-primary.btn-sm 105x36",
+   "button#apply-context-button.btn.btn-solid 81x40"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat-modal_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn.btn-primary.btn-sm 105x36",
+   "button#apply-context-button.btn.btn-solid 81x40"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat-modal_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [
+   "button#add-documents-button.btn.btn-primary.btn-sm 105x36",
+   "button#apply-context-button.btn.btn-solid 81x40"
+  ],
+  "tinyText": 2,
+  "scrollers": []
+ },
+ "chat-modal_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "notes_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "pre"
+  ]
+ },
+ "notes_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "pre"
+  ]
+ },
+ "notes_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "pre"
+  ]
+ },
+ "notes_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "pre"
+  ]
+ },
+ "notes_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "pre"
+  ]
+ },
+ "notes_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "notes_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "pre"
+  ]
+ },
+ "notes_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "pre"
+  ]
+ },
+ "notes_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "pre"
+  ]
+ },
+ "notes_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "notes_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "pre"
+  ]
+ },
+ "tasks_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "button#open-task-modal.btn.btn-primary.px-6 161x40",
+   "select#status-5-active.task-status-select.status-select.input-field 130x36",
+   "select#status-1-active.task-status-select.status-select.input-field 130x36",
+   "select#status-2-active.task-status-select.status-select.input-field 130x36",
+   "select#status-3-active.task-status-select.status-select.input-field 130x36",
+   "select#status-4-active.task-status-select.status-select.input-field 130x36",
+   "select#status-6-done.task-status-select.status-select.input-field 130x36"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [
+   "button#open-task-modal.btn.btn-primary.px-6 161x40",
+   "select#status-5-active.task-status-select.status-select.input-field 130x36",
+   "select#status-1-active.task-status-select.status-select.input-field 130x36",
+   "select#status-2-active.task-status-select.status-select.input-field 130x36",
+   "select#status-3-active.task-status-select.status-select.input-field 130x36",
+   "select#status-4-active.task-status-select.status-select.input-field 130x36",
+   "select#status-6-done.task-status-select.status-select.input-field 130x36"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "button#open-task-modal.btn.btn-primary.px-6 161x40",
+   "select#status-5-active.task-status-select.status-select.input-field 130x36",
+   "select#status-1-active.task-status-select.status-select.input-field 130x36",
+   "select#status-2-active.task-status-select.status-select.input-field 130x36",
+   "select#status-3-active.task-status-select.status-select.input-field 130x36",
+   "select#status-4-active.task-status-select.status-select.input-field 130x36",
+   "select#status-6-done.task-status-select.status-select.input-field 130x36"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [
+   "button#open-task-modal.btn.btn-primary.px-6 161x40",
+   "select#status-5-active.task-status-select.status-select.input-field 130x36",
+   "select#status-1-active.task-status-select.status-select.input-field 130x36",
+   "select#status-2-active.task-status-select.status-select.input-field 130x36",
+   "select#status-3-active.task-status-select.status-select.input-field 130x36",
+   "select#status-4-active.task-status-select.status-select.input-field 130x36",
+   "select#status-6-done.task-status-select.status-select.input-field 130x36"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "button#open-task-modal.btn.btn-primary.px-6 161x40",
+   "select#status-5-active.task-status-select.status-select.input-field 130x36",
+   "select#status-1-active.task-status-select.status-select.input-field 130x36",
+   "select#status-2-active.task-status-select.status-select.input-field 130x36",
+   "select#status-3-active.task-status-select.status-select.input-field 130x36",
+   "select#status-4-active.task-status-select.status-select.input-field 130x36",
+   "select#status-6-done.task-status-select.status-select.input-field 130x36",
+   "input#task-title.input-field.rounded-lg.px-4 382x42",
+   "select#task-priority.input-field.rounded-lg.px-4 382x41",
+   "input#task-date.input-field.rounded-lg.px-4 382x42",
+   "input#task-tags.input-field.rounded-lg.px-4 382x42",
+   "button.btn.btn-ghost.flex-1 185x40",
+   "button.btn.btn-solid.flex-1 185x40"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [
+   "button#open-task-modal.btn.btn-primary.px-6 161x40",
+   "select#status-5-active.task-status-select.status-select.input-field 130x36",
+   "select#status-1-active.task-status-select.status-select.input-field 130x36",
+   "select#status-2-active.task-status-select.status-select.input-field 130x36",
+   "select#status-3-active.task-status-select.status-select.input-field 130x36",
+   "select#status-4-active.task-status-select.status-select.input-field 130x36",
+   "select#status-6-done.task-status-select.status-select.input-field 130x36",
+   "input#task-title.input-field.rounded-lg.px-4 382x42",
+   "select#task-priority.input-field.rounded-lg.px-4 382x41",
+   "input#task-date.input-field.rounded-lg.px-4 382x42",
+   "input#task-tags.input-field.rounded-lg.px-4 382x42",
+   "button.btn.btn-ghost.flex-1 185x40",
+   "button.btn.btn-solid.flex-1 185x40"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "button#open-task-modal.btn.btn-primary.px-6 161x40",
+   "select#status-5-active.task-status-select.status-select.input-field 130x36",
+   "select#status-1-active.task-status-select.status-select.input-field 130x36",
+   "select#status-2-active.task-status-select.status-select.input-field 130x36",
+   "select#status-3-active.task-status-select.status-select.input-field 130x36",
+   "select#status-4-active.task-status-select.status-select.input-field 130x36",
+   "select#status-6-done.task-status-select.status-select.input-field 130x36",
+   "input#task-title.input-field.rounded-lg.px-4 382x42",
+   "select#task-priority.input-field.rounded-lg.px-4 382x41",
+   "input#task-date.input-field.rounded-lg.px-4 382x42",
+   "input#task-tags.input-field.rounded-lg.px-4 382x42",
+   "button.btn.btn-ghost.flex-1 185x40",
+   "button.btn.btn-solid.flex-1 185x40"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [
+   "button#open-task-modal.btn.btn-primary.px-6 161x40",
+   "select#status-5-active.task-status-select.status-select.input-field 130x36",
+   "select#status-1-active.task-status-select.status-select.input-field 130x36",
+   "select#status-2-active.task-status-select.status-select.input-field 130x36",
+   "select#status-3-active.task-status-select.status-select.input-field 130x36",
+   "select#status-4-active.task-status-select.status-select.input-field 130x36",
+   "select#status-6-done.task-status-select.status-select.input-field 130x36",
+   "input#task-title.input-field.rounded-lg.px-4 382x42",
+   "select#task-priority.input-field.rounded-lg.px-4 382x41",
+   "input#task-date.input-field.rounded-lg.px-4 382x42",
+   "input#task-tags.input-field.rounded-lg.px-4 382x42",
+   "button.btn.btn-ghost.flex-1 185x40",
+   "button.btn.btn-solid.flex-1 185x40"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tasks-modal_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "input#display-name.input-field.rounded-lg.px-4 283x42",
+   "input#email-address.input-field.rounded-lg.px-4 283x42",
+   "select#theme-select.input-field.rounded-lg.px-4 295x41",
+   "input#github-repo.input-field.rounded-lg.px-4 283x42",
+   "input#github-token.input-field.rounded-lg.px-4 283x42",
+   "select#ai-strategy.input-field.rounded-lg.px-4 443x41"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [
+   "input#display-name.input-field.rounded-lg.px-4 411x42",
+   "input#email-address.input-field.rounded-lg.px-4 411x42",
+   "select#theme-select.input-field.rounded-lg.px-4 423x41",
+   "input#github-repo.input-field.rounded-lg.px-4 411x42",
+   "input#github-token.input-field.rounded-lg.px-4 411x42",
+   "select#ai-strategy.input-field.rounded-lg.px-4 635x41"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "input#display-name.input-field.rounded-lg.px-4 427x42",
+   "input#email-address.input-field.rounded-lg.px-4 427x42",
+   "select#theme-select.input-field.rounded-lg.px-4 439x41",
+   "input#github-repo.input-field.rounded-lg.px-4 427x42",
+   "input#github-token.input-field.rounded-lg.px-4 427x42",
+   "select#ai-strategy.input-field.rounded-lg.px-4 659x41"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [
+   "input#display-name.input-field.rounded-lg.px-4 427x42",
+   "input#email-address.input-field.rounded-lg.px-4 427x42",
+   "select#theme-select.input-field.rounded-lg.px-4 439x41",
+   "input#github-repo.input-field.rounded-lg.px-4 427x42",
+   "input#github-token.input-field.rounded-lg.px-4 427x42",
+   "select#ai-strategy.input-field.rounded-lg.px-4 659x41"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "system-matrix_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "nav.w-full.md:w-64.shrink-0"
+  ]
+ },
+ "system-matrix_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "nav.w-full.md:w-64.shrink-0"
+  ]
+ },
+ "system-matrix_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "nav.w-full.md:w-64.shrink-0"
+  ]
+ },
+ "system-matrix_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "nav.w-full.md:w-64.shrink-0"
+  ]
+ },
+ "system-matrix_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "div.glass-card.rounded-2xl.overflow-x-auto"
+  ]
+ },
+ "system-matrix_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "div.glass-card.rounded-2xl.overflow-x-auto"
+  ]
+ },
+ "system-matrix_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "a.touch-44.inline-flex.items-center 106x30",
+   "input.input-field.rounded.px-3 122x40",
+   "input.input-field.rounded.px-3 118x40",
+   "select.input-field.rounded.px-3 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 76x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 60x30",
+   "input.input-field.rounded.px-3 122x40",
+   "input.input-field.rounded.px-3 118x40",
+   "select.input-field.rounded.px-3 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 76x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 60x30"
+  ],
+  "tinyText": 0,
+  "scrollers": [
+   "div.glass-card.rounded-2xl.overflow-x-auto"
+  ]
+ },
+ "system-matrix_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [
+   "a.touch-44.inline-flex.items-center 106x30",
+   "input.input-field.rounded.px-3 239x40",
+   "input.input-field.rounded.px-3 239x40",
+   "select.input-field.rounded.px-3 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 76x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 60x30",
+   "input.input-field.rounded.px-3 239x40",
+   "input.input-field.rounded.px-3 239x40",
+   "select.input-field.rounded.px-3 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 76x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 60x30"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "system-matrix_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "a.touch-44.inline-flex.items-center 106x30",
+   "input.input-field.rounded.px-3 319x40",
+   "input.input-field.rounded.px-3 319x40",
+   "select.input-field.rounded.px-3 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 76x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 60x30",
+   "input.input-field.rounded.px-3 319x40",
+   "input.input-field.rounded.px-3 319x40",
+   "select.input-field.rounded.px-3 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 76x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 60x30"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "system-matrix_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [
+   "a.touch-44.inline-flex.items-center 106x30",
+   "input.input-field.rounded.px-3 559x40",
+   "input.input-field.rounded.px-3 559x40",
+   "select.input-field.rounded.px-3 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 76x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 60x30",
+   "input.input-field.rounded.px-3 559x40",
+   "input.input-field.rounded.px-3 559x40",
+   "select.input-field.rounded.px-3 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 76x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 60x30"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "system-matrix_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "nav.w-full.md:w-64.shrink-0"
+  ]
+ },
+ "system-matrix-tasks_320": {
+  "vw": 320,
+  "docScroll": 320,
+  "bodyScroll": 320,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "nav.w-full.md:w-64.shrink-0"
+  ]
+ },
+ "system-matrix-tasks_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "nav.w-full.md:w-64.shrink-0"
+  ]
+ },
+ "system-matrix-tasks_390": {
+  "vw": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "nav.w-full.md:w-64.shrink-0"
+  ]
+ },
+ "system-matrix-tasks_414": {
+  "vw": 414,
+  "docScroll": 414,
+  "bodyScroll": 414,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "nav.w-full.md:w-64.shrink-0"
+  ]
+ },
+ "system-matrix-tasks_768": {
+  "vw": 768,
+  "docScroll": 768,
+  "bodyScroll": 768,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "div.glass-card.rounded-2xl.overflow-x-auto"
+  ]
+ },
+ "system-matrix-tasks_834": {
+  "vw": 834,
+  "docScroll": 834,
+  "bodyScroll": 834,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "div.glass-card.rounded-2xl.overflow-x-auto"
+  ]
+ },
+ "system-matrix-tasks_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "a.touch-44.inline-flex.items-center 106x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40"
+  ],
+  "tinyText": 0,
+  "scrollers": [
+   "div.glass-card.rounded-2xl.overflow-x-auto"
+  ]
+ },
+ "system-matrix-tasks_1280": {
+  "vw": 1280,
+  "docScroll": 1280,
+  "bodyScroll": 1280,
+  "overflowing": [],
+  "smallTargets": [
+   "a.touch-44.inline-flex.items-center 106x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 109x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40"
+  ],
+  "tinyText": 0,
+  "scrollers": [
+   "div.glass-card.rounded-2xl.overflow-x-auto"
+  ]
+ },
+ "system-matrix-tasks_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "a.touch-44.inline-flex.items-center 106x30",
+   "input.input-field.rounded.px-2 127x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 127x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 127x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 127x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 127x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 127x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "system-matrix-tasks_1920": {
+  "vw": 1920,
+  "docScroll": 1920,
+  "bodyScroll": 1920,
+  "overflowing": [],
+  "smallTargets": [
+   "a.touch-44.inline-flex.items-center 106x30",
+   "input.input-field.rounded.px-2 607x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 607x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 607x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 607x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 607x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40",
+   "input.input-field.rounded.px-2 128x40",
+   "button.save-row-btn.min-h-11.lg:min-h-0 66x30",
+   "button.delete-row-btn.min-h-11.lg:min-h-0 51x30",
+   "input.input-field.rounded.px-2 607x40",
+   "select.input-field.rounded.px-2 112x40",
+   "select.input-field.rounded.px-2 96x40",
+   "input.input-field.rounded.px-2 143x40"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "system-matrix-tasks_667x375": {
+  "vw": 667,
+  "docScroll": 667,
+  "bodyScroll": 667,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": [
+   "nav.w-full.md:w-64.shrink-0"
+  ]
+ }
+}

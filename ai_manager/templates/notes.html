@@ -2,61 +2,58 @@
 {% load static %}
 
 {% block title %}Second Brain - Synced Knowledge Base Vault{% endblock %}
+{% block mobile_title %}Notes{% endblock %}
 
 {% block content %}
-<!-- Three-pane note workspace: vault explorer, selected note, and backlinks. -->
-<main class="flex-1 flex flex-col lg:flex-row relative z-10 p-4 lg:p-8 gap-6 overflow-visible lg:overflow-hidden">
-    
-        <aside class="w-full lg:w-64 glass-card rounded-2xl p-5 flex flex-col h-[40vh] lg:h-full overflow-y-auto shadow-lg max-h-screen mb-6 lg:mb-0">       
-            <header class="mb-4 pb-2 border-b border-[var(--border-glass)]">
-            <h2 class="font-bold text-[var(--text-primary)] tracking-wider text-xs uppercase flex items-center gap-2">
-                <span>📁</span> File Explorer
+<!-- Three-pane note workspace: vault explorer, selected note, and backlinks
+     (stacked below 1280px, side by side from xl). -->
+<main class="flex-1 flex flex-col xl:flex-row relative p-3 sm:p-4 lg:p-8 gap-4 lg:gap-6 overflow-visible xl:overflow-hidden xl:min-h-0">
+
+    <aside class="w-full xl:w-64 shrink-0 glass-card rounded-2xl p-4 sm:p-5 flex flex-col max-h-[40vh] xl:max-h-none xl:h-full overflow-hidden shadow-lg" aria-labelledby="explorer-title">
+        <header class="mb-3 pb-2 border-b border-line flex items-center justify-between gap-2">
+            <h2 id="explorer-title" class="font-bold text-fg tracking-wider text-xs uppercase flex items-center gap-2">
+                <span aria-hidden="true">📁</span> File Explorer
             </h2>
+            <span class="badge badge-muted">{{ user_notes|length }}</span>
         </header>
         <!-- The left pane lists the current user's synchronized Markdown files. -->
-        <nav class="directory-tree flex-1 overflow-y-auto pr-1">
-            <ul class="flex flex-col gap-2 text-sm">
-                <li>
-                    <div class="flex items-center gap-2 text-[var(--text-primary)] font-medium mb-1">
-                        <span>📂</span> Obsidian Vault Root
-                    </div>
-                    <ul class="ml-4 flex flex-col gap-1 border-l border-[var(--border-glass)] pl-2 file-list-container">
-                        <!-- Each item exposes its canonical note name to notes.js. -->
-                        {% for note in user_notes %}
-                            <li class="file-item text-[var(--text-secondary)] cursor-pointer hover:text-[var(--text-primary)] px-2 py-1.5 rounded hover:bg-[var(--bg-glass)] transition-colors flex items-center gap-2" data-filename="{{ note }}">
-                                <span class="opacity-70">📄</span> <span class="truncate text-xs">{{ note }}</span>
-                            </li>
-                        {% empty %}
-                            <li class="text-xs italic opacity-50 px-2 py-1.5">No synced .md files found. Update your repository link in settings.</li>
-                        {% endfor %}
-                    </ul>
-                </li>
+        <nav class="directory-tree flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1" aria-label="Notes">
+            <p class="flex items-center gap-2 text-fg font-medium mb-1 text-sm"><span aria-hidden="true">📂</span> Obsidian Vault Root</p>
+            <ul class="ml-2 flex flex-col gap-0.5 border-l border-line pl-2 file-list-container">
+                <!-- Each item exposes its canonical note name to notes.js. -->
+                {% for note in user_notes %}
+                    <li>
+                        <button type="button" class="file-item w-full text-left text-soft hover:text-fg px-2 py-2 min-h-11 rounded-md hover:bg-surface transition-colors flex items-start gap-2 border border-transparent" data-filename="{{ note }}" title="{{ note }}">
+                            <span aria-hidden="true">📄</span> <span class="line-clamp-2 break-words text-sm xl:text-[0.8125rem] leading-snug">{{ note }}</span>
+                        </button>
+                    </li>
+                {% empty %}
+                    <li class="empty-state my-2">No synced .md files yet. Add your repository in <a href="{% url 'settings' %}" class="text-accent underline">Settings</a>.</li>
+                {% endfor %}
             </ul>
         </nav>
     </aside>
 
     <!-- The center pane is populated asynchronously with rendered note content. -->
-    <article id="workspace-content-area" class="flex-1 min-h-[60vh] lg:min-h-0 glass-card rounded-2xl p-6 lg:p-10 overflow-y-auto shadow-2xl border-[var(--border-glass)]">
-        <div class="flex flex-col items-center justify-center h-full text-center opacity-60">
-            <span class="text-4xl mb-4">🧠</span>
-            <h3 class="text-xl font-bold text-[var(--text-primary)] mb-1">Knowledge Core Idle</h3>
-            <p class="text-sm">Select a node from the explorer map or trigger link vectors to process data.</p>
+    <article id="workspace-content-area" tabindex="-1" class="flex-1 min-w-0 min-h-[60vh] xl:min-h-0 glass-card rounded-2xl p-5 sm:p-6 lg:p-10 overflow-y-auto shadow-2xl scroll-mt-20" aria-live="polite">
+        <div class="flex flex-col items-center justify-center h-full text-center text-muted">
+            <span class="text-4xl mb-4" aria-hidden="true">🧠</span>
+            <h3 class="text-xl font-bold text-fg mb-1">No note open</h3>
+            <p class="text-sm">Pick a note in the explorer or follow a wiki link.</p>
         </div>
     </article>
 
     <!-- Inbound wiki-link references are rendered in the right-hand pane. -->
-    <aside class="w-full lg:w-72 glass-card rounded-2xl p-5 min-h-[30vh] lg:h-full overflow-y-auto shadow-lg flex flex-col">
-        <header class="mb-6 pb-2 border-b border-[var(--border-glass)]">
-            <h3 class="font-bold text-[var(--text-primary)] tracking-wider text-xs uppercase flex items-center gap-2">
-                <span>🔗</span> Linked Mentions
+    <aside class="w-full xl:w-72 shrink-0 glass-card rounded-2xl p-4 sm:p-5 xl:h-full overflow-y-auto shadow-lg flex flex-col" aria-labelledby="mentions-title">
+        <header class="mb-4 pb-2 border-b border-line">
+            <h3 id="mentions-title" class="font-bold text-fg tracking-wider text-xs uppercase flex items-center gap-2">
+                <span aria-hidden="true">🔗</span> Linked Mentions
             </h3>
-            <p id="backlinks-counter-label" class="text-xs mt-1 opacity-60">0 nodes link here</p>
+            <p id="backlinks-counter-label" class="text-xs mt-1 text-muted">0 nodes link here</p>
         </header>
 
-        <div id="linked-mentions-feed" class="flex flex-col gap-4 overflow-y-auto flex-1 pr-1">
-            <div class="p-4 rounded-xl border border-dashed border-[var(--border-glass)] text-center text-xs opacity-50 italic">
-                No active backlinks mapped.
-            </div>
+        <div id="linked-mentions-feed" class="flex flex-col gap-3 overflow-y-auto flex-1 pr-1">
+            <div class="empty-state">No backlinks yet.</div>
         </div>
     </aside>
 

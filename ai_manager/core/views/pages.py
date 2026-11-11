@@ -6,8 +6,9 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import make_aware
 
-from ..models import Task, ChatMessage
+from ..models import Task, ChatMessage, get_user_settings
 from .. import rag_engine
+from .. import ai_models
 from .utils import get_user_config
 
 @login_required(login_url='login')
@@ -50,7 +51,8 @@ def home_view(request):
         'recent_tasks': tasks.order_by('-created_at')[:4],
         'recent_notes': top_recent_notes,
         'total_notes_count': len(recent_notes),
-        'top_focus': top_focus
+        'top_focus': top_focus,
+        'models': ai_models.ui_model_config(),
     }
     return render(request, 'home.html', context)
 
@@ -67,13 +69,16 @@ def ai_chat_view(request):
                 if file.endswith(".md"):
                     synced_notes.append(file.replace(".md", ""))
                     
-    chat_history = reversed(ChatMessage.objects.filter(user=request.user).order_by('-created_at')[:50])
+    # A list (not a reversed() iterator, which is always truthy) so the template's
+    # `{% if not chat_history %}` greeting works (B-05).
+    chat_history = list(reversed(ChatMessage.objects.filter(user=request.user).order_by('-created_at')[:50]))
     synced_notes.sort()
     context = {
         'active_page': 'ai-chat', 
         'config': get_user_config(request.user),
-        'context_files': synced_notes[:10],
+        # Q12: nothing is preselected — without a selection the whole vault is searched.
         'all_files': synced_notes,
+        'models': ai_models.ui_model_config(),
         'chat_history': chat_history
     }
     return render(request, 'ai-chat.html', context)
@@ -87,7 +92,7 @@ def notes_view(request):
     from ..git_sync import sync_obsidian_repo
     
     paths = get_user_paths(request.user)
-    settings = request.user.settings
+    settings = get_user_settings(request.user)
     git_folder = os.path.join(paths["notes_dir"], '.git')
     
     if settings.github_repo_url and not os.path.exists(git_folder):
@@ -120,4 +125,11 @@ def tasks_view(request):
 @login_required(login_url='login')
 def settings_view(request):
     # Render the preferences page with the authenticated user's settings object.
-    return render(request, 'settings.html', {'active_page': 'settings', 'config': get_user_config(request.user)})
+    config = get_user_config(request.user)
+    return render(request, 'settings.html', {
+        'active_page': 'settings',
+        'config': config,
+        # Q7: only whether a token exists is sent to the template, never the token.
+        'has_github_token': bool(config.github_token),
+        'models': ai_models.ui_model_config(),
+    })

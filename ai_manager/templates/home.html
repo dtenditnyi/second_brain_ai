@@ -2,151 +2,88 @@
 {% load static %}
 
 {% block title %}Second Brain - Home{% endblock %}
+{% block mobile_title %}Home{% endblock %}
 
 {% block content %}
 <!-- Dashboard header combines account context with a shortcut into AI chat. -->
-<main class="p-8 lg:p-12 max-w-7xl mx-auto w-full relative z-10">
-    <header class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-            <h2 class="text-3xl font-bold text-[var(--text-primary)] mb-2">Welcome back, {{ config.display_name|default:"Operator" }}</h2>
-            <p class="text-[var(--text-secondary)]">Here's what's happening with your second brain today.</p>
+<main class="px-4 py-6 sm:p-8 lg:p-12 max-w-7xl mx-auto w-full relative">
+    <header class="mb-8 lg:mb-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div class="min-w-0">
+            <h1 class="text-2xl sm:text-3xl font-bold text-fg mb-2 break-words">Welcome back, {{ config.display_name|default:"Operator" }}</h1>
+            <p class="text-soft">Here's what's happening with your second brain today.</p>
         </div>
         <div class="w-full md:w-96 relative">
-            <span class="absolute left-3 top-2.5 opacity-50">🔍</span>
-            <input type="search" id="global-search-input" placeholder="Search notes, tasks, or ask AI..." class="input-field rounded-full pl-10 pr-4 py-2 w-full" />
+            <label for="global-search-input" class="sr-only">Ask AI about your notes</label>
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" aria-hidden="true">🔍</span>
+            <input type="search" id="global-search-input" enterkeyhint="search" placeholder="Search notes, tasks, or ask AI…" class="input-field rounded-full pl-10 pr-4 py-2 w-full" />
         </div>
     </header>
 
     <!-- Summary cards: recent tasks, recent notes, and an AI-generated briefing. -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <article class="glass-card rounded-xl p-6 flex flex-col">
-            <h3 class="text-lg font-bold text-[var(--text-primary)] mb-4 border-b border-[var(--border-glass)] pb-2 flex justify-between items-center">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6 mb-10">
+        <article class="glass-card card p-5 sm:p-6 flex flex-col min-w-0">
+            <h2 class="text-lg font-bold text-fg mb-4 border-b border-line pb-2 flex justify-between items-center gap-2">
                 <span>Recent Tasks</span>
-                <a href="{% url 'tasks' %}" class="text-xs text-[var(--active-accent)] hover:underline">View All</a>
-            </h3>
-            <ul class="flex flex-col gap-3 flex-1">
+                <a href="{% url 'tasks' %}" class="text-sm text-accent hover:underline inline-flex items-center min-h-11 px-2 -mr-2">View all</a>
+            </h2>
+            <ul class="flex flex-col gap-1 flex-1">
                 <!-- Show a compact task sample with direct completion controls. -->
                 {% for task in recent_tasks %}
-                    <li class="flex items-center gap-3 {% if task.status == 'done' %}opacity-50{% endif %}">
-                        <input type="checkbox" class="task-checkbox cursor-pointer" data-id="{{ task.id }}" {% if task.status == 'done' %}checked{% endif %} /> 
-                        <span class="{% if task.status == 'done' %}line-through{% endif %}">{{ task.title }}</span>
+                    <li class="flex items-center gap-3 min-w-0 {% if task.status == 'done' %}text-muted{% endif %}">
+                        <label class="tap-zone shrink-0" title="Mark as done">
+                            <input type="checkbox" class="task-checkbox" data-id="{{ task.id }}" aria-label="Done: {{ task.title }}" {% if task.status == 'done' %}checked{% endif %} />
+                        </label>
+                        <span class="min-w-0 break-words py-2 {% if task.status == 'done' %}line-through{% endif %}">{{ task.title }}</span>
                     </li>
                 {% empty %}
-                    <li class="text-sm opacity-70 italic text-center mt-4">No tasks in your database yet.</li>
+                    <li class="empty-state"><span class="empty-icon" aria-hidden="true">🗒️</span>No tasks yet. <a href="{% url 'tasks' %}" class="text-accent underline">Create one</a></li>
                 {% endfor %}
             </ul>
         </article>
 
-        <article class="glass-card rounded-xl p-6">
-            <h3 class="text-lg font-bold text-[var(--text-primary)] mb-4 border-b border-[var(--border-glass)] pb-2">Recent Notes</h3>
+        <article class="glass-card card p-5 sm:p-6 min-w-0">
+            <h2 class="text-lg font-bold text-fg mb-4 border-b border-line pb-2">Recent Notes</h2>
             <ul class="flex flex-col gap-4">
                 <!-- Recent note names and filesystem modification age. -->
                 {% for note in recent_notes %}
-                <li>
-                    <p class="font-semibold text-[var(--text-primary)] truncate" title="{{ note.name }}">{{ note.name }}</p>
-                    <span class="text-xs text-[var(--active-accent)] opacity-80">{{ note.modified_at|timesince }} ago</span>
+                <li class="min-w-0">
+                    <a href="{% url 'notes' %}?file={{ note.name|urlencode }}" class="font-semibold text-fg truncate flex items-center min-h-11 hover:text-accent" title="{{ note.name }}">{{ note.name }}</a>
+                    <span class="text-xs text-accent">{{ note.modified_at|timesince }} ago</span>
                 </li>
                 {% empty %}
-                <li class="text-sm opacity-70 italic">No notes found in matrix vault.</li>
+                <li class="empty-state"><span class="empty-icon" aria-hidden="true">📭</span>No notes synced yet. Add your vault in <a href="{% url 'settings' %}" class="text-accent underline">Settings</a>.</li>
                 {% endfor %}
             </ul>
         </article>
 
-        <article class="glass-card rounded-xl p-6 border-[var(--active-accent)] shadow-[var(--glow-active)] flex flex-col">
-            <h3 class="text-lg font-bold text-[var(--text-primary)] mb-4 border-b border-[var(--border-glass)] pb-2 flex items-center gap-2">
-                <span>✨</span> AI Analytics
-            </h3>
-            <p class="mb-2 text-sm leading-relaxed">System holds <strong class="text-[var(--text-primary)]">{{ todo_tasks|length }} pending tasks</strong> and <strong class="text-[var(--text-primary)]">{{ total_notes_count }} core notes</strong>.</p>
-            <p class="mb-4 text-sm leading-relaxed">Computed focus area: <strong class="text-[var(--active-accent)] uppercase tracking-wide">{{ top_focus }}</strong></p>
-            
+        <article class="glass-card card p-5 sm:p-6 border-accent shadow-[var(--glow-active)] flex flex-col min-w-0 md:col-span-2 xl:col-span-1">
+            <h2 class="text-lg font-bold text-fg mb-4 border-b border-line pb-2 flex items-center gap-2">
+                <span aria-hidden="true">✨</span> AI Analytics
+            </h2>
+            <p class="mb-2 text-sm leading-relaxed">System holds <strong class="text-fg">{{ todo_tasks|length }} pending tasks</strong> and <strong class="text-fg">{{ total_notes_count }} core notes</strong>.</p>
+            <p class="mb-4 text-sm leading-relaxed">Computed focus area: <strong class="text-accent uppercase tracking-wide break-words">{{ top_focus }}</strong></p>
+
             <div class="mt-auto">
-                <div id="ai-report-output" class="hidden mb-3 text-xs bg-[var(--bg-base)] bg-opacity-60 border border-[var(--border-glass)] p-3 rounded-lg text-gray-300 leading-relaxed max-h-32 overflow-y-auto"></div>
-                
-                <button type="button" id="generate-report-btn" class="btn-primary w-full py-2 rounded-lg text-xs uppercase tracking-wide font-bold">Generate Status Report</button>
+                <div id="ai-report-output" class="hidden mb-3 text-sm bg-base/60 border border-line p-3 rounded-lg text-fg leading-relaxed max-h-40 overflow-y-auto chat-bubble" aria-live="polite"></div>
+                <button type="button" id="generate-report-btn" class="btn btn-primary w-full uppercase tracking-wide text-xs">Generate Status Report</button>
+                <p class="field-hint mt-2">Uses {{ models.smart.name }} (not saved in chat history).</p>
+                <p class="field-hint mt-1" id="last-model-indicator">Last answer by: <span class="font-semibold text-soft" data-last-model>{{ config.last_model_used|default:"—" }}</span></p>
             </div>
         </article>
     </div>
-    
 
     <!-- Kanban-style project board split by the task workflow state. -->
-    <section>
-        <h3 class="text-xl font-bold text-[var(--text-primary)] mb-6">Project Board</h3>
+    <section aria-labelledby="board-title">
+        <h2 id="board-title" class="text-xl font-bold text-fg mb-5">Project Board</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <div class="flex flex-col gap-4">
-                <h4 class="font-semibold flex items-center justify-between border-b border-[var(--border-glass)] pb-2">
-                    To Do 
-                    <span class="bg-[var(--bg-glass)] px-2 py-1 rounded text-xs text-[var(--text-primary)]">{{ todo_tasks|length }}</span>
-                </h4>
-                <!-- Pending work cards. -->
-                {% for task in todo_tasks %}
-                    <div class="glass-card rounded-lg p-4 hover:border-[var(--active-accent)] transition-colors cursor-pointer">
-                        <p class="text-[var(--text-primary)] font-medium mb-3">{{ task.title }}</p>
-                        <div class="flex justify-between items-center">
-                            {% if task.priority == 'urgent' or task.priority == 'high' %}
-                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-red-500 bg-opacity-20 text-red-400 border border-red-500 border-opacity-30">{{ task.priority }}</span>
-                            {% else %}
-                                <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-[var(--active-accent)] bg-opacity-20 text-[var(--active-accent)] border border-[var(--active-accent)] border-opacity-30">{{ task.priority }}</span>
-                            {% endif %}
-                            
-                            {% if task.due_date %}
-                                <span class="text-xs opacity-60">📅 {{ task.due_date|date:"M d" }}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                {% empty %}
-                    <div class="p-4 rounded-lg border border-dashed border-[var(--border-glass)] text-center opacity-50 text-sm">
-                        No pending tasks
-                    </div>
-                {% endfor %}
-            </div>
-
-            <div class="flex flex-col gap-4">
-                <h4 class="font-semibold flex items-center justify-between border-b border-[var(--border-glass)] pb-2">
-                    In Progress 
-                    <span class="bg-[var(--bg-glass)] px-2 py-1 rounded text-xs text-[var(--text-primary)]">{{ progress_tasks|length }}</span>
-                </h4>
-                <!-- In-progress work cards. -->
-                {% for task in progress_tasks %}
-                    <div class="glass-card rounded-lg p-4 border-[var(--active-accent)] shadow-[var(--glow-active)] cursor-pointer">
-                        <p class="text-[var(--text-primary)] font-medium mb-3">{{ task.title }}</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-[var(--active-accent)] bg-opacity-20 text-[var(--active-accent)] border border-[var(--active-accent)] border-opacity-30">Active</span>
-                            {% if task.tags %}
-                                <span class="text-xs opacity-60 truncate max-w-[100px]">#{{ task.tags }}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                {% empty %}
-                    <div class="p-4 rounded-lg border border-dashed border-[var(--border-glass)] text-center opacity-50 text-sm">
-                        No active tasks
-                    </div>
-                {% endfor %}
-            </div>
-
-            <div class="flex flex-col gap-4">
-                <h4 class="font-semibold flex items-center justify-between border-b border-[var(--border-glass)] pb-2">
-                    Done 
-                    <span class="bg-[var(--bg-glass)] px-2 py-1 rounded text-xs text-[var(--text-primary)]">{{ done_tasks|length }}</span>
-                </h4>
-                <!-- Completed work cards. -->
-                {% for task in done_tasks %}
-                    <div class="glass-card rounded-lg p-4 opacity-50 cursor-pointer">
-                        <p class="text-[var(--text-primary)] font-medium mb-3 line-through">{{ task.title }}</p>
-                        <span class="text-xs opacity-60">Completed</span>
-                    </div>
-                {% empty %}
-                    <div class="p-4 rounded-lg border border-dashed border-[var(--border-glass)] text-center opacity-50 text-sm">
-                        No completed tasks
-                    </div>
-                {% endfor %}
-            </div>
-            
+            {% include "partials/board_column.html" with title="To Do" tasks=todo_tasks empty="No pending tasks" %}
+            {% include "partials/board_column.html" with title="In Progress" tasks=progress_tasks empty="No active tasks" %}
+            {% include "partials/board_column.html" with title="Done" tasks=done_tasks empty="No completed tasks" %}
         </div>
     </section>
 </main>
 
 <!-- Dashboard interactions are split between shared task controls and report/search behavior. -->
 <script src="{% static 'js/tasks.js' %}"></script>
-<script src="{% static 'js/home.js' %}"></script> 
+<script src="{% static 'js/home.js' %}"></script>
 {% endblock %}
