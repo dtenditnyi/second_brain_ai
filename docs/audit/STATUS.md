@@ -1,8 +1,7 @@
 # STATUS
 
-- Rounds 1–2: DONE (`feature/audit`, merged into `main` as 6ed60c4 at the start of Rounds 3–5).
-- **Current: Round 3** (branch `feature/round3`). Goals: `docs/audit/round3/GOALS.md`.
-- Done: G-A1…A4, G-C1…C7, G-B1…B4 (no xfail left in `tests/acceptance/test_round3.py`).
-- In progress: G-final — full run, Round 3 responsive screenshots, independent verification (VERIFY-1.md).
-- Left: G-final for Round 3; then Round 4 (D → E → API), Round 5.
-- **Следующий шаг:** after the full run is green → screenshots `docs/audit/round3/responsive/`, launch the verifier agent, fix findings, REPORT "Round 3", push, start Round 4 (branch `feature/round4` from `feature/round3`).
+- Rounds 1–2: DONE (merged into `main` as 6ed60c4).
+- **Round 3 = DONE** (`feature/round3`, pushed): all goals, no xfail, 825 passed / 1 skipped, two verifier rounds (`docs/audit/round3/VERIFY-1.md`, `VERIFY-2.md`), REPORT "Round 3".
+- **Current: Round 4** (branch `feature/round4` from `feature/round3`). Goals: `docs/audit/round4/GOALS.md`.
+- In progress: acceptance tests for Round 4, then part D (editor) → E (agent, Claude) → API.
+- **Следующий шаг:** commit Round 4 GOALS + acceptance tests (all xfail), acceptance-start.txt; then implement D (notes_service drafted in the session scratchpad r4/).

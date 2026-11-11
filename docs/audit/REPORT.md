@@ -203,3 +203,17 @@ Branch `feature/round3` (from `main` after merging `feature/audit`, 6ed60c4). Ta
 2. Create a fine-grained PAT with **Contents: Read and write** for `myObsidian` and enter it in Settings with the repository URL.
 3. Move the old data: `deploy/migrate-from-old-pc.sh --dump` (old PC) → `--restore` (server). Then run `export_tasks_to_note --user … --dry-run`, and finally the same command without `--dry-run`.
 4. Set the Cloudflare Tunnel public hostname → `http://web:8000`.
+
+## R3.4 Tests and verification
+- **Final run** (`start.bat -FullTests -NoServer` → `docs/audit/round3/test-run.txt`): **826 collected — 825 passed, 1 skipped** (the screenshot tool). Breakdown: 474 unit/integration, 52 e2e, 300 responsive.
+- **Acceptance:** `tests/acceptance/test_round3.py` has 84 tests and no `xfail`. Start state: `docs/audit/round3/acceptance-start.txt` (79 xfail + 4 guards).
+- **Coverage of the new modules:** `tasks_md` 99 %, `tasks_service` 99 %, `vault_writer` 96 %, `sync_tasks` 100 %, `export_tasks_to_note` 93 %, `health` 100 %.
+- **Independent verification**, two rounds by separate agents:
+  - `VERIFY-1.md`: 2 high defects (restore across schema versions; a duplicate 🆔 hid a task and edits hit the wrong line), 6 medium, 3 low, 3 uncaught mutations.
+  - `VERIFY-2.md`: every finding was fixed, but two of the fixes caused regressions (a read-only token combined with duplicate IDs; an unclosed `---`). Those were fixed too.
+  - After round 2 I re-ran the mutations that had survived (N2+N16, N3, N13); the tests now catch all three.
+  - Bugs B-32…B-48 are listed in `docs/BUGS.md`.
+- **Screenshots** at 11 sizes: `docs/audit/round3/responsive/`.
+
+## R3.5 Commits (feature/round3)
+08c0701 acceptance tests · b559385 Markdown (A1) · 6ddad30 Core Matrix (A2/A3) · a02f85d logs (A4) · 1c9083f tasks note, writer, cache, outbox (C1–C6) · f8b5900 tasks UI (C7) · 6a47a34 prod image/compose (B1) · 45fbe10 deploy scripts + DEPLOY.md (B2–B4) · 21cb9f4 VERIFY-1 fixes · f1b1c6f VERIFY-2 fixes · (final docs)

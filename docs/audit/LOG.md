@@ -106,3 +106,6 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 - VERIFY-2 (`docs/audit/round3/VERIFY-2.md`): all VERIFY-1 defects fixed incl. both highs; M1/M8/M11 caught; regressions R1 (read-only token + duplicate IDs → empty list), R2 (unclosed `---` hides tasks); R3 (ERR trap needs `set -E`); R4 test gaps (N2+N16, N3, N13 survived); R5 (sub-items after blank line).
 - Fixed as B-44…B-48 with tests; re-ran the surviving mutations myself (backup-copy restore, not `git checkout`): N2+N16 → `test_b34_duplicates_are_kept_apart…` fails, N3 → `test_n3_…` fails, N13 → `test_n13_…` fails (real Windows junction). Spec allows 2 verifier rounds → no third agent round; Round 4's verifier re-checks shared modules.
 - Checks: regressions 58 passed; fast suite 474 passed.
+
+### 2026-11-11 19:50 — Round 3 / G-final — DONE
+- Final run `logs/runs/run_2026-11-11_16-48-00.log`: 825 passed, 1 skipped (`docs/audit/round3/test-run.txt`); REPORT "Round 3" (R3.1–R3.5), STATUS; branch pushed. Next: Round 4 on `feature/round4`.
