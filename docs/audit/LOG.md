@@ -44,3 +44,15 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 [2026-11-10 22:50] R2 §4 · Independent responsive verifier: 247 responsive tests passed; PARTIAL on light-theme contrast (Settings accent labels 2.3–3.3:1, badge 3.9:1), touch targets at 1024, admin outside the design system; desktop regression in the Notes explorer (identical truncated names); cramped 667×375 chat. Also improved: a failed first sync is retried on the next message (8bcb359)
 [2026-11-10 23:00] R2 §4 · Fixed R27–R30 (49ee379); new rendered-contrast test (caught a colour-format parsing bug in my own test first — computed `color(srgb …)` values, now normalised via canvas) and a mutation check; touch-tablet tap test. Admin console styling left (documented) · next: final screenshots, final full run via `start.bat -FullTests -NoServer`, final auditor
 [2026-11-10 23:00] Final · Full run via `start.bat -FullTests -NoServer`: 569 passed, 1 skipped (screenshot capture flaked once on a Playwright timeout, rerun OK). Independent final auditor: overall PASS; defects: own-account delete with ids "01"/2.0/" 3" (string comparison), Cyrillic token underestimate, Ollama fallback without re-probe, 500/network errors not falling back, start.ps1 aborts without git, error-only pytest runs recorded 0/0; docs: stale B-14 OPEN section. All fixed test-first in 1afdf64 (a stray backspace char from an escape in my patch script was caught and removed); errors-only launcher path verified with a temporary broken test file · next: final full run, REPORT, push
+
+## Rounds 3–5 (docs/audit/PROMPT_ROUNDS_3-5.md)
+
+### 2026-11-11 14:30 — Round 3 / setup — merge, branch, tools
+- `feature/audit` was not in `main` → merged with `--no-ff` (6ed60c4, owner-approved in the brief) and pushed; branch `feature/round3` from it.
+- Docker CLI present but the daemon is not running; not started on purpose (existing prod containers have restart policies → would violate rule 0.3). G-B4 will use `docker compose config`, `bash -n`, shellcheck.
+- Dev tools into the venv: hypothesis 6.170.15, pytest-cov 7.1.0, shellcheck-py 0.11.0.1 (→ requirements-dev.txt). Front-end libs via npm (marked 15.0.12, dompurify 3.4.17, @highlightjs/cdn-assets 11) copied to `static/vendor/`.
+- Files: requirements-dev.txt, ai_manager/package*.json
+
+### 2026-11-11 15:10 — Round 3 / goals — GOALS.md + acceptance tests
+- `docs/audit/round3/GOALS.md` (15 goals); `tests/acceptance/test_round3.py` (83 tests), `tests/vault_helpers.py` (bare remote + clones, fictional PARA vault), `tests/acceptance/conftest.py`.
+- First run: 4 passed + 79 xfailed (`docs/audit/round3/acceptance-start.txt`). The 4 already true (Auto-Hybrid → Gemini when the LAN PC is off; Core Matrix table at 1280; Core Matrix contrast in both themes) are kept as guards without xfail (GOALS.md). Fixed a test bug: shellcheck-py has no importable module → the test looks for the executable.
