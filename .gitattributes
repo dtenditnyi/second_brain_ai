@@ -1,0 +1,6 @@
+# Shell scripts, systemd units and the container entrypoint must keep LF line endings
+# (they run on Linux) even on a Windows checkout with core.autocrlf=true.
+*.sh text eol=lf
+deploy/systemd/* text eol=lf
+docker/* text eol=lf
+Dockerfile text eol=lf
