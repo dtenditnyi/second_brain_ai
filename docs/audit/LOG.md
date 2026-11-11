@@ -109,3 +109,7 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 
 ### 2026-11-11 19:50 — Round 3 / G-final — DONE
 - Final run `logs/runs/run_2026-11-11_16-48-00.log`: 825 passed, 1 skipped (`docs/audit/round3/test-run.txt`); REPORT "Round 3" (R3.1–R3.5), STATUS; branch pushed. Next: Round 4 on `feature/round4`.
+
+### 2026-11-11 20:10 — Round 4 / goals — GOALS.md + acceptance tests
+- Branch `feature/round4` from `feature/round3` (0885f78). `docs/audit/round4/GOALS.md` (D1–D6, E1–E6, API1–API6), `tests/acceptance/test_round4.py` (77 tests, scripted fake AI provider, local git repos).
+- First run: 77 xfailed (`docs/audit/round4/acceptance-start.txt`). Modules were drafted in the session scratchpad during the Round 3 verification (notes_service, ai_providers, agent, api_v1, weekly) — not yet in the repo.
