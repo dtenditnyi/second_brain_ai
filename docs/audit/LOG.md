@@ -72,3 +72,6 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 - `git rm --cached` for `ai_manager/logs/{rag_engine,system}.log` (the files stay on disk, ignored; old history unchanged — no rewriting), `logs/.gitkeep`, `.gitignore` rules; `RotatingFileHandler` (`LOG_MAX_BYTES` 5 MB × `LOG_BACKUP_COUNT` 5); `LOG_DIR` env, folder created at start.
 - Files: .gitignore, ai_manager/logs/.gitkeep, ai_manager/ai_manager/settings.py, tests/acceptance/test_round3.py
 - Checks: acceptance `-k a4` 2 passed; fast suite 272 passed, 54 xfailed.
+
+### 2026-11-11 16:25 — Round 3 / part A — full run
+- `start.bat -FullTests -NoServer` → 616 passed, 1 skipped, 59 xfailed (log `logs/runs/run_2026-11-11_15-08-30.log`). Part A (G-A1…A4) complete; branch pushed.
