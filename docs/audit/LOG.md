@@ -75,3 +75,22 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 
 ### 2026-11-11 16:25 — Round 3 / part A — full run
 - `start.bat -FullTests -NoServer` → 616 passed, 1 skipped, 59 xfailed (log `logs/runs/run_2026-11-11_15-08-30.log`). Part A (G-A1…A4) complete; branch pushed.
+
+### 2026-11-11 17:40 — Round 3 / G-C1…C6 — tasks note, single vault writer, cache, outbox
+- Pure parser `core/tasks_md.py`, writer `core/vault_writer.py` (lock → fetch/reset → op → commit → push, re-apply on rejection), `core/tasks_service.py` (cache, interval, outbox, legacy mode), commands `sync_tasks` / `export_tasks_to_note`, migration 0010, API (update fields, delete, sync), `/healthz/`; `docs/TASKS_FORMAT.md`. Modules first written in the scratchpad while the part-A full run was going (a new module mid-run would have made strict-xfail tests pass early).
+- Files: ai_manager/core/{tasks_md,vault_writer,tasks_service,git_sync,models}.py, core/management/commands/*, core/migrations/0010_round3_tasks_in_vault.py, core/views/{api,pages,health,__init__}.py, core/urls.py, tests/{test_tasks_md,test_vault_writer,test_tasks_service,test_git_sync,conftest}.py, docs/TASKS_FORMAT.md
+- Checks: acceptance C1–C7 39 passed; unit tests 162 passed; coverage tasks_md 99 %, tasks_service 99 %, vault_writer 96 %, sync_tasks 100 %, export command 93 %, health 100 %; fast suite 414 passed.
+- Problems: (1) bug in my design found by unit tests — IDs were added before applying ops, so ops addressing ID-less lines by text failed → IDs now after ops (D22); (2) unknown op raised TaskNotFound → ValueError; (3) B-32 (Windows read-only git objects); (4) `two_writers_in_parallel` hit an SQLite-in-memory threading limitation → threads run only the git path (D22); (5) old API contracts kept (list tags still 400, update response unchanged).
+- Commit: 1c9083f
+
+### 2026-11-11 17:50 — Round 3 / G-C7 — tasks UI
+- Edit/delete (confirm) buttons, shared create/edit dialog, sync status bar + Refresh, "не синхронизировано" badge, allowed-tags hint, Settings field "Tasks note" with the sync/permission error.
+- Files: templates/tasks.html, templates/partials/priority_badge.html, templates/settings.html, static/js/{tasks,settings}.js
+- Checks: e2e `test_c7_e2e_add_edit_delete_with_confirm` + responsive `test_c7_tasks_page_responsive[*]` passed.
+- Commit: f8b5900
+
+### 2026-11-11 18:05 — Round 3 / G-B1…B4 — production config, deploy scripts, DEPLOY.md
+- Multi-stage Dockerfile, entrypoint, compose (db/web/scheduler/tunnel), prod settings, `.env.example`/`.env.test.example`, requirements UTF-8 without CUDA; `deploy/*.sh` + systemd units; `docs/DEPLOY.md` (Russian); `.gitattributes` keeps scripts LF.
+- Checks: `docker compose --env-file .env.test.example config --quiet` OK (4 services); `bash -n` + shellcheck `-S warning` clean for all scripts; B acceptance tests 21 passed.
+- Not checked live: Docker daemon deliberately not started (rule 0.3) → no image build, no `up`, no backup/restore run (D23; owner runs `deploy/install.sh` on the VM).
+- Commits: 6a47a34, 45fbe10
