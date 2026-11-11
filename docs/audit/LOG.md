@@ -56,3 +56,9 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 ### 2026-11-11 15:10 — Round 3 / goals — GOALS.md + acceptance tests
 - `docs/audit/round3/GOALS.md` (15 goals); `tests/acceptance/test_round3.py` (83 tests), `tests/vault_helpers.py` (bare remote + clones, fictional PARA vault), `tests/acceptance/conftest.py`.
 - First run: 4 passed + 79 xfailed (`docs/audit/round3/acceptance-start.txt`). The 4 already true (Auto-Hybrid → Gemini when the LAN PC is off; Core Matrix table at 1280; Core Matrix contrast in both themes) are kept as guards without xfail (GOALS.md). Fixed a test bug: shellcheck-py has no importable module → the test looks for the executable.
+
+### 2026-11-11 15:40 — Round 3 / G-A1 — Markdown in AI answers
+- Client renderer `static/js/markdown.js` (marked + DOMPurify + highlight.js, local), wiki-links, callouts, code "Copy", external links, scroll-wrapped tables; chat history ships raw Markdown (`data-markdown`); status report rendered too; Markdown + highlight styles for both themes in `input.css`.
+- Files: static/js/markdown.js, static/vendor/{marked,purify,highlight}.min.js, templates/ai-chat.html, templates/home.html, static/js/chat.js, static/js/home.js, static/css/input.css (+styles.css), package.json, tests/test_pages.py, tests/acceptance/test_round3.py
+- Checks: acceptance `-k a1` 13 passed; old e2e (errors/flows/round2) 38 passed; fast suite 269 passed, 57 xfailed.
+- Deviation: sanitize test refined (D20); `test_chat_page_lists_notes_and_history` updated to the raw-Markdown contract + new escaping test.

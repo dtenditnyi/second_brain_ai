@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const bubble = document.createElement('div');
         bubble.className = 'chat-bubble glass-card rounded-2xl p-3 sm:p-4 max-w-[85%] ' + (isAI
-            ? 'rounded-tl-none border-accent shadow-[var(--glow-active)]'
+            ? 'ai-bubble rounded-tl-none border-accent shadow-[var(--glow-active)]'
             : 'rounded-tr-none bg-accent/10 border border-accent');
         const p = document.createElement('p');
         p.className = 'text-fg leading-relaxed';
@@ -217,8 +217,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const msgEl = document.getElementById(id);
         if (!msgEl) return;
         const bubble = msgEl.querySelector('.chat-bubble');
-        // Escape before inserting: replies may contain HTML from notes or the LLM (B-09).
-        msgEl.querySelector('p').innerHTML = window.escapeHtml(text).replace(/\n/g, '<br>');
+        const p = msgEl.querySelector('p');
+        if (!isNotice(text) && window.renderMarkdownInto && bubble.classList.contains('ai-bubble')) {
+            // AI answers: sanitised Markdown, same renderer as the server-rendered history (G-A1).
+            const body = document.createElement('div');
+            body.className = 'text-fg leading-relaxed';
+            window.renderMarkdownInto(body, text);
+            p.replaceWith(body);
+        } else {
+            // Notices and errors stay plain text; escaped before inserting (B-09).
+            p.innerHTML = window.escapeHtml(text).replace(/\n/g, '<br>');
+        }
         bubble.classList.toggle('is-notice', isNotice(text));
         if (model && !isNotice(text)) {
             const meta = document.createElement('p');

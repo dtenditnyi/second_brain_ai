@@ -72,7 +72,7 @@
                 <article class="flex gap-2 sm:gap-4 self-start w-full">
                   <div class="text-xl sm:text-2xl mt-1" aria-hidden="true">✨</div>
                   <div class="chat-bubble glass-card rounded-2xl rounded-tl-none p-3 sm:p-4 max-w-[85%] border-accent shadow-[var(--glow-active)]{% if msg.content|slice:':7' == 'System ' %} is-notice{% endif %}">
-                    <p class="text-fg leading-relaxed">{{ msg.content|linebreaksbr }}</p>
+                    {% if msg.content|slice:':7' == 'System ' %}<p class="text-fg leading-relaxed">{{ msg.content|linebreaksbr }}</p>{% else %}<div class="text-fg leading-relaxed markdown-body whitespace-pre-wrap" data-markdown>{{ msg.content }}</div>{% endif %}
                   </div>
                 </article>
             {% else %}
@@ -144,5 +144,9 @@
   </main>
 
   <!-- Handles modal selection state, context rendering, and chat API requests. -->
+  <script src="{% static 'vendor/marked.min.js' %}"></script>
+  <script src="{% static 'vendor/purify.min.js' %}"></script>
+  <script src="{% static 'vendor/highlight.min.js' %}"></script>
+  <script src="{% static 'js/markdown.js' %}"></script>
   <script src="{% static 'js/chat.js' %}"></script>
 {% endblock %}

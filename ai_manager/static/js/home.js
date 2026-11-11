@@ -48,8 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 if (data.status !== 'ok') throw new Error(data.msg || 'API Rejection');
                 // Escaped text: replies may contain HTML from notes or the LLM (B-09).
-                reportOutput.innerHTML = window.escapeHtml(data.reply).replace(/\n/g, '<br>');
-                if (String(data.reply).startsWith('System ')) reportOutput.classList.add('text-warning');
+                if (String(data.reply).startsWith('System ') || !window.renderMarkdownInto) {
+                    reportOutput.innerHTML = window.escapeHtml(data.reply).replace(/\n/g, '<br>');
+                    if (String(data.reply).startsWith('System ')) reportOutput.classList.add('text-warning');
+                } else {
+                    // Sanitised Markdown (G-A1); raw HTML in the answer stays text.
+                    window.renderMarkdownInto(reportOutput, data.reply);
+                }
                 if (lastModel && data.model) lastModel.textContent = data.model;
                 reportBtn.textContent = 'Report Updated';
             } catch (error) {

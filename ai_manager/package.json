@@ -12,7 +12,10 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@highlightjs/cdn-assets": "^11.12.0",
     "@tailwindcss/cli": "^4.3.0",
+    "dompurify": "^3.4.17",
+    "marked": "^15.0.12",
     "tailwindcss": "^4.3.0"
   }
 }

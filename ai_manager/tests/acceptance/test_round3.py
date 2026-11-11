@@ -60,7 +60,6 @@ def vault_user(db, user, remote, real_git, isolated_vault):
 # G-A1 Markdown in AI answers
 # --------------------------------------------------------------------------
 
-@goal("G-A1")
 def test_a1_markdown_libraries_are_local_and_loaded():
     for name in ("marked.min.js", "purify.min.js", "highlight.min.js"):
         assert (APP / "static" / "vendor" / name).is_file()
@@ -70,7 +69,6 @@ def test_a1_markdown_libraries_are_local_and_loaded():
         assert "cdn." not in html and "unpkg" not in html
 
 
-@goal("G-A1")
 def test_a1_history_is_rendered_from_raw_markdown(auth_client, user):
     from core.models import ChatMessage
     ChatMessage.objects.create(user=user, role="ai", content="# Title\n\n**bold** and `code`")
@@ -80,7 +78,6 @@ def test_a1_history_is_rendered_from_raw_markdown(auth_client, user):
 
 
 @pytest.mark.e2e
-@goal("G-A1")
 def test_a1_markdown_features_render_in_chat(logged_page, live_server):
     md = ("# Заголовок\n\n- пункт **жирный** *курсив*\n- [ ] задача\n- [x] готово\n\n"
           "| A | B |\n|---|---|\n| 1 | 2 |\n\n```python\nprint('hi')\n```\n\n"
@@ -107,7 +104,6 @@ def test_a1_markdown_features_render_in_chat(logged_page, live_server):
 
 
 @pytest.mark.e2e
-@goal("G-A1")
 @pytest.mark.parametrize("payload", [
     "<script>window.__xss=1</script>",
     '<img src=x onerror="window.__xss=2">',
@@ -126,11 +122,14 @@ def test_a1_markdown_is_sanitized(logged_page, live_server, payload):
         p.locator(".chat-bubble .markdown-body").last.wait_for()
         p.wait_for_timeout(400)
     assert p.evaluate("window.__xss") is None
-    assert "javascript:" not in p.locator("#chat-feed").inner_html()
+    # No element may carry a javascript: URL or an inline handler (escaped text is harmless, see D20).
+    bad = p.evaluate("""() => [...document.querySelectorAll('#chat-feed *')].filter(e =>
+        [...e.attributes].some(a => /^on/i.test(a.name) || /^\s*javascript:/i.test(a.value))).map(e => e.outerHTML)""")
+    assert bad == []
+    assert p.locator("#chat-feed svg, #chat-feed script").count() == 0
 
 
 @pytest.mark.e2e
-@goal("G-A1")
 def test_a1_history_and_new_answer_render_identically(logged_page, live_server, e2e_user):
     from core.models import ChatMessage
     md = "## Список\n\n1. один\n2. два\n\n`код`"
@@ -147,7 +146,6 @@ def test_a1_history_and_new_answer_render_identically(logged_page, live_server, 
 
 
 @pytest.mark.e2e
-@goal("G-A1")
 def test_a1_status_report_renders_markdown(logged_page, live_server):
     p = logged_page
     with mock.patch("core.rag_engine.ask_second_brain", return_value="**Отлично** — 2 задачи\n\n- a\n- b"):
@@ -158,7 +156,6 @@ def test_a1_status_report_renders_markdown(logged_page, live_server):
 
 
 @pytest.mark.e2e
-@goal("G-A1")
 def test_a1_wide_markdown_does_not_overflow_at_320(browser, live_server, e2e_user):
     from core.models import ChatMessage
     from tests.e2e.conftest import login

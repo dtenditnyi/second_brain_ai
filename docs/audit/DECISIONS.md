@@ -94,3 +94,13 @@ Each entry: context · options · chosen · why · how to roll back.
 - Fallback also on 500/INTERNAL/504/DEADLINE_EXCEEDED and network errors; Auto-Hybrid re-probes Ollama (2 s) before using it as the last fallback (no 600 s hang on an unreachable OLLAMA_HOST).
 - The PAT header is scoped to the repository host (`http.https://<host>/.extraHeader`), so git never sends it to another server (e.g. submodules elsewhere).
 - Left: `ai_manager/logs/rag_engine.log` is a tracked log file from before the audit that contains the old LAN IP; not changed (pre-existing, owner's call whether to untrack it).
+
+---
+
+# Rounds 3–5 decisions
+
+## D20. Markdown in AI answers: client renderer, raw HTML stays text (R3 / G-A1)
+- Question: render where, and what to do with raw HTML the model writes?
+- Decision: one client renderer (`static/js/markdown.js`: marked GFM → DOMPurify HTML profile → DOM post-processing) for both new answers and the history (the history ships raw Markdown in `<div data-markdown>`, escaped by Django). Raw HTML in an answer is **escaped and shown as text** (marked `renderer.html`), DOMPurify is a second layer (no SVG/MathML, forbidden `style`/forms/iframes, only http(s)/mailto/relative URLs).
+- Why: Markdown needs no raw HTML; showing it as text is what the site did before (Round 1 B-09), keeps the old XSS tests valid, and removes a whole class of sanitizer bypasses. External links get `target=_blank rel="noopener noreferrer"`; `[[wiki-links]]` → `/notes/?file=…` (same tab). Libraries vendored in `static/vendor/` (no CDN).
+- Test change (allowed by 0.5.5, the goal was over-specified): `test_a1_markdown_is_sanitized` asserted that the substring `javascript:` never appears in the feed; with raw HTML shown as text the payload `<a href="javascript:…">` legitimately appears as visible text. The test now asserts that no element carries an `on*` attribute or a `javascript:` URL and that no `<svg>`/`<script>` element exists — the actual security criterion. Where: `tests/acceptance/test_round3.py`.
