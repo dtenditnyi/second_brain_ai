@@ -164,3 +164,9 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 | B-49 | data (R4 / D) | Git for Windows `core.autocrlf=true` gave the editor CRLF text → hash/diff mismatch and CRLF commits from the site | `test_round4::test_d1_raw_note_has_content_and_hash`, `test_vault_writer::test_repo_clone_pull_commit_push_cycle` (byte-exact) | FIXED (R4 part D) |
 | B-50 | tests (R4 / D) | e2e: live_server shares one in-memory SQLite connection; parallel requests (note + editor names) failed with `InterfaceError` | test-only `tests/serial_middleware.py` in `settings_test`; D e2e stable | FIXED (R4 part D) |
 | B-51 | functional (R4 / API) | Git for Windows: notes with long names in deep folders failed to commit ("Filename too long") | `test_api_contract::test_create_writes_markdown_as_is_and_suffixes_names` (120-char name); `core.longpaths=true` pinned per clone | FIXED (R4 part API) |
+| B-52 | security (R4 verify, HIGH) | `POST /api/v1/agent` with an ai-only token auto-applied additions (Settings option), bypassing `write` + `write_paths` | `test_round4_regressions::test_b52_api_agent_never_auto_applies` | FIXED |
+| B-53 | security (R4 verify) | API revert checked only the `write` scope, not paths / `delete` for created notes | `test_b53_api_revert_checks_paths` | FIXED |
+| B-54 | data (R4 verify) | Revert failing half-way left reverted shas in the batch → second revert stuck | `test_b54_partial_revert_is_not_repeated` | FIXED |
+| B-55 | data (R4 verify) | PATCH frontmatter wrote unquoted YAML (`a: b`, `#x`, `[a`) → Obsidian dropped properties | `test_b55_frontmatter_values_are_yaml_safe[*]` | FIXED |
+| B-56 | data (R4 verify) | Rename rewrote linking CRLF notes as LF (whole-file diffs) | `test_b56_rename_keeps_crlf` | FIXED |
+| B-57 | data (R4 verify) | Rename rewrote `[[Name]]` pointing to another note with the same name; case-sensitive link match | `test_b57_rename_ambiguous_names_and_case` | FIXED |

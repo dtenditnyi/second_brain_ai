@@ -128,7 +128,7 @@ def note_names(user):
         if rel.startswith(TEMPLATES_DIR + "/"):
             continue
         try:
-            text = full.read_text(encoding="utf-8")
+            text = full.read_bytes().decode("utf-8")
         except (OSError, UnicodeDecodeError):
             text = ""
         notes.append({"name": PurePosixPath(rel).stem, "path": rel, "aliases": _aliases(text)})
@@ -360,15 +360,20 @@ def delete_note(user, rel):
 
 def _link_pattern(targets):
     alternatives = "|".join(re.escape(t) for t in sorted(targets, key=len, reverse=True))
-    return re.compile(r"(!?\[\[)(" + alternatives + r")((?:#[^\]|\n]*)?(?:\|[^\]\n]*)?\]\])")
+    return re.compile(r"(!?\[\[)(" + alternatives + r")((?:#[^\]|\n]*)?(?:\|[^\]\n]*)?\]\])", re.IGNORECASE)
 
 
-def _relink(text, old_rel, new_rel):
+def _relink(text, old_rel, new_rel, bare_names=True):
+    """Rewrite links to the renamed note. Links match case-insensitively like Obsidian; bare
+    ``[[Name]]`` links are rewritten only when no other note has that name (VERIFY M5)."""
     old, new = PurePosixPath(old_rel), PurePosixPath(new_rel)
     old_path, new_path = str(old.with_suffix("")), str(new.with_suffix(""))
-    by_target = {old.stem: new.stem, old_path: new_path, old_path + ".md": new_path + ".md", old.name: new.name}
+    by_target = {old_path: new_path, old_path + ".md": new_path + ".md"}
+    if bare_names:
+        by_target.update({old.stem: new.stem, old.name: new.name})
+    lookup = {k.casefold(): v for k, v in by_target.items()}
     pattern = _link_pattern(by_target)
-    return pattern.sub(lambda m: m.group(1) + by_target[m.group(2)] + m.group(3), text)
+    return pattern.sub(lambda m: m.group(1) + lookup[m.group(2).casefold()] + m.group(3), text)
 
 
 def _rename_plan(root, rel, new_rel):
@@ -378,9 +383,12 @@ def _rename_plan(root, rel, new_rel):
     if dst.exists():
         raise NoteError("Заметка с таким именем уже есть.")
     updates = {}
-    for other, full in _walk_md(root):
-        text = full.read_text(encoding="utf-8")
-        new_text = _relink(text, rel, new_rel)
+    files = list(_walk_md(root))
+    stem = PurePosixPath(rel).stem.casefold()
+    unique = sum(1 for other, _ in files if PurePosixPath(other).stem.casefold() == stem) <= 1
+    for other, full in files:
+        text = full.read_bytes().decode("utf-8")          # byte-exact: CRLF notes stay CRLF (VERIFY M4)
+        new_text = _relink(text, rel, new_rel, bare_names=unique)
         if new_text != text:
             updates[other] = new_text
     return src, dst, updates

@@ -380,8 +380,12 @@ def vault_rules(root):
     return rules
 
 
-def run_agent(user, request, provider=None, history=None):
-    """Run the tool loop for one request; returns AgentRun (changes are only proposed)."""
+def run_agent(user, request, provider=None, history=None, auto_apply=None):
+    """Run the tool loop for one request; returns AgentRun (changes are only proposed).
+
+    auto_apply: None = the user's Settings option; False = never (REST API: token rights are
+    checked per path only on an explicit apply — VERIFY H1).
+    """
     request = str(request or "").strip()[:4000]
     provider = provider or default_provider(user)
     run = AgentRun(provider=getattr(provider, "label", None) or getattr(provider, "model", ""))
@@ -457,7 +461,7 @@ def run_agent(user, request, provider=None, history=None):
         from .models import AgentBatch, get_user_settings
         run.batch = AgentBatch.objects.create(user=user, request=request[:500], provider=run.provider[:60],
                                               changes=ws.changes)
-        if get_user_settings(user).agent_auto_apply_additions:
+        if auto_apply is not False and get_user_settings(user).agent_auto_apply_additions:
             additive = [i for i, c in enumerate(ws.changes) if c["kind"] in ADDITIVE_KINDS]
             if additive:
                 try:
@@ -580,15 +584,19 @@ def revert_batch(user, batch_id):
     batch = _get_batch(user, batch_id)
     if batch.status not in ("applied", "partial") or not batch.commits:
         raise AgentError("Откатывать нечего: изменения пакета не применялись.", status=409)
+    total = len(batch.commits)
     try:
-        for commit in reversed(batch.commits):
+        for commit in reversed(list(batch.commits)):
             vault_revert(user, commit)
+            batch.commits = [c for c in batch.commits if c != commit]     # already reverted (VERIFY M2)
+            batch.save(update_fields=["commits", "updated_at"])
     except VaultError as error:
-        raise AgentError(error.message, status=409) from None
+        raise AgentError(f"{error.message} Откачено коммитов: {total - len(batch.commits)} из {total}.",
+                         status=409) from None
     batch.status = "reverted"
     batch.save(update_fields=["status", "updated_at"])
     _after_write(user, sorted({c["path"] for c in batch.changes if c.get("applied")}))
-    logger.info("Agent batch %s reverted: commits=%s.", batch.pk, len(batch.commits))
+    logger.info("Agent batch %s reverted: commits=%s.", batch.pk, total)
     return batch
 
 

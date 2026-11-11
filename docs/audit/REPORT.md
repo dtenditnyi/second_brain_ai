@@ -217,3 +217,33 @@ Branch `feature/round3` (from `main` after merging `feature/audit`, 6ed60c4). Ta
 
 ## R3.5 Commits (feature/round3)
 08c0701 acceptance tests · b559385 Markdown (A1) · 6ddad30 Core Matrix (A2/A3) · a02f85d logs (A4) · 1c9083f tasks note, writer, cache, outbox (C1–C6) · f8b5900 tasks UI (C7) · 6a47a34 prod image/compose (B1) · 45fbe10 deploy scripts + DEPLOY.md (B2–B4) · 21cb9f4 VERIFY-1 fixes · f1b1c6f VERIFY-2 fixes · (final docs)
+
+# Round 4 — note editor, AI agent + Claude, REST API for the Telegram bot
+
+Branch `feature/round4` (from `feature/round3`). Goals: `docs/audit/round4/GOALS.md`. Method: `docs/audit/PROMPT_LEAN.md`.
+
+## R4.1 What was done
+- **D Editor** on the Notes page: CodeMirror 6 (local bundle), Markdown/frontmatter highlighting, preview beside it (tabs «Текст / Просмотр» on phones), `[[` autocomplete, Ctrl+S / Esc, browser drafts. Create from `99 - Templates` (only `tp.date.now` / `tp.file.title` filled in), save with conflict dialog («Моя версия / Версия из хранилища / Скопировать мой текст»), offline queue with a conflict copy, rename with link update in one commit (preview of affected files), delete with confirmation, per-note re-index.
+- **E AI**: one provider layer (Gemini chain, Ollama with tool-capable models, **Claude** `claude-haiku-5-5` / `claude-sonnet-5-5`); provider + Claude model in Settings (disabled without `ANTHROPIC_API_KEY`). Chat **"Агент" mode**: 8 tools (no delete), changes only proposed → diff card («Изменения / Итоговый текст», «Применить всё / выбранное / Отклонить», «Откатить» = revert commit), vault rules in the prompt (+ `VAULT_RULES_NOTE`), note text treated as data, 8-step / token limits, content-free logs.
+- **API** `/api/v1/` per the **Link2Note contract** (`docs/link2note/`): tokens in Settings (shown once, hash only), scopes read/write/delete/ai with folder rights, rate limit, call log, Idempotency-Key, contract errors, notes from ready Markdown, `lookup` by normalized URL (all contract pairs), list with `fm.*`, byte-exact `PATCH` frontmatter, `PUT`/`DELETE` with `if_sha`, capture (inbox / weekly), tasks, ask, agent. Docs: `docs/API.md`, `docs/DEPLOY.md` §12. Docker network `secondbrain` + alias `secondbrain-web` for the bot.
+
+## R4.2 Tests and verification
+- Full run (`docs/audit/round4/test-run.txt`): 974 passed, 1 skipped, 36 xfailed (Round 5 tests), 1 failed — the settings e2e test, fixed right after (ac13fd4) and re-run green. After the review fixes: fast suite re-run (see LOG).
+- Acceptance `tests/acceptance/test_round4.py`: 77 tests, **no xfail**. Contract tests `tests/test_api_contract.py` read `docs/link2note/contract/*.json`.
+- One independent reviewer (`docs/audit/round4/VERIFY.md`): 1 HIGH (API agent auto-apply bypassed token rights), 5 MEDIUM, 7 LOW; all 5 mutations caught. HIGH + MEDIUM fixed as B-52…B-57 with regression tests.
+
+## R4.3 Not verified live
+- No real Gemini / Claude / Ollama calls (all mocked) — Claude model IDs and tool calling should be tried once with a real key.
+- No real GitHub push, no Docker build/up (rule 0.3); `docker compose config` checked.
+- The bot's own live check (`scripts/check_second_brain_api.py`) was not run against a running site.
+
+## R4.4 What the owner needs to do
+1. Optional: `ANTHROPIC_API_KEY` in `.env` → choose Claude in Settings.
+2. After deploy: Settings → API tokens → create the bot token (rights and folders: `docs/DEPLOY.md` §12), put it into the bot's `.env`, then run the bot's `scripts/check_second_brain_api.py --all`.
+3. If you keep a tag-rules note in the vault, add `fun` there.
+
+## R4.5 Left (LOW, from VERIFY) — candidates for Round 5
+Chained offline saves of one note (2nd becomes a conflict copy); duplicate conflict-copy name in the same minute blocks the outbox; web delete/rename without `base_sha`; NFD file names via API; `DELETE /tasks` uses `write` (contract wording says delete); a push that reached GitHub but timed out → retry creates « (2)».
+
+## R4.6 Commits (feature/round4)
+d82f0d0 acceptance tests · dce7748 editor (D) · 329d18e providers/agent/UI (E) · c024485 REST API + contract (API) · ac13fd4 settings fix + run log · (review fixes, docs)

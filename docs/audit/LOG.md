@@ -125,3 +125,7 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 ### 2026-11-11 — Round 4 / part API — REST API v1 + Link2Note contract
 - `core/api_v1.py` (token auth, rights by path segments, rate limit, call log, Idempotency-Key, contract errors), `url_normalize.py` (port of the bot's normalize), `frontmatter.py` (byte-exact PATCH), tokens in Settings, `/ask` sources + provider, docker network `secondbrain`, `docs/API.md`, DEPLOY §12, contract files in `docs/link2note/`. B-51 (longpaths).
 - Tests: `test_api_contract.py` 95 passed with vault_writer; R4 acceptance 63 non-e2e passed, no xfail left; compose config OK.
+
+### 2026-11-11 — Round 4 / end — full run, review, fixes
+- Full run 974 passed / 1 failed (settings e2e, fixed ac13fd4) → `round4/test-run.txt`. Reviewer `round4/VERIFY.md`: 1 HIGH, 5 MEDIUM, 7 LOW, 5/5 mutations caught.
+- Fixed B-52…B-57 (+ /health no global counters); `tests/test_round4_regressions.py` 12 passed; fast suite 622 passed. Round 5 GOALS + 36 xfail tests ready.

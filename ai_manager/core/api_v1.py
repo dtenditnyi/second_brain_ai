@@ -386,17 +386,14 @@ def _walk(root):
 
 @endpoint(("GET",), public=True)
 def health(request, token, data):
-    from .models import ApiToken, UserSettings, VaultOutbox
+    from .models import ApiToken, VaultOutbox
     user_token = ApiToken.authenticate(_bearer(request)) if _bearer(request) else None
+    synced, pending = None, 0           # without a token: no data about any user (VERIFY L6)
     if user_token is not None:
         s = user_token.user.settings
         if not s.github_repo_url:
             raise ApiError(503, "vault_unavailable", "Хранилище не подключено.", retryable=True, retry_after=300)
         synced, pending = s.tasks_last_sync, VaultOutbox.objects.filter(user=user_token.user).count()
-    else:
-        synced = UserSettings.objects.exclude(tasks_last_sync=None).order_by("-tasks_last_sync") \
-            .values_list("tasks_last_sync", flat=True).first()
-        pending = VaultOutbox.objects.count()
     return ok({"status": "degraded" if pending else "ok",
                "vault_synced_at": synced.isoformat().replace("+00:00", "Z") if synced else None,
                "version": API_VERSION})
@@ -889,7 +886,7 @@ def agent_run(request, token, data):
     text = data.get("request")
     if not isinstance(text, str) or not text.strip():
         raise ApiError(422, "validation_error", "request обязателен.")
-    run = agent.run_agent(token.user, text)
+    run = agent.run_agent(token.user, text, auto_apply=False)
     batch = agent.batch_json(run.batch)
     return ok({"text": run.text, "steps": run.steps, "provider": run.provider,
                "batch_id": batch["id"] if batch else None, "status": batch["status"] if batch else None,
@@ -909,6 +906,12 @@ def agent_action(request, token, data, batch_id, action):
                 need_path(token, "write", change["path"])
         return ok({"batch": agent.batch_json(agent.apply_batch(token.user, batch.pk, indices=indices))})
     need(token, "write")
+    if action == "revert":       # a revert rewrites applied files and deletes created notes (VERIFY M1)
+        for change in batch.changes:
+            if change.get("applied"):
+                need_path(token, "write", change["path"])
+                if change["kind"] == "create":
+                    need_path(token, "delete", change["path"])
     fn = agent.reject_batch if action == "reject" else agent.revert_batch
     return ok({"batch": agent.batch_json(fn(token.user, batch.pk))})
 

@@ -17,14 +17,30 @@ class FrontmatterError(ValueError):
 
 def _unquote(value):
     value = value.strip()
-    if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
-        return value[1:-1]
+    if len(value) >= 2 and value[0] == value[-1] == '"':
+        return value[1:-1].replace('\\"', '"').replace("\\\\", "\\")
+    if len(value) >= 2 and value[0] == value[-1] == "'":
+        return value[1:-1].replace("''", "'")
     return value
+
+
+_NEEDS_QUOTES = re.compile(r"^[\s\-?:,\[\]{}#&*!|>'\"%@`]|: |\s#|\s$|^$")
+
+
+def _quote(text, in_list=False):
+    """Double-quote a YAML scalar when plain style would change its meaning (VERIFY M3)."""
+    if _NEEDS_QUOTES.search(text) or (in_list and "," in text) or text.lower() in ("true", "false", "null", "~"):
+        return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
+    return text
+
+
+_LIST_ITEM = re.compile(r"""\s*(?:"(?:[^"\\]|\\.)*"|'(?:[^']|'')*'|[^,]+)""")
 
 
 def _inline_list(value):
     inner = value.strip()[1:-1]
-    return [_unquote(v) for v in inner.split(",") if v.strip()]
+    items = _LIST_ITEM.findall(inner)          # quoted items may hold ","
+    return [_unquote(v) for v in items if v.strip()]
 
 
 def split(text):
@@ -74,20 +90,20 @@ def tags_of(meta):
     return []
 
 
-def render_value(value):
+def render_value(value, in_list=False):
     if isinstance(value, bool):
         return "true" if value else "false"
     if value is None:
         return ""
     if isinstance(value, (list, tuple)):
-        return "[" + ", ".join(render_value(v) for v in value) + "]"
+        return "[" + ", ".join(render_value(v, in_list=True) for v in value) + "]"
     if isinstance(value, (int, float)):
         return str(value)
     if not isinstance(value, str):
         raise FrontmatterError("Значения frontmatter: строки, числа, true/false или списки.")
     if "\n" in value or "\r" in value:
         raise FrontmatterError("Значение frontmatter не может содержать перевод строки.")
-    return value
+    return _quote(value, in_list)
 
 
 def set_fields(text, values):
