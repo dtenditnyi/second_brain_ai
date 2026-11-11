@@ -37,3 +37,12 @@ Gaps in tests (no mutation spent): no test covers auto-apply via an API token, r
 ## Fixes (main agent)
 HIGH H1 → B-52; MEDIUM → B-53…B-57 (all with regression tests in `tests/test_round4_regressions.py`).
 LOW: /health without token no longer shows global data (fixed). Left for Round 5 (REPORT R4.5): chained offline saves, duplicate conflict-copy name, web delete without base_sha, NFD paths, DELETE /tasks scope wording, push-reached-but-timeout duplicate.
+
+## Re-check of H1 (second round)
+**H1: CLOSED.** M1 (API revert rights): CLOSED. Re-checked at HEAD e23038c (read-only).
+- `core/agent.py:464`: auto-apply only when `auto_apply is not False` and the setting is on. `core/api_v1.py:889` passes `auto_apply=False`. Nothing else calls `run_agent`: only `views/agent_api.py:33` (session) and `api_v1.py:889`. The agent tools only stage changes in the `Workspace` overlay (`agent.py:138-143`). The only vault writes are in `apply_batch` (`agent.py:542`) and `revert_batch` (`agent.py:590`).
+- API apply (`api_v1.py:904-907`): calls `need_path(token,"write",path)` for every pending change it selects before calling `apply_batch`. Revert (`:908-914`): requires `write`, then `need_path` write on each applied path, plus `delete` for each `create`. Reject (`:908`): requires `write` and does not write to the vault. `need_path` (`:116-122`) checks the scope and `write_paths`/`delete_paths`.
+- Path bypass via `..` is ruled out: an agent path like `Allowed/../X.md` would pass `within()`, but `safe_path` rejects `..` (`vault_writer.py:66`) when `apply_batch` writes the file (`md_path`).
+- Session path still follows the setting: `views/agent_api.py:33` calls `run_agent(request.user, message)` with `auto_apply=None`. Covered by `tests/acceptance/test_round4.py::test_e3_auto_apply_additions_only` (line 561).
+- Tests: `pytest tests/test_round4_regressions.py tests/test_api_contract.py`: **78 passed**.
+- New issue (LOW/informational, no write impact): `POST /api/v1/agent` (`:885`) and `/ask` (`:859`) check only `ai`, not `read`. A token with only `ai` can still read note contents, through the agent's read tools and the batch `diff`/`after`. This looks deliberate (consistent with `/ask`) but should be documented in the contract.

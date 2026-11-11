@@ -23,7 +23,7 @@ Authorization: Bearer sb_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 | `read` | чтение заметок, папок, задач, `lookup`, `sync` |
 | `write` | создание/изменение заметок и задач, захват, применение пакетов агента — только в `write_paths` |
 | `delete` | `DELETE /notes/{path}` — только в `delete_paths` |
-| `ai` | `POST /ask`, `POST /agent` |
+| `ai` | `POST /ask`, `POST /agent` (ответы и дифф агента содержат текст заметок — `ai` подразумевает чтение) |
 
 `write_paths` / `delete_paths` — папки или отдельные заметки, по одной на строку. Сравнение по **целым сегментам**:
 `03 - Resources/📥 Из ссылок2` не входит в `03 - Resources/📥 Из ссылок`. Пустой список = всё хранилище.
