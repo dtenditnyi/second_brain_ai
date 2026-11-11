@@ -6,7 +6,7 @@
 
 {% block content %}
 <!-- Dashboard header combines account context with a shortcut into AI chat. -->
-<main class="px-4 py-6 sm:p-8 lg:p-12 max-w-7xl mx-auto w-full relative">
+<main data-r5-page="home" class="px-4 py-6 sm:p-8 lg:p-12 max-w-7xl mx-auto w-full relative">
     <header class="mb-8 lg:mb-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div class="min-w-0">
             <h1 class="text-2xl sm:text-3xl font-bold text-fg mb-2 break-words">Welcome back, {{ config.display_name|default:"Operator" }}</h1>
@@ -18,6 +18,72 @@
             <input type="search" id="global-search-input" enterkeyhint="search" placeholder="Search notes, tasks, or ask AI…" class="input-field rounded-full pl-10 pr-4 py-2 w-full" />
         </div>
     </header>
+
+    <!-- Round 5 (F5): the dashboard — quick capture, today / this week, current weekly note, recent notes, AI. -->
+    <section class="glass-card card p-4 sm:p-5 mb-6" aria-labelledby="capture-title">
+        <h2 id="capture-title" class="text-sm font-bold text-fg mb-2 uppercase tracking-wider">⚡ Быстрая запись во «Входящие»</h2>
+        <form id="quick-capture-form" class="flex flex-col sm:flex-row gap-2" autocomplete="off">
+            <label for="quick-capture-input" class="sr-only">Текст записи</label>
+            <input id="quick-capture-input" type="text" maxlength="10000" enterkeyhint="send" required
+                   placeholder="Мысль, ссылка, задача… — Enter, и она во «Входящих»" class="input-field rounded-lg px-4 py-2 w-full min-h-11">
+            <button type="submit" class="btn btn-primary min-h-11 shrink-0">Записать</button>
+        </form>
+        <p id="quick-capture-status" class="field-hint mt-2 min-h-5" aria-live="polite"></p>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+        <article id="tasks-today" class="glass-card card p-5 min-w-0" aria-labelledby="today-title">
+            <h2 id="today-title" class="text-lg font-bold text-fg mb-3 border-b border-line pb-2 flex justify-between items-center gap-2">
+                <span>Сегодня</span><a href="{% url 'tasks' %}" class="text-sm text-accent hover:underline inline-flex items-center min-h-11 px-2 -mr-2">Все задачи</a>
+            </h2>
+            <ul class="flex flex-col gap-1">
+                {% for task in today_tasks %}
+                <li class="flex items-start gap-2 min-w-0 py-1.5"><span aria-hidden="true">{% if task.overdue %}⚠️{% else %}📌{% endif %}</span>
+                    <span class="min-w-0 break-words text-sm text-fg">{{ task.title }}{% if task.due_date %} <span class="text-xs {% if task.overdue %}text-danger{% else %}text-muted{% endif %}">· {{ task.due_date|date:"d.m" }}</span>{% endif %}</span></li>
+                {% empty %}
+                <li class="empty-state">На сегодня задач нет 🎉</li>
+                {% endfor %}
+            </ul>
+            {% if week_tasks %}
+            <h3 class="text-xs uppercase tracking-wider text-muted mt-4 mb-1">На этой неделе</h3>
+            <ul class="flex flex-col gap-1">
+                {% for task in week_tasks %}<li class="text-sm text-soft break-words py-1">{{ task.title }} <span class="text-xs text-muted">· {{ task.due_date|date:"D d.m" }}</span></li>{% endfor %}
+            </ul>
+            {% endif %}
+        </article>
+
+        <article id="current-week" class="glass-card card p-5 min-w-0" aria-labelledby="week-title">
+            <h2 id="week-title" class="text-lg font-bold text-fg mb-3 border-b border-line pb-2 flex justify-between items-center gap-2">
+                <span>Эта неделя</span><a href="{% url 'weekly' %}" class="text-sm text-accent hover:underline inline-flex items-center min-h-11 px-2 -mr-2">Календарь</a>
+            </h2>
+            {% if current_week_path %}
+            <a href="{% url 'notes' %}?path={{ current_week_path|urlencode }}" class="font-semibold text-fg hover:text-accent break-words flex items-center min-h-11">{{ current_week_name }}</a>
+            <ul class="flex flex-col gap-1 mt-1">
+                {% for t in week_note_tasks %}<li class="text-sm text-soft break-words py-1">{% if t.char == '/' %}◐{% else %}☐{% endif %} {{ t.text }}</li>{% empty %}<li class="text-sm text-muted">Открытых задач нет.</li>{% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-sm text-soft mb-3">Заметки этой недели ещё нет.</p>
+            <a href="{% url 'weekly' %}" class="btn btn-primary min-h-11">📅 Создать</a>
+            {% endif %}
+        </article>
+
+        <article id="recent-notes" class="glass-card card p-5 min-w-0" aria-labelledby="recent-title">
+            <h2 id="recent-title" class="text-lg font-bold text-fg mb-3 border-b border-line pb-2">Недавние заметки</h2>
+            <ul class="flex flex-col">
+                {% for note in dashboard_recent %}
+                <li class="min-w-0"><a href="{% url 'notes' %}?path={{ note.path|urlencode }}" class="text-fg hover:text-accent truncate flex items-center min-h-11" title="{{ note.path }}">{{ note.name }}</a></li>
+                {% empty %}
+                <li class="empty-state"><span class="empty-icon" aria-hidden="true">📭</span>Хранилище не подключено — <a href="{% url 'settings' %}" class="text-accent underline">Настройки</a>.</li>
+                {% endfor %}
+            </ul>
+        </article>
+
+        <article class="glass-card card p-5 min-w-0 flex flex-col" aria-labelledby="ai-entry-title">
+            <h2 id="ai-entry-title" class="text-lg font-bold text-fg mb-3 border-b border-line pb-2">✨ ИИ</h2>
+            <p class="text-sm text-soft mb-4">Спросите по заметкам или попросите агента дописать заметку (с подтверждением).</p>
+            <a href="{% url 'chat' %}" class="btn btn-primary min-h-11 mt-auto">Открыть ИИ-чат</a>
+        </article>
+    </div>
 
     <!-- Summary cards: recent tasks, recent notes, and an AI-generated briefing. -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 lg:gap-6 mb-10">
@@ -90,4 +156,27 @@
 <script src="{% static 'js/markdown.js' %}"></script>
 <script src="{% static 'js/tasks.js' %}"></script>
 <script src="{% static 'js/home.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {   // pwa.js (SBCapture) loads after this block
+    const form = document.getElementById('quick-capture-form');
+    const input = document.getElementById('quick-capture-input');
+    const status = document.getElementById('quick-capture-status');
+    const say = text => { status.textContent = text; };
+    if (!form || !window.SBCapture) return;
+    window.SBCapture.onChange((state, d) => {
+        if (state === 'sent') say(d.pending ? `Сохранено. В очереди ещё: ${d.pending}` : 'Сохранено во «Входящие» ✓');
+        else if (state === 'queued') say(`Нет сети — запись в очереди (${d.pending}), отправится автоматически.`);
+        else if (state === 'error') say('Не сохранено: ' + (d.msg || 'ошибка'));
+    });
+    if (window.SBCapture.pending()) say(`В очереди: ${window.SBCapture.pending()} — отправится при появлении сети.`);
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+        say('Сохраняю…');
+        const result = await window.SBCapture.send(text, 'inbox');
+        if (result.ok || result.queued) input.value = '';
+    });
+});
+</script>
 {% endblock %}

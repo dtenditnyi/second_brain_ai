@@ -58,7 +58,33 @@ def home_view(request):
         'models': ai_models.ui_model_config(),
         'tasks_state': tasks_state,
     }
+    context.update(_dashboard(request.user, tasks))
     return render(request, 'home.html', context)
+
+
+def _dashboard(user, tasks):
+    """Round 5 (F5): today / this week tasks, current weekly note, recent notes (never fails)."""
+    import datetime as _dt
+    from django.utils import timezone
+    from .. import vault_index, weekly
+    today = timezone.localdate()
+    week_end = today + _dt.timedelta(days=6 - today.weekday())
+    open_tasks = tasks.filter(status__in=('todo', 'in_progress'))
+    today_tasks = list(open_tasks.filter(due_date__lte=today).order_by('due_date')[:8])
+    for t in today_tasks:
+        t.overdue = t.due_date < today
+    week_tasks = list(open_tasks.filter(due_date__gt=today, due_date__lte=week_end).order_by('due_date')[:6])
+    data = {'today_tasks': today_tasks, 'week_tasks': week_tasks, 'current_week_path': None,
+            'current_week_name': '', 'week_note_tasks': [], 'dashboard_recent': []}
+    if not get_user_settings(user).github_repo_url:
+        return data
+    try:
+        rel, week_open = weekly.open_tasks_this_week(user, today)
+        data.update({'current_week_path': rel, 'current_week_name': rel.rsplit('/', 1)[-1][:-3] if rel else '',
+                     'week_note_tasks': week_open[:6], 'dashboard_recent': vault_index.recent(user, limit=6)})
+    except Exception:  # pragma: no cover - offline / broken vault: the dashboard still opens
+        pass
+    return data
 
 @login_required(login_url='login')
 def ai_chat_view(request):
@@ -112,8 +138,19 @@ def notes_view(request):
                     rel = os.path.relpath(os.path.join(root, file), paths["notes_dir"]).replace(os.sep, "/")
                     entries.append({"name": file[:-3], "path": rel})
 
+    from .. import vault_index
+    try:
+        tree = vault_index.folder_tree(request.user) if entries else {"folders": [], "notes": []}
+        all_tags = [t for t, _n in vault_index.tag_counts(request.user)] if entries else []
+        recent = vault_index.recent(request.user, limit=8) if entries else []
+    except Exception:  # pragma: no cover - the explorer must still open
+        tree, all_tags, recent = {"folders": [], "notes": [{"name": e["name"], "path": e["path"]} for e in entries]}, [], []
     return render(request, 'notes.html', {
         'active_page': 'notes',
+        'tree': tree,
+        'top_folders': [f["path"] for f in tree["folders"]],
+        'all_tags': all_tags,
+        'recent_notes': recent,
         'config': get_user_config(request.user),
         'user_notes': [e["name"] for e in entries],
         'note_entries': entries,

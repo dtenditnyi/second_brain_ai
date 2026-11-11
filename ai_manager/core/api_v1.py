@@ -687,10 +687,13 @@ def _new_inbox(today):
             f"aliases: [Входящие, Inbox]\n---\n# 📥 Входящие\n\n🔗 [[{notes_service.DEFAULT_MOC}]]\n")
 
 
-@endpoint(("POST",))
-def capture(request, token, data):
+def capture_text(user, text, target="inbox", token=None):
+    """Append ``text`` to the inbox note or this week's note (shared by the API and the site).
+
+    ``token`` (API calls) is checked against its ``write_paths``; the site passes None.
+    Returns (rel, short commit).
+    """
     from . import weekly
-    text, target = data.get("text"), data.get("target") or "inbox"
     if not isinstance(text, str) or not text.strip() or len(text) > 10000:
         raise ApiError(422, "validation_error", "text: от 1 до 10 000 символов.")
     if target not in ("inbox", "weekly", "week"):
@@ -700,12 +703,13 @@ def capture(request, token, data):
         rel = clean_rel(settings.CAPTURE_INBOX_NOTE)
         stamp = now.strftime("%Y-%m-%d %H:%M") + " —"
     else:
-        _root(token.user)
-        rel = weekly.current_week_note(token.user, today=now.date())
+        _root(user)
+        rel = weekly.current_week_note(user, today=now.date())
         if not rel:
             raise ApiError(404, "not_found", "Текущая недельная заметка не найдена (06 - Daily, type: weekly).")
         stamp = ""
-    need_path(token, "write", rel)
+    if token is not None:
+        need_path(token, "write", rel)
     entry = _entry(text, stamp)
 
     def operation(root):
@@ -719,8 +723,14 @@ def capture(request, token, data):
         full.write_bytes(_insert_before_moc(current, entry).encode("utf-8"))
         return [rel], rel
 
-    _, commit = _apply(token.user, operation, f"api: capture to {rel}")
-    notes_service._reindex(token.user, changed=[rel])
+    _, commit = _apply(user, operation, f"api: capture to {rel}" if token is not None else f"site: capture to {rel}")
+    notes_service._reindex(user, changed=[rel])
+    return rel, commit
+
+
+@endpoint(("POST",))
+def capture(request, token, data):
+    rel, commit = capture_text(token.user, data.get("text"), data.get("target") or "inbox", token=token)
     return ok({"path": rel, "name": PurePosixPath(rel).stem, "commit": commit, "pushed": True}, status=201)
 
 

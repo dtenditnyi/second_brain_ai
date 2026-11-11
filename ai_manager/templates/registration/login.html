@@ -10,6 +10,8 @@
     <title>Second Brain - Core Terminal Authentication</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="{% static 'icons/icon.svg' %}" type="image/svg+xml">
 </head>
 <body class="bg-[#0D0D12] min-h-screen min-h-dvh w-full flex items-center justify-center relative font-sans overflow-x-hidden py-6">
     
@@ -59,5 +61,8 @@
             </footer>
         </div>
     </main>
+    <!-- Round 5 (F4): signed out → drop offline copies of notes (pwa.js, sb-clear-cache). -->
+    <div id="sb-clear-cache" hidden></div>
+    <script src="{% static 'js/pwa.js' %}"></script>
 </body>
 </html>

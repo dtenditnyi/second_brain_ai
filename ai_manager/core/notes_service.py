@@ -418,3 +418,49 @@ def rename_note(user, rel, new_rel, preview=False):
     result = vault_apply(user, operation, f"notes: rename {rel} → {new_rel} via site")
     _reindex(user, changed=[new_rel, *[p for p in result["updated"] if p != new_rel]], removed=[rel])
     return result
+
+
+# --------------------------------------------------------------------------- task checkbox (Round 5, F2)
+
+TASK_CHARS = {"todo": " ", "done": "x", "in_progress": "/", "forwarded": ">", "cancelled": "-",
+              " ": " ", "x": "x", "/": "/", ">": ">", "-": "-"}
+_TASK_LINE = re.compile(r"^(\s*[-*+] )\[(.)\]( .*)$")
+
+
+def set_task_status(user, rel, raw_line, status, line_no=None):
+    """Change ``[c]`` of exactly this task line (matched by its text; ``line_no`` breaks ties).
+
+    The line must still be what the page showed — otherwise NoteConflict-like 409 (reload).
+    """
+    rel = _norm(rel)
+    char = TASK_CHARS.get(status)
+    if char is None:
+        raise NoteError("Неизвестный статус задачи.")
+    if not isinstance(raw_line, str) or not _TASK_LINE.match(raw_line.rstrip("\r")):
+        raise NoteError("Это не строка задачи.")
+    raw_line = raw_line.rstrip("\r")
+
+    def operation(root):
+        path = md_path(root, rel)
+        text = _read(path)
+        if text is None:
+            raise NoteError("Заметка не найдена.", status=404)
+        lines = text.split("\n")
+        bare = [l.rstrip("\r") for l in lines]
+        hits = [i for i, l in enumerate(bare) if l == raw_line]
+        if not hits:
+            raise NoteError("Задача изменилась в другом месте — обновите заметку.", status=409)
+        index = line_no if isinstance(line_no, int) and line_no in hits else hits[0]
+        match = _TASK_LINE.match(bare[index])
+        if match.group(2) == char:
+            return [], {"path": rel, "line": index, "status": status, "changed": False}
+        ending = "\r" if lines[index].endswith("\r") else ""
+        lines[index] = f"{match.group(1)}[{char}]{match.group(3)}{ending}"
+        path.write_bytes("\n".join(lines).encode("utf-8"))
+        return [rel], {"path": rel, "line": index, "status": status, "changed": True,
+                       "raw": lines[index].rstrip("\r")}
+
+    result = vault_apply(user, operation, f"notes: task status in {rel} via site")
+    if result.get("changed"):
+        _reindex(user, changed=[rel])
+    return result

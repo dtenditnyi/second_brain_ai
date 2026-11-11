@@ -81,6 +81,14 @@ class UserSettings(models.Model):
     cloud_provider = models.CharField(max_length=20, choices=CLOUD_PROVIDER_CHOICES, default='gemini')
     claude_model = models.CharField(max_length=40, blank=True, default='')
     agent_auto_apply_additions = models.BooleanField(default=False)
+    # Round 5: two-factor login (TOTP). The secret is encrypted at rest like the GitHub token;
+    # backup codes are stored as SHA-256 hashes and removed when used. API tokens are not affected.
+    totp_enabled = models.BooleanField(default=False)
+    totp_secret = EncryptedCharField(max_length=255, blank=True, default='')
+    totp_backup_codes = models.JSONField(default=list, blank=True)
+    totp_last_step = models.BigIntegerField(default=0)
+    # Round 5: favourite notes (vault-relative paths) for the notes page / home.
+    favorite_notes = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         # Provide a concise identifier for Django admin and diagnostic output.

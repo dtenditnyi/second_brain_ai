@@ -2,11 +2,13 @@
 from django.urls import path, re_path
 from . import views
 from . import api_v1
-from .views import agent_api, notes_api, tokens_api
+from .views import agent_api, notes_api, pwa, security, tokens_api, vault_views
+from .views.auth import login_2fa_view
 
 urlpatterns = [
     # Public authentication pages manage registration, login, and session exit.
     path('login/', views.login_view, name='login'),
+    path('login/2fa/', login_2fa_view, name='login_2fa'),
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
 
@@ -37,6 +39,33 @@ urlpatterns = [
     path('api/notes/create/', notes_api.notes_create, name='api_notes_create'),
     path('api/notes/delete/', notes_api.notes_delete, name='api_notes_delete'),
     path('api/notes/rename/', notes_api.notes_rename, name='api_notes_rename'),
+
+    # Round 5 (part F): web vault — navigation, search, links, graph, checkboxes, attachments.
+    path('notes/tags/', vault_views.tags_page, name='notes_tags'),
+    path('notes/graph/', vault_views.graph_page, name='notes_graph'),
+    path('weekly/', vault_views.weekly_page, name='weekly'),
+    path('attachments/', vault_views.attachment, name='attachments'),
+    path('api/notes/search/', vault_views.notes_search, name='api_notes_search'),
+    path('api/notes/mentions/', vault_views.notes_mentions, name='api_notes_mentions'),
+    path('api/notes/graph/', vault_views.notes_graph, name='api_notes_graph'),
+    path('api/notes/tree/', vault_views.notes_tree, name='api_notes_tree'),
+    path('api/notes/favorite/', vault_views.notes_favorite, name='api_notes_favorite'),
+    path('api/notes/toggle-task/', vault_views.notes_toggle_task, name='api_notes_toggle_task'),
+    path('api/weekly/this-week/', vault_views.weekly_this_week, name='api_weekly_this_week'),
+    path('api/weekly/carry-over/', vault_views.weekly_carry_over, name='api_weekly_carry_over'),
+    path('api/weekly/calendar/', vault_views.weekly_calendar, name='api_weekly_calendar'),
+    path('api/capture/', vault_views.capture, name='api_capture'),
+
+    # Round 5 (F7): two-factor login (TOTP) in Settings.
+    path('api/2fa/status/', security.totp_status, name='api_2fa_status'),
+    path('api/2fa/setup/', security.totp_setup, name='api_2fa_setup'),
+    path('api/2fa/enable/', security.totp_enable, name='api_2fa_enable'),
+    path('api/2fa/disable/', security.totp_disable, name='api_2fa_disable'),
+    path('api/2fa/backup-codes/', security.totp_backup_codes, name='api_2fa_backup_codes'),
+
+    # Round 5 (F4): PWA manifest + service worker (root scope).
+    path('manifest.webmanifest', pwa.manifest, name='pwa_manifest'),
+    path('sw.js', pwa.service_worker, name='pwa_sw'),
 
     # AI agent (Round 4): run → batch of proposed changes → apply / reject / revert.
     path('api/agent/run/', agent_api.agent_run, name='api_agent_run'),

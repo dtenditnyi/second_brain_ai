@@ -817,3 +817,53 @@ body.scroll-locked .scroll-container {
 .agent-diff .diff-hunk { display: block; opacity: 0.75; }
 .agent-view-switch { display: inline-flex; gap: 0.25rem; }
 .agent-view-switch [aria-pressed="true"] { border-color: var(--active-accent); background: color-mix(in srgb, var(--active-accent) 12%, transparent); }
+
+/* ------------------------------------------------------------------ Round 5: web vault */
+.markdown-body mark, .search-hit mark { background: color-mix(in srgb, var(--warning) 30%, transparent); color: var(--text-primary); border-radius: 0.2em; padding: 0 0.1em; }
+.markdown-body .callout { border: 1px solid color-mix(in srgb, var(--callout, var(--info)) 40%, transparent); border-left-width: 4px; border-left-color: var(--callout, var(--info)); background: color-mix(in srgb, var(--callout, var(--info)) 9%, transparent); border-radius: 0.6rem; padding: 0.6em 0.9em; }
+.markdown-body .callout-title { font-weight: 700; color: var(--text-primary); display: flex; gap: 0.4em; align-items: center; min-height: 2.75rem; cursor: default; }
+.markdown-body details.callout > summary { cursor: pointer; list-style: none; }
+.markdown-body details.callout > summary::-webkit-details-marker { display: none; }
+.markdown-body details.callout > summary::after { content: "▸"; margin-left: auto; transition: transform .15s; }
+.markdown-body details.callout[open] > summary::after { transform: rotate(90deg); }
+.markdown-body .callout-content > * + * { margin-top: 0.5em; }
+.callout-note, .callout-info, .callout-todo { --callout: var(--info); }
+.callout-abstract, .callout-tip, .callout-question { --callout: var(--active-accent); }
+.callout-success { --callout: var(--success); }
+.callout-warning { --callout: var(--warning); }
+.callout-failure, .callout-danger, .callout-bug { --callout: var(--danger); }
+.callout-example { --callout: #A78BFA; }
+.callout-quote { --callout: var(--text-muted); }
+.markdown-body li.task-item { list-style: none; display: flex; gap: 0.5em; align-items: flex-start; margin-left: -1.2em; }
+.markdown-body input.task-cb { appearance: none; flex: none; width: 1.35rem; height: 1.35rem; margin: 0.12em 0.1em 0 0; border: 2px solid var(--border-strong); border-radius: 0.35rem; display: inline-grid; place-content: center; cursor: pointer; background: transparent; position: relative; }
+.markdown-body input.task-cb::after { content: ""; position: absolute; inset: -0.7rem; }  /* 44px touch target */
+.markdown-body input.task-cb:checked, .markdown-body input.task-cb.task-done { background: var(--active-accent); border-color: var(--active-accent); }
+.markdown-body input.task-cb:checked::before { content: "✓"; color: var(--accent-contrast); font-size: 0.9rem; font-weight: 800; }
+.markdown-body input.task-cb.task-in_progress::before { content: "◐"; color: var(--warning); font-size: 0.85rem; }
+.markdown-body input.task-cb.task-forwarded::before { content: "›"; color: var(--info); font-weight: 800; }
+.markdown-body input.task-cb.task-cancelled::before { content: "–"; color: var(--text-muted); font-weight: 800; }
+.markdown-body li.task-item:has(> input.task-done), .markdown-body li.task-item:has(> input.task-cancelled) { color: var(--text-muted); text-decoration: line-through; }
+.markdown-body input.task-cb:disabled { cursor: default; opacity: 0.85; }
+.markdown-body input.task-cb:focus-visible { outline: 2px solid var(--active-accent); outline-offset: 2px; }
+.markdown-body .note-embed { border-left: 3px solid var(--active-accent); padding: 0.4em 0 0.4em 0.9em; background: color-mix(in srgb, var(--text-primary) 4%, transparent); border-radius: 0 0.5rem 0.5rem 0; }
+.markdown-body .note-embed-title { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4em; }
+.markdown-body .note-embed.unresolved, .markdown-body a.wiki-link.unresolved { color: var(--text-muted); }
+.markdown-body img.note-image { border-radius: 0.5rem; }
+.markdown-body .note-properties { font-size: 0.85em; border: 1px solid var(--border-glass); border-radius: 0.6rem; padding: 0.4em 0.8em; }
+.markdown-body .note-properties > summary { cursor: pointer; color: var(--text-muted); min-height: 2.75rem; display: flex; align-items: center; }
+.markdown-body .note-properties dl { display: grid; grid-template-columns: minmax(5rem, max-content) 1fr; gap: 0.3em 1em; padding-bottom: 0.4em; }
+.markdown-body .note-properties dt { color: var(--text-muted); }
+.markdown-body .note-properties dd { color: var(--text-primary); overflow-wrap: anywhere; display: flex; flex-wrap: wrap; gap: 0.3em; }
+.markdown-body .dataview { border: 1px dashed var(--border-strong); border-radius: 0.6rem; padding: 0.5em 0.8em; overflow-x: auto; }
+.markdown-body .dataview-note, .markdown-body .code-note { color: var(--warning); font-size: 0.85em; margin-bottom: 0.4em; }
+.markdown-body .dataview-empty { color: var(--text-muted); font-size: 0.9em; }
+.markdown-body .math-display { overflow-x: auto; text-align: center; padding: 0.3em 0; }
+.markdown-body pre.mermaid { background: transparent; text-align: center; overflow-x: auto; }
+.vault-tree summary { list-style: none; cursor: pointer; }
+.vault-tree summary::-webkit-details-marker { display: none; }
+.vault-tree summary .chev { transition: transform .15s; display: inline-block; }
+.vault-tree details[open] > summary .chev { transform: rotate(90deg); }
+#offline-banner { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(0.75rem, var(--safe-bottom)); z-index: 90; }
+.qs-option[aria-selected="true"] { background: color-mix(in srgb, var(--active-accent) 15%, transparent); color: var(--text-primary); }
+.graph-canvas { width: 100%; height: 100%; touch-action: none; display: block; }
+.week-cell { min-height: 2.75rem; min-width: 2.75rem; }

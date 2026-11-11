@@ -179,7 +179,7 @@ docker compose exec web python manage.py createsuperuser
 4. Проверка: `https://secondbrain-core.com/healthz/` → `{"status": "ok", "db": "ok"}`.
 
 HTTPS обеспечивает Cloudflare. Django перенаправляет на https, ставит secure-cookies и HSTS.
-Защита доступа (Cloudflare Access, одноразовый код на почту) описана в Round 5.
+Защита доступа (Cloudflare Access, одноразовый код на почту) — раздел 13; Obsidian в браузере — раздел 14.
 
 ## 6. Обновление
 
@@ -320,3 +320,98 @@ SECOND_BRAIN_API_URL=http://127.0.0.1:8000/api/v1 SECOND_BRAIN_API_TOKEN=sb_... 
 ```
 Тег `fun` (нужен боту) уже есть в списке разрешённых (`ALLOWED_TAGS`); если у вас в хранилище есть заметка
 с правилами тегов — допишите `fun` и туда.
+
+
+## 13. Защита доступа: Cloudflare Access + 2FA на сайте (Round 5)
+
+Две независимые защиты: **Cloudflare Access** не пускает к сайту никого, кроме владельца (ещё до Django),
+а **2FA (TOTP)** на самом сайте спрашивает код из приложения при каждом входе.
+
+### 13.1 Cloudflare Access (одноразовый код на почту)
+
+1. Cloudflare Dashboard → **Zero Trust** → Settings → Authentication → Login methods →
+   убедитесь, что включён **One-time PIN** (код на e-mail).
+2. Zero Trust → **Access** → Applications → **Add an application** → *Self-hosted*:
+   - Application name: `Second Brain`; Session duration: `24 hours` (или `1 week`);
+   - Application domain: `secondbrain-core.com` (и, если используете, `www`);
+   - **Policy** «Owner»: Action **Allow**, Include → *Emails* → ваш адрес. Больше никого.
+3. Ещё одно приложение для Obsidian в браузере (раздел 14): домен `obsidian.secondbrain-core.com`,
+   та же политика «Owner». Без него поддомен Obsidian **не включать**.
+4. **Исключение для API** (бот Link2Note и скрипты ходят с токеном, а не через браузер):
+   Access → Applications → **Add an application** → *Self-hosted* → домен `secondbrain-core.com`,
+   **path** `/api/v1/` → Policy: Action **Bypass**, Include → *Everyone*.
+   Путь `/api/v1/` защищён токенами (`Authorization: Bearer sb_…`, права по папкам, см. раздел 12);
+   остальной сайт по-прежнему за Access. Бот внутри docker-сети (`http://secondbrain-web:8000/api/v1`)
+   через Cloudflare вообще не ходит.
+5. Проверка: в приватном окне `https://secondbrain-core.com/` → страница Cloudflare с запросом e-mail;
+   `https://secondbrain-core.com/api/v1/health` → JSON без запроса кода (Bypass работает);
+   `https://obsidian.secondbrain-core.com/` → запрос e-mail.
+
+`/healthz/` можно оставить за Access (Docker проверяет его изнутри контейнера). PWA (установка на телефон)
+работает за Access: после входа по коду браузер держит cookie Access на время сессии.
+
+### 13.2 2FA (TOTP) на сайте
+
+1. Сайт → **Settings** → «Двухфакторный вход (2FA)» → **Включить 2FA**.
+2. Отсканируйте QR-код приложением (Google Authenticator, Aegis, 1Password, Bitwarden…) и введите код.
+3. Сохраните **10 резервных кодов** (показываются один раз; каждый работает один раз). Новые коды —
+   кнопкой «Новые резервные коды» (нужен код из приложения).
+4. Дальше вход = пароль → страница «Второй шаг входа» → код из приложения **или** резервный код.
+   5 неверных кодов — снова пароль; больше 10 неверных за 15 минут — код временно не принимается.
+5. Отключить: Settings → код из приложения или резервный → «Отключить 2FA».
+6. Потеряли телефон и коды: на сервере `docker compose exec web python manage.py shell -c
+   "from core.models import UserSettings as S; S.objects.filter(user__username='ВАШ_ЛОГИН').update(totp_enabled=False, totp_secret='', totp_backup_codes=[])"`.
+
+**TOTP не влияет на API-токены**: бот и скрипты работают как раньше (токен — отдельный ключ с ограниченными правами).
+Секрет TOTP хранится в базе зашифрованным (как токен GitHub), резервные коды — только в виде хэшей.
+
+## 14. Obsidian в браузере (полный функционал, Round 5)
+
+Для всего, чего нет на сайте (плагины, Canvas, Templater, полноценный Dataview), — настоящий Obsidian
+в вкладке браузера: сервис `obsidian` (образ `lscr.io/linuxserver/obsidian`, рабочий стол через KasmVNC).
+
+> ⚠️ **Безопасность.** Внутри контейнера рабочий стол с **sudo без пароля**: кто откроет страницу — тот
+> управляет контейнером и видит всё хранилище. Поэтому: **только через Cloudflare Tunnel и только за
+> Cloudflare Access** (раздел 13.1, приложение для `obsidian.…`). Порты на хост не публикуются
+> (в `docker-compose.yml` у сервиса нет `ports`), в локальную сеть он тоже не смотрит. Дополнительно
+> задайте `OBSIDIAN_USER` / `OBSIDIAN_PASSWORD` в `.env` (второй замок — HTTP-пароль KasmVNC).
+
+### Включение
+
+1. В `.env` (по `.env.example`): `OBSIDIAN_PASSWORD=<длинный случайный>`; при желании закрепите версию
+   `OBSIDIAN_IMAGE=lscr.io/linuxserver/obsidian:<тег>`.
+2. Сервис выключен по умолчанию (профиль `obsidian`). Запуск:
+   `docker compose --profile obsidian up -d obsidian`. Остановка: `docker compose --profile obsidian stop obsidian`.
+3. Cloudflare → Tunnels → ваш туннель → **Public Hostname** → Add: Subdomain `obsidian`,
+   Domain `secondbrain-core.com`, Service **HTTP** → `obsidian:3000`.
+4. Сначала создайте приложение Access для `obsidian.secondbrain-core.com` (13.1, шаг 3), потом открывайте.
+
+### Первая настройка хранилища (один раз)
+
+Хранилище в контейнере — **отдельный git-клон** в томе `obsidian_config` (не папка сайта: у сайта свой клон
+и своя блокировка записи; оба синхронизируются через GitHub, как телефон и ноутбук).
+
+1. Откройте `https://obsidian.secondbrain-core.com` → в окне KasmVNC откройте терминал (правый клик по рабочему столу).
+2. Клонируйте хранилище с токеном GitHub (тот же fine-grained PAT, что и для сайта, раздел 3):
+   ```bash
+   cd /config && git clone https://<ВАШ_ЛОГИН>:<PAT>@github.com/Lol4ik0/myObsidian.git vault
+   git -C /config/vault config user.name "Obsidian (server)"
+   git -C /config/vault config user.email "obsidian-server@localhost"
+   ```
+   (git в контейнере есть благодаря `DOCKER_MODS=linuxserver/mods:universal-git`.)
+3. В Obsidian: **Open folder as vault** → `/config/vault`.
+4. Плагин **obsidian-git** обычно уже в `.obsidian/plugins` хранилища; включите его (Settings → Community plugins)
+   и задайте: *Auto pull interval* 5 мин, *Auto commit-and-sync interval* 5 мин, *Pull on startup* — вкл.
+   Остальные ваши плагины (Dataview, Templater, Calendar, Iconize) подтянутся из `.obsidian` хранилища.
+
+### Ресурсы
+
+Electron + браузерный рабочий стол: ~1–1.5 ГБ RAM при работе (лимит `OBSIDIAN_MEMORY`, по умолчанию 2g),
+`shm_size: 1gb` нужен Chromium. CPU — заметно только при открытой вкладке. Если ресурсов мало —
+держите сервис выключенным и включайте по необходимости (`--profile obsidian up -d` / `stop`).
+
+### Проверено / не проверено
+
+`docker compose config` (с профилем и без) и тест `test_f6_compose_obsidian_profile` (профиль, `shm_size`,
+`restart: unless-stopped`, нет `ports`). Сам образ на этой машине не запускался (Docker-демон намеренно не
+поднимался) — первая проверка вживую на сервере.

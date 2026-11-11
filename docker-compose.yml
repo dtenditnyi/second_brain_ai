@@ -83,6 +83,35 @@ services:
       web:
         condition: service_healthy
 
+  # Round 5 (F6): the real Obsidian in a browser tab (linuxserver image, KasmVNC GUI on :3000).
+  # OFF by default — start it explicitly:  docker compose --profile obsidian up -d obsidian
+  # Nothing is published on the host: the tunnel reaches it as http://obsidian:3000 on the
+  # compose network (subdomain obsidian.<domain>), and that subdomain MUST be behind
+  # Cloudflare Access — the desktop inside has passwordless sudo (docs/DEPLOY.md, section 14).
+  # The vault is a separate git clone inside /config, synced by the obsidian-git plugin.
+  obsidian:
+    image: ${OBSIDIAN_IMAGE:-lscr.io/linuxserver/obsidian:latest}
+    profiles: ["obsidian"]
+    restart: unless-stopped
+    shm_size: "1gb"
+    environment:
+      PUID: ${OBSIDIAN_PUID:-1000}
+      PGID: ${OBSIDIAN_PGID:-1000}
+      TZ: Europe/Bucharest
+      TITLE: Obsidian
+      # Second lock in front of the GUI (HTTP basic auth of KasmVNC), in addition to Access.
+      CUSTOM_USER: ${OBSIDIAN_USER:-owner}
+      PASSWORD: ${OBSIDIAN_PASSWORD:-}
+      # git inside the container for obsidian-git.
+      DOCKER_MODS: linuxserver/mods:universal-git
+    volumes:
+      - obsidian_config:/config
+    deploy:
+      resources:
+        limits:
+          memory: ${OBSIDIAN_MEMORY:-2g}
+    logging: *logging
+
   tunnel:
     # Pin a tested version in .env (CLOUDFLARED_IMAGE=cloudflare/cloudflared:<tag>), see DEPLOY.md.
     image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
@@ -108,3 +137,4 @@ volumes:
   hf_cache:
   app_logs:
   staticfiles:
+  obsidian_config:

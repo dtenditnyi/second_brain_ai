@@ -3,8 +3,6 @@ import json
 import logging
 import os
 import re
-import markdown
-from html import escape
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
@@ -320,6 +318,12 @@ def api_get_note_content(request):
         return JsonResponse({'status': 'error', 'msg': 'No note name provided.'}, status=400)
 
     paths = get_user_paths(request.user)
+    if get_user_settings(request.user).github_repo_url:
+        try:                                   # first visit: clone the vault (Round 5)
+            from ..notes_service import _local_root
+            _local_root(request.user)
+        except Exception as error:             # offline etc.: show what the local copy has
+            logger.info("Vault clone skipped: %s", type(error).__name__)
     current_file_path = None
     if note_path:
         # Round 4: open by vault-relative path (validated: no escape, .md only).
@@ -344,40 +348,24 @@ def api_get_note_content(request):
         return JsonResponse({'status': 'error', 'msg': 'Note not found in the secure vault.'}, status=404)
 
     try:
-        with open(current_file_path, 'r', encoding='utf-8') as f:
-            raw_markdown = f.read()
-
-        linked_mentions = []
-        wiki_link_pattern = f"[[{note_name}]]"
-        for root, dirs, files in os.walk(paths["notes_dir"]):
-            for file in files:
-                if file.endswith(".md") and file != target_file_name:
-                    try:
-                        with open(os.path.join(root, file), 'r', encoding='utf-8') as sf:
-                            scan_content = sf.read()
-                            if wiki_link_pattern in scan_content:
-                                idx = scan_content.find(wiki_link_pattern)
-                                snippet = scan_content[max(0, idx - 40):min(len(scan_content), idx + len(wiki_link_pattern) + 40)].replace('\n', ' ').strip()
-                                linked_mentions.append({'title': file.replace(".md", ""), 'snippet': f"...{snippet}..."})
-                    except Exception:
-                        continue 
-
-        # Convert each Obsidian link while preserving optional display-text aliases.
-        def replace_wiki_links(match):
-            link_text = match.group(1).strip()
-            if '|' in link_text:
-                note_target, note_display = link_text.split('|', 1)
-            else:
-                note_target, note_display = link_text, link_text
-            return f'<a href="#" class="wiki-link text-[var(--active-accent)] border-b border-dashed border-[var(--active-accent)] hover:text-white transition-colors" data-note="{escape(note_target.strip())}">{escape(note_display.strip())}</a>'
-
-        html_content = markdown.markdown(re.sub(r'\[\[(.*?)\]\]', replace_wiki_links, raw_markdown), extensions=['fenced_code', 'tables'])
+        from .. import render as note_render, vault_index
+        with open(current_file_path, 'rb') as f:
+            raw_markdown = f.read().decode('utf-8', errors='replace')
         rel_path = os.path.relpath(current_file_path, paths["notes_dir"]).replace(os.sep, "/")
-        return JsonResponse({'status': 'ok', 'html_content': html_content, 'backlinks': linked_mentions,
-                             'name': note_name, 'path': rel_path,
+        # Round 5 (F2): Obsidian-like server render (callouts, checkboxes, embeds, Dataview-lite…);
+        # raw HTML from the note is escaped, never executed.
+        notes = vault_index.scan_root(paths["notes_dir"])
+        rendered = note_render.render_note(paths["notes_dir"], rel_path, raw_markdown, notes)
+        links = vault_index.mentions(request.user, rel_path, notes) or {"backlinks": [], "unlinked": []}
+        backlinks = [{'title': b['name'], 'path': b['path'], 'snippet': f"...{b['snippet']}..."} for b in links['backlinks']]
+        favorites = get_user_settings(request.user).favorite_notes or []
+        return JsonResponse({'status': 'ok', 'html_content': rendered['html'], 'backlinks': backlinks,
+                             'unlinked': links['unlinked'], 'name': note_name, 'path': rel_path,
+                             'favorite': rel_path in favorites,
                              'editable': bool(get_user_settings(request.user).github_repo_url)})
     except Exception as e:
-        return JsonResponse({'status': 'error', 'msg': str(e)}, status=500)
+        logger.exception("Note render failed")
+        return JsonResponse({'status': 'error', 'msg': f'Не удалось показать заметку: {type(e).__name__}'}, status=500)
 
 @login_required(login_url='login')
 def api_sidebar_stats(request):

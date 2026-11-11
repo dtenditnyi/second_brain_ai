@@ -27,7 +27,6 @@ def goal(g):
 
 # --------------------------------------------------------------------------- F1 navigation & search
 
-@goal("G-F1")
 def test_f1_search_filters_and_highlight(vclient):
     data = vclient.get("/api/notes/search/", {"q": "Аудит", "folder": "01 - Projects"}).json()
     assert data["results"] and all(r["path"].startswith("01 - Projects/") for r in data["results"])
@@ -35,13 +34,11 @@ def test_f1_search_filters_and_highlight(vclient):
     assert vclient.get("/api/notes/search/", {"q": "Аудит", "tag": "physics"}).json()["results"] == []
 
 
-@goal("G-F1")
 def test_f1_tags_page(vclient):
     html = vclient.get("/notes/tags/").content.decode()
     assert "#planning" in html and "#dev" in html
 
 
-@goal("G-F1")
 def test_f1_unlinked_mentions(vclient, remote, tmp_path):
     phone = vh.clone(remote, tmp_path / "phone")
     vh.commit_and_push(phone, "05 - Fleeting/упоминание.md", "Тут просто слово Университет без ссылки.\n")
@@ -50,7 +47,6 @@ def test_f1_unlinked_mentions(vclient, remote, tmp_path):
     assert data["backlinks"]
 
 
-@goal("G-F1")
 def test_f1_graph_data(vclient):
     local = vclient.get("/api/notes/graph/", {"path": "00 - Maps of content/Главная (Home).md"}).json()
     assert {"nodes", "edges"} <= set(local) and any("Университет" in n["name"] for n in local["nodes"])
@@ -58,7 +54,6 @@ def test_f1_graph_data(vclient):
 
 
 @pytest.mark.e2e
-@goal("G-F1")
 def test_f1_quick_switcher_e2e(page, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     from tests.e2e.conftest import login
     remote_ = vh.make_remote(tmp_path)
@@ -76,7 +71,6 @@ def test_f1_quick_switcher_e2e(page, live_server, e2e_user, tmp_path, real_git, 
 
 # --------------------------------------------------------------------------- F2 render & Dataview-lite
 
-@goal("G-F2")
 def test_f2_callouts_and_checkbox_toggle_commits(vclient, remote, tmp_path):
     html = vclient.get("/api/get-note/", {"path": NOTE}).json()["html_content"]
     assert 'data-task-line' in html
@@ -84,7 +78,6 @@ def test_f2_callouts_and_checkbox_toggle_commits(vclient, remote, tmp_path):
     assert r.status_code == 200 and "- [x] Round 3" in vh.remote_file(remote, NOTE, tmp_path)
 
 
-@goal("G-F2")
 def test_f2_embeds_and_attachment_safety(vclient, remote, tmp_path):
     phone = vh.clone(remote, tmp_path / "phone")
     vh.commit_and_push(phone, "05 - Fleeting/встройка.md", "![[Университет#Физика]]\n![[img.png]]\n")
@@ -94,7 +87,6 @@ def test_f2_embeds_and_attachment_safety(vclient, remote, tmp_path):
     assert vclient.get("/attachments/", {"path": ".git/config"}).status_code in (400, 404)
 
 
-@goal("G-F2")
 def test_f2_dataview_list_table_task(vuser):
     from core import dataview
     out = dataview.run(vuser, 'TABLE status, date FROM "01 - Projects" WHERE status = "active" SORT file.name LIMIT 5')
@@ -103,7 +95,6 @@ def test_f2_dataview_list_table_task(vuser):
     assert all(t["status"] != "done" for t in dataview.run(vuser, "TASK WHERE !completed")["rows"])
 
 
-@goal("G-F2")
 def test_f2_dataview_unsupported_and_sandbox(vuser):
     from core import dataview
     assert dataview.run(vuser, 'CALENDAR file.mtime')["kind"] == "unsupported"
@@ -111,7 +102,6 @@ def test_f2_dataview_unsupported_and_sandbox(vuser):
     assert dataview.run(vuser, 'dv.pages().forEach(p => fetch("x"))')["kind"] == "unsupported"
 
 
-@goal("G-F2")
 def test_f2_math_mermaid_assets_local():
     vendor = {p.name for p in (APP / "static" / "vendor").iterdir()}
     assert any("katex" in n for n in vendor) and any("mermaid" in n for n in vendor)
@@ -119,7 +109,6 @@ def test_f2_math_mermaid_assets_local():
 
 # --------------------------------------------------------------------------- F3 weekly notes
 
-@goal("G-F3")
 def test_f3_this_week_opens_or_creates(vclient, remote, tmp_path):
     r = post(vclient, "/api/weekly/this-week/", {"today": "2026-11-11"})
     data = r.json()
@@ -129,7 +118,6 @@ def test_f3_this_week_opens_or_creates(vclient, remote, tmp_path):
     assert again["path"] == data["path"] and again["created"] is False
 
 
-@goal("G-F3")
 def test_f3_carry_over_tasks_preview_and_apply(vclient, remote, tmp_path):
     week = post(vclient, "/api/weekly/this-week/", {"today": "2026-11-11"}).json()["path"]
     preview = post(vclient, "/api/weekly/carry-over/", {"to": week, "preview": True}).json()
@@ -141,7 +129,6 @@ def test_f3_carry_over_tasks_preview_and_apply(vclient, remote, tmp_path):
     assert "- [>] Повторить DSA" in old and "Повторить DSA" in vh.remote_file(remote, week, tmp_path)
 
 
-@goal("G-F3")
 def test_f3_week_calendar_lists_weeks(vclient):
     weeks = vclient.get("/api/weekly/calendar/").json()["weeks"]
     assert any(w["path"].endswith("Fifth week of 2nd year.md") for w in weeks)
@@ -149,7 +136,6 @@ def test_f3_week_calendar_lists_weeks(vclient):
 
 # --------------------------------------------------------------------------- F4 PWA
 
-@goal("G-F4")
 def test_f4_manifest_and_sw_served(client):
     manifest = client.get("/manifest.webmanifest")
     assert manifest.status_code == 200 and json.loads(manifest.content)["icons"]
@@ -157,14 +143,12 @@ def test_f4_manifest_and_sw_served(client):
     assert sw.status_code == 200 and "javascript" in sw["Content-Type"] and sw.get("Service-Worker-Allowed", "/") == "/"
 
 
-@goal("G-F4")
 def test_f4_logout_clears_cache_header(auth_client):
     r = auth_client.post("/logout/")
     assert '"cache"' in r.get("Clear-Site-Data", "") or "sb-clear-cache" in r.content.decode()
 
 
 @pytest.mark.e2e
-@goal("G-F4")
 def test_f4_offline_banner_and_capture_queue_e2e(page, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     from tests.e2e.conftest import login
     remote_ = vh.make_remote(tmp_path)
@@ -183,14 +167,12 @@ def test_f4_offline_banner_and_capture_queue_e2e(page, live_server, e2e_user, tm
 
 # --------------------------------------------------------------------------- F5 home
 
-@goal("G-F5")
 def test_f5_home_dashboard_blocks(vclient):
     html = vclient.get("/").content.decode()
     for block in ("tasks-today", "current-week", "recent-notes", "quick-capture-input", "/chat/"):
         assert block in html, block
 
 
-@goal("G-F5")
 def test_f5_quick_capture_from_home(vclient, remote, tmp_path, settings):
     r = post(vclient, "/api/capture/", {"text": "с главной"})
     assert r.status_code == 200 and "с главной" in vh.remote_file(remote, settings.CAPTURE_INBOX_NOTE, tmp_path)
@@ -198,7 +180,6 @@ def test_f5_quick_capture_from_home(vclient, remote, tmp_path, settings):
 
 # --------------------------------------------------------------------------- F6 / F7 docs + compose
 
-@goal("G-F6")
 def test_f6_compose_obsidian_profile():
     compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
     block = compose.split("  obsidian:", 1)[1].split("\n  tunnel:", 1)[0] if "  obsidian:" in compose else ""
@@ -206,13 +187,11 @@ def test_f6_compose_obsidian_profile():
     assert "ports:" not in block and "restart: unless-stopped" in block
 
 
-@goal("G-F6")
 def test_f6_deploy_doc_obsidian():
     doc = (ROOT / "docs" / "DEPLOY.md").read_text(encoding="utf-8")
     assert "linuxserver/obsidian" in doc and "obsidian-git" in doc and "sudo" in doc and "Cloudflare Access" in doc
 
 
-@goal("G-F7")
 def test_f7_totp_enable_login_backup_disable(vclient, vuser):
     import pyotp
     setup = vclient.get("/api/2fa/setup/").json()
@@ -228,7 +207,6 @@ def test_f7_totp_enable_login_backup_disable(vclient, vuser):
     assert post(vclient, "/api/2fa/disable/", {"code": "000000"}).status_code == 400
 
 
-@goal("G-F7")
 def test_f7_api_not_affected_by_2fa(vuser):
     from core.models import ApiToken
     s = vuser.settings
@@ -239,7 +217,6 @@ def test_f7_api_not_affected_by_2fa(vuser):
     assert Client().get("/api/v1/sync/", HTTP_AUTHORIZATION=f"Bearer {raw}").status_code == 200
 
 
-@goal("G-F7")
 def test_f7_deploy_doc_access():
     doc = (ROOT / "docs" / "DEPLOY.md").read_text(encoding="utf-8")
     assert "Cloudflare Access" in doc and "Bypass" in doc and "/api/v1/" in doc and "TOTP" in doc
@@ -249,7 +226,6 @@ def test_f7_deploy_doc_access():
 
 @pytest.mark.e2e
 @pytest.mark.responsive
-@goal("G-F8")
 @pytest.mark.parametrize("url", ["/", "/notes/tags/", "/notes/graph/", "/weekly/"])
 @pytest.mark.parametrize("width", [320, 768, 1440])
 def test_f8_new_pages_responsive(browser, live_server, e2e_user, tmp_path, real_git, isolated_vault, url, width):

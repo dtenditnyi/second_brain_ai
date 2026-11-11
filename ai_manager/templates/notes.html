@@ -7,10 +7,10 @@
 {% block content %}
 <!-- Three-pane note workspace: vault explorer, selected note, and backlinks
      (stacked below 1280px, side by side from xl). -->
-<main class="flex-1 flex flex-col xl:flex-row relative p-3 sm:p-4 lg:p-8 gap-4 lg:gap-6 overflow-visible xl:overflow-hidden xl:min-h-0"
+<main data-r5-page="notes" class="flex-1 flex flex-col xl:flex-row relative p-3 sm:p-4 lg:p-8 gap-4 lg:gap-6 overflow-visible xl:overflow-hidden xl:min-h-0"
       data-vault-editable="{{ vault_editable|yesno:'1,0' }}">
 
-    <aside class="w-full xl:w-64 shrink-0 glass-card rounded-2xl p-4 sm:p-5 flex flex-col max-h-[40vh] xl:max-h-none xl:h-full overflow-hidden shadow-lg" aria-labelledby="explorer-title">
+    <aside class="w-full xl:w-72 shrink-0 glass-card rounded-2xl p-4 sm:p-5 flex flex-col max-h-[40vh] xl:max-h-none xl:h-full overflow-hidden shadow-lg" aria-labelledby="explorer-title">
         <header class="mb-3 pb-2 border-b border-line flex items-center justify-between gap-2">
             <h2 id="explorer-title" class="font-bold text-fg tracking-wider text-xs uppercase flex items-center gap-2">
                 <span aria-hidden="true">📁</span> File Explorer
@@ -22,20 +22,47 @@
                 {% endif %}
             </div>
         </header>
-        <!-- The left pane lists the current user's synchronized Markdown files. -->
-        <nav class="directory-tree flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1" aria-label="Notes">
-            <p class="flex items-center gap-2 text-fg font-medium mb-1 text-sm"><span aria-hidden="true">📂</span> Obsidian Vault Root</p>
-            <ul class="ml-2 flex flex-col gap-0.5 border-l border-line pl-2 file-list-container">
-                <!-- Each item exposes its note name and vault-relative path to notes.js. -->
-                {% for note in note_entries %}
-                    <li>
-                        <button type="button" class="file-item w-full text-left text-soft hover:text-fg px-2 py-2 min-h-11 rounded-md hover:bg-surface transition-colors flex items-start gap-2 border border-transparent" data-filename="{{ note.name }}" data-path="{{ note.path }}" title="{{ note.path }}">
-                            <span aria-hidden="true">📄</span> <span class="line-clamp-2 break-words text-sm xl:text-[0.8125rem] leading-snug">{{ note.name }}</span>
-                        </button>
-                    </li>
-                {% empty %}
+        <!-- Round 5 (F1): full-text search with highlight + filters (folder / tag / modified since). -->
+        <form id="vault-search" class="flex flex-col gap-2 mb-3" role="search" autocomplete="off">
+            <label for="vault-search-q" class="sr-only">Поиск по заметкам</label>
+            <input id="vault-search-q" type="search" enterkeyhint="search" placeholder="Поиск по тексту…" class="input-field rounded-lg px-3 py-2 w-full min-h-11">
+            <details class="text-xs">
+                <summary class="cursor-pointer text-muted min-h-11 flex items-center">Фильтры</summary>
+                <div class="grid grid-cols-1 gap-2 pt-1">
+                    <label class="field-label" for="vault-search-folder">Папка</label>
+                    <select id="vault-search-folder" class="input-field rounded-lg px-2 py-2 min-h-11">
+                        <option value="">Все папки</option>
+                        {% for f in top_folders %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
+                    </select>
+                    <label class="field-label" for="vault-search-tag">Тег</label>
+                    <select id="vault-search-tag" class="input-field rounded-lg px-2 py-2 min-h-11">
+                        <option value="">Любой тег</option>
+                        {% for t in all_tags %}<option value="{{ t }}">#{{ t }}</option>{% endfor %}
+                    </select>
+                    <label class="field-label" for="vault-search-after">Изменена после</label>
+                    <input id="vault-search-after" type="date" class="input-field rounded-lg px-2 py-2 min-h-11">
+                </div>
+            </details>
+        </form>
+        <div id="vault-search-results" class="hidden flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1" aria-live="polite"></div>
+        <nav id="vault-tree-nav" class="vault-tree directory-tree flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1" aria-label="Notes">
+            <div id="vault-favorites" class="mb-2"></div>
+            <details class="mb-2" id="vault-recent-box">
+                <summary class="flex items-center gap-1.5 px-2 py-2 min-h-11 rounded-md text-fg hover:bg-surface text-sm font-medium"><span class="chev text-muted text-xs" aria-hidden="true">▸</span>🕘 Недавние</summary>
+                <ul class="ml-3 flex flex-col gap-0.5 border-l border-line pl-2">
+                    {% for n in recent_notes %}<li><a href="?path={{ n.path|urlencode }}" data-open-path="{{ n.path }}" class="block px-2 py-2 min-h-11 rounded-md text-sm text-soft hover:text-fg hover:bg-surface break-words">{{ n.name }}</a></li>{% endfor %}
+                </ul>
+            </details>
+            <div class="flex flex-wrap gap-1 mb-2 text-xs">
+                <a href="{% url 'notes_tags' %}" class="btn btn-ghost btn-sm min-h-11"># Теги</a>
+                <a href="{% url 'notes_graph' %}" class="btn btn-ghost btn-sm min-h-11">🕸 Граф</a>
+            </div>
+            <!-- Each item exposes its note name and vault-relative path to notes.js. -->
+            <ul class="flex flex-col gap-0.5 file-list-container">
+                {% include "vault/_tree.html" with node=tree %}
+                {% if not note_entries %}
                     <li class="empty-state my-2">No synced .md files yet. Add your repository in <a href="{% url 'settings' %}" class="text-accent underline">Settings</a>.</li>
-                {% endfor %}
+                {% endif %}
             </ul>
         </nav>
     </aside>
@@ -58,9 +85,16 @@
             <p id="backlinks-counter-label" class="text-xs mt-1 text-muted">0 nodes link here</p>
         </header>
 
-        <div id="linked-mentions-feed" class="flex flex-col gap-3 overflow-y-auto flex-1 pr-1">
+        <div id="linked-mentions-feed" class="flex flex-col gap-3 pr-1">
             <div class="empty-state">No backlinks yet.</div>
         </div>
+        <!-- Round 5 (F1): mentions of this note's name / aliases without a [[link]]. -->
+        <h3 class="font-bold text-fg tracking-wider text-xs uppercase mt-5 mb-2 pt-3 border-t border-line">Упоминания без ссылки</h3>
+        <div id="unlinked-mentions-feed" class="flex flex-col gap-2"><div class="empty-state">—</div></div>
+        <h3 class="font-bold text-fg tracking-wider text-xs uppercase mt-5 mb-2 pt-3 border-t border-line flex items-center justify-between gap-2">
+            <span>Локальный граф</span><a id="local-graph-link" href="{% url 'notes_graph' %}" class="text-accent normal-case font-normal min-h-11 inline-flex items-center">весь граф →</a>
+        </h3>
+        <div id="local-graph" class="h-56 shrink-0 rounded-xl border border-line bg-base/40 overflow-hidden"></div>
     </aside>
 
     <!-- Save conflict: the note changed in the vault while it was being edited (G-D3). -->
@@ -146,6 +180,8 @@
 <script src="{% static 'vendor/highlight.min.js' %}"></script>
 <script src="{% static 'js/markdown.js' %}"></script>
 <script src="{% static 'vendor/sb-editor.js' %}" defer></script>
+<script src="{% static 'js/graph.js' %}"></script>
+<script src="{% static 'js/note_render.js' %}"></script>
 <script src="{% static 'js/notes.js' %}"></script>
 <script src="{% static 'js/note_editor.js' %}" defer></script>
 {% endblock %}

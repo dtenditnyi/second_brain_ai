@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Second Brain - Недели{% endblock %}
+{% block mobile_title %}Недели{% endblock %}
+
+{% block content %}
+<main data-r5-page="weekly" class="px-4 py-6 sm:p-8 lg:p-12 max-w-6xl mx-auto w-full">
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div class="min-w-0">
+            <h1 class="text-2xl sm:text-3xl font-bold text-fg mb-1">Недельные заметки</h1>
+            <p class="text-soft text-sm">«06 - Daily»: открыть или создать заметку этой недели по шаблону Template_Weekly.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <button type="button" id="this-week-btn" class="btn btn-primary min-h-11">📅 Эта неделя</button>
+            <button type="button" id="carry-btn" class="btn btn-ghost min-h-11" {% if not current %}disabled{% endif %}>↪️ Перенести незакрытые задачи</button>
+        </div>
+    </header>
+    <p id="weekly-status" class="text-sm text-soft mb-4 min-h-6" aria-live="polite">
+        {% if current %}Текущая неделя: <a class="text-accent underline" href="{% url 'notes' %}?path={{ current.path|urlencode }}">{{ current.name }}</a>{% else %}Заметки этой недели ещё нет — нажмите «Эта неделя».{% endif %}
+    </p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-5">
+        <!-- Week calendar (like the Calendar plugin): weeks with a note are highlighted. -->
+        <section class="glass-card card p-4 sm:p-5 min-w-0" aria-labelledby="cal-title">
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <button type="button" class="icon-btn min-h-11 min-w-11" id="cal-prev" aria-label="Предыдущий месяц">‹</button>
+                <h2 id="cal-title" class="text-lg font-bold text-fg text-center"></h2>
+                <button type="button" class="icon-btn min-h-11 min-w-11" id="cal-next" aria-label="Следующий месяц">›</button>
+            </div>
+            <table class="w-full text-center text-sm table-fixed" aria-describedby="cal-title">
+                <thead><tr class="text-muted text-xs"><th scope="col" class="py-1 w-12">Нед.</th><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th></tr></thead>
+                <tbody id="cal-body"></tbody>
+            </table>
+        </section>
+
+        <section class="glass-card card p-4 sm:p-5 min-w-0" aria-labelledby="weeks-title">
+            <h2 id="weeks-title" class="text-lg font-bold text-fg mb-3">Все недели</h2>
+            <ul class="flex flex-col max-h-[50vh] overflow-y-auto overscroll-contain pr-1">
+                {% for w in weeks %}
+                <li><a href="{% url 'notes' %}?path={{ w.path|urlencode }}" class="flex items-center justify-between gap-3 min-h-11 px-2 rounded-md hover:bg-surface {% if w.current %}text-fg font-semibold{% else %}text-soft{% endif %}">
+                    <span class="break-words min-w-0">{{ w.name }}</span><span class="text-xs text-muted shrink-0">{{ w.date }}</span></a></li>
+                {% empty %}
+                <li class="empty-state">Недельных заметок (type: weekly) пока нет.</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
+
+    <!-- Carry-over preview: the exact diff of both notes before anything is written. -->
+    <div id="carry-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="carry-title">
+        <div class="modal-panel max-w-3xl p-5 sm:p-6 overflow-y-auto">
+            <div class="flex items-start justify-between gap-4 mb-3">
+                <h2 id="carry-title" class="text-xl font-bold text-fg">Перенос незакрытых задач</h2>
+                <button type="button" class="icon-btn text-2xl leading-none -mr-2 -mt-2" aria-label="Закрыть" data-carry-close>&times;</button>
+            </div>
+            <p class="text-sm text-soft mb-3" id="carry-summary"></p>
+            <pre id="carry-diff" class="diff-view text-xs rounded-lg border border-line p-3 overflow-auto max-h-[50vh] whitespace-pre-wrap break-words"></pre>
+            <div class="flex flex-wrap gap-2 mt-4 justify-end">
+                <button type="button" class="btn btn-ghost min-h-11" data-carry-close>Отмена</button>
+                <button type="button" class="btn btn-primary min-h-11" id="carry-apply">Перенести (один коммит)</button>
+            </div>
+        </div>
+    </div>
+</main>
+{{ calendar.weeks|json_script:"weeks-data" }}
+<script src="{% static 'js/weekly.js' %}"></script>
+{% endblock %}
