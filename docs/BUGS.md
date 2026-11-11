@@ -36,6 +36,7 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 | B-28 | functional (Round 2) | Display Name renamed the login (Q6) | `test_api::test_save_settings_display_name_does_not_rename_login`, e2e `test_display_name_change_keeps_login` | FIXED 4a751f6 |
 | B-29 | functional (Round 2) | Chat searched only the first 10 notes by default (Q12) | `test_pages::test_chat_page_preselects_nothing_and_searches_whole_vault`, e2e `test_chat_sends_selected_context_files_to_api` | FIXED 4a751f6 + e3dcb36 |
 | B-30 | functional (Round 2) | First chat after a failed sync answered "Empty Response" (Q14) | `test_rag_engine::test_ask_sync_failure_explains_instead_of_empty_response`, `..._empty_vault_after_successful_sync` | FIXED 4a751f6 |
+| B-32 | functional (Round 3) | Re-cloning after an interrupted clone failed on Windows: `shutil.rmtree` cannot delete read-only git object files | `test_git_sync::test_incomplete_clone_with_read_only_files_is_removed`, `test_vault_writer::test_pull_resets_local_junk_and_recovers_broken_clone` | FIXED (Round 3, part C commit) |
 | B-31 | config (Round 2) | DEBUG hard-coded True, LAN-IP default for OLLAMA_HOST, settings label "Gemini 2.5 Flash" vs code `gemini-3.6-flash` (Q1, Q8, Q9) | `test_debug_static::*`, `test_rag_engine::test_ollama_url_from_settings_with_localhost_default`, `..._no_hardcoded_lan_ip_in_code`, `test_pages::test_settings_dropdown_shows_real_model_names_and_limits` | FIXED c52427f + e3dcb36 |
 
 ## Details
@@ -127,3 +128,8 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 - B-29 (Q12): no pre-checked notes; empty selection = whole vault; UI shows "Searching the whole vault" / "Selected: N notes" + Reset.
 - B-30 (Q14): see DECISIONS D16.
 - B-31: DEBUG from env (default off), OLLAMA_HOST env-only (default localhost), model labels from `core/ai_models.py`.
+
+### B-32 — Round 3: interrupted clone could not be removed on Windows
+- Symptom: after an interrupted clone, the next sync tried `shutil.rmtree(local_dir)` and failed with `PermissionError: [WinError 5]` on read-only files in `.git/objects` → the vault never re-synced until the folder was deleted by hand.
+- Cause: git marks object files read-only; `rmtree` does not clear the flag on Windows.
+- Fix: `vault_writer.remove_tree` (rmtree with an `onexc` handler that makes files writable), used by `git_sync` and `VaultRepo.pull`. Regression tests above. Found by the new vault-writer unit tests.

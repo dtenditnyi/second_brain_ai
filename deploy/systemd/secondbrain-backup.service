@@ -1,0 +1,11 @@
+# Daily database backup (triggered by secondbrain-backup.timer).
+[Unit]
+Description=Second Brain database backup
+Requires=docker.service
+After=docker.service secondbrain.service
+
+[Service]
+Type=oneshot
+User=__USER__
+WorkingDirectory=__REPO_DIR__
+ExecStart=__REPO_DIR__/deploy/backup.sh

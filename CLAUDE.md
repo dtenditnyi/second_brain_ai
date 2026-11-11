@@ -13,6 +13,15 @@ AI: `core/rag_engine.py` (LlamaIndex + Chroma + HuggingFace embeddings; Ollama l
   `CHAT_HISTORY_MESSAGES`, `PROMPT_TOKEN_BUDGET_*`; labels/limits in `core/ai_models.py`.
   `scripts/list_gemini_models.py` lists the key's models (owner runs it; it calls Google).
 
+## Production / tasks (Round 3)
+- Prod: `Dockerfile` (multi-stage), `docker-compose.yml` (db, web, scheduler, tunnel), `docker/entrypoint.sh`,
+  scripts in `deploy/` (bash, LF via `.gitattributes`); step-by-step guide: `docs/DEPLOY.md` (Russian). `/healthz/` = probe.
+  Compose check without the real `.env`: `ENV_FILE=.env.test.example docker compose --env-file .env.test.example config --quiet`.
+- Tasks: one Obsidian note is the source of truth (`docs/TASKS_FORMAT.md`); `core/tasks_md.py` (pure parser),
+  `core/vault_writer.py` (THE only way to write to a vault: lock → pull → op → commit → push, retry),
+  `core/tasks_service.py` (cache + outbox); `manage.py sync_tasks`, `export_tasks_to_note`.
+  Tests use local bare repos (`tests/vault_helpers.py`); conftest blocks real git unless a test patches `Repo`.
+
 ## Commands (run from `ai_manager/`, Windows venv at `../venv`)
 - Local server on a SQLite **copy** of the DB (never the prod DB). On a fresh checkout create the copy first
   (only if missing): `cp db.sqlite3 audit_copy_db.sqlite3` (path override: env `AUDIT_SQLITE_PATH`). Default port 8000.

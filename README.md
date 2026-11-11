@@ -58,6 +58,10 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
 
+Production on a home server (Proxmox VM, Ubuntu 24.04, Docker, Cloudflare Tunnel): see docs/DEPLOY.md
+(step-by-step guide in Russian: deploy/install.sh, update.sh, backup.sh, restore.sh, status.sh).
+Tasks live in one Obsidian note of your vault: format and rules in docs/TASKS_FORMAT.md.
+
 Running the Application:
 
 The main way to start everything on Windows is start.bat (double-click it, or run it from a terminal

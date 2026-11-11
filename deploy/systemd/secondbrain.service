@@ -1,0 +1,17 @@
+# Starts the Second Brain docker compose stack at boot (installed by deploy/install.sh).
+[Unit]
+Description=Second Brain (docker compose stack)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=__REPO_DIR__
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
+ExecStop=/usr/bin/docker compose stop
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target
