@@ -252,7 +252,107 @@ def test_f8_new_pages_responsive(browser, live_server, e2e_user, tmp_path, real_
 # --------------------------------------------------------------------------- end to end
 
 @pytest.mark.e2e
-@goal("G-E2E")
 def test_e2e_owner_journey(page, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     """2FA login → this week → bot capture → API task → Obsidian edit → editor → agent apply/revert → search."""
-    raise NotImplementedError("written in Round 5 when the pieces above exist (one test, the whole path)")
+    import pyotp
+    from core import agent, twofa
+    from core.models import ApiToken
+    from tests.conftest import PASSWORD
+    remote_ = vh.make_remote(tmp_path)
+    tasks_rel = vh.TASKS_NOTE
+    s = e2e_user.settings
+    secret = twofa.new_secret()
+    s.github_repo_url, s.totp_enabled, s.totp_secret = str(remote_), True, secret
+    s.save()
+    _, bot = ApiToken.create_for(e2e_user, name="link2note", scopes=["read", "write", "ai"])
+    auth = {"Authorization": f"Bearer {bot}"}
+    base = live_server.url
+
+    # 1) password → second step (TOTP) → home
+    page.goto(f"{base}/login/")
+    page.fill("#id_username", "e2e")
+    page.fill("#id_password", PASSWORD)
+    page.click("button[type=submit]")
+    page.wait_for_url(f"{base}/login/2fa/")
+    page.fill("#id_code", pyotp.TOTP(secret).now())
+    page.click("button[type=submit]")
+    page.wait_for_url(f"{base}/")
+    page.locator("#quick-capture-input").wait_for()
+
+    # 2) «Эта неделя» creates this week's note and opens it
+    page.goto(f"{base}/weekly/")
+    page.click("#this-week-btn")
+    page.wait_for_url(re.compile(r"/notes/\?path=06"))
+    week = page.evaluate("new URLSearchParams(location.search).get('path')")
+    assert week.startswith(WEEK_DIR + "/") and "type: weekly" in vh.remote_file(remote_, week, tmp_path)
+
+    # 3) capture via the API with the bot token → «Входящие»
+    r = page.request.post(f"{base}/api/v1/capture", data={"text": "мысль от бота"},
+                          headers={**auth, "Idempotency-Key": "journey-1"})
+    assert r.status == 201
+    inbox = r.json()["path"]
+    assert "мысль от бота" in vh.remote_file(remote_, inbox, tmp_path)
+
+    # 4) a task via the API is visible on the site
+    r = page.request.post(f"{base}/api/v1/tasks", data={"text": "Купить молоко", "tags": ["cooking"]}, headers=auth)
+    assert r.status == 201, r.text()
+    page.goto(f"{base}/tasks/")
+    page.get_by_text("Купить молоко").first.wait_for()
+
+    # 5) the task is changed "in Obsidian" (a commit in a 2nd clone) → visible after sync
+    phone = vh.clone(remote_, tmp_path / "phone")
+    note = (phone / tasks_rel).read_bytes().decode("utf-8")
+    vh.commit_and_push(phone, tasks_rel, note.replace("Купить молоко", "Купить овсяное молоко"), "obsidian: edit task")
+    page.click("#tasks-refresh")
+    page.get_by_text("Купить овсяное молоко").first.wait_for()
+
+    # 6) edit a note in the editor
+    page.goto(f"{base}/notes/?path={NOTE}")
+    page.get_by_role("button", name=re.compile("Edit")).click()
+    editor = page.locator(".cm-content")
+    editor.wait_for()
+    editor.click()
+    page.keyboard.press("Control+End")
+    page.keyboard.type("\nСтрока из редактора про Университет")
+    page.keyboard.press("Control+s")
+    page.locator("#note-save-status", has_text=re.compile("Saved|Сохранено")).wait_for()
+    page.keyboard.press("Escape")
+
+    # 7) the agent appends → diff → apply → revert
+    prov = ScriptedProvider([{"tools": [("append_to_note", {"path": NOTE, "text": "Строка от ИИ"})]},
+                             {"text": "Дописал."}])
+    with mock.patch.object(agent, "default_provider", lambda user: prov):
+        page.goto(f"{base}/chat/")
+        page.check("#agent-mode-toggle")
+        page.fill("#chat-input", "Допиши заметку")
+        page.keyboard.press("Enter")
+        card = page.locator(".agent-diff-card").last
+        card.wait_for()
+    assert "Строка от ИИ" in card.inner_text()
+    card.get_by_role("button", name="Применить всё").click()
+    card.locator(".agent-applied", has_text=re.compile("Применено|Applied")).wait_for()
+    assert "Строка от ИИ" in vh.remote_file(remote_, NOTE, tmp_path)
+    card.get_by_role("button", name="Откатить").click()
+    card.locator(".agent-applied", has_text=re.compile("Откат|Reverted")).wait_for()
+
+    # 8) search, backlinks / mentions and Dataview see the new data
+    found = page.request.get(f"{base}/api/notes/search/", params={"q": "редактора"}).json()["results"]
+    assert [x["path"] for x in found] == [NOTE] and "<mark>" in found[0]["snippet_html"]
+    assert page.request.get(f"{base}/api/notes/search/", params={"q": "мысль от бота"}).json()["results"]
+    links = page.request.get(f"{base}/api/notes/mentions/", params={"path": "00 - Maps of content/Университет.md"}).json()
+    assert NOTE in [m["path"] for m in links["unlinked"]]
+    tasks_html = page.request.get(f"{base}/api/get-note/", params={"path": tasks_rel}).json()["html_content"]
+    assert "dataview-task" in tasks_html and "Round 3" in tasks_html
+    page.goto(f"{base}/notes/?path={NOTE}")
+    page.locator("#workspace-content-area", has_text="Строка из редактора").wait_for()
+    assert "Строка от ИИ" not in page.locator("#workspace-content-area").inner_text()
+
+    # 9) git history intact: every step is a commit, the owner's own text untouched
+    subjects = [subject for _author, subject in vh.remote_log(remote_)]
+    assert subjects[-1] == "seed vault" and "obsidian: edit task" in subjects
+    assert any(sub.startswith("weekly:") for sub in subjects) and any("capture" in sub for sub in subjects)
+    assert any(sub.startswith("Revert") or "revert" in sub.lower() for sub in subjects)
+    final_tasks = vh.remote_file(remote_, tasks_rel, tmp_path)
+    assert "Личный текст владельца — не трогать." in final_tasks and "Купить овсяное молоко" in final_tasks
+    assert vh.remote_file(remote_, "00 - Maps of content/Университет.md", tmp_path) == \
+        vh.FIXTURE_VAULT["00 - Maps of content/Университет.md"]
