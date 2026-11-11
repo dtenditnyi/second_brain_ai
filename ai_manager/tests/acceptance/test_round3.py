@@ -1,7 +1,7 @@
 """Round 3 acceptance tests (docs/audit/round3/GOALS.md).
 
-Every test names its goal. Tests start as xfail(strict=True) and the marker is
-removed when the goal is implemented; a test that passes early breaks the run.
+Every test names its goal. All goals are implemented: the strict expected-failure
+markers used while building Round 3 are gone (start state: docs/audit/round3/acceptance-start.txt).
 External services are never contacted: git runs against local bare repos.
 """
 import datetime
@@ -26,10 +26,6 @@ ROOT = Path(__file__).resolve().parents[3]          # repository root
 APP = ROOT / "ai_manager"
 
 
-def goal(g):
-    return pytest.mark.xfail(strict=True, reason=f"R3 {g}")
-
-
 # --------------------------------------------------------------------------
 # fixtures
 # --------------------------------------------------------------------------
@@ -38,8 +34,9 @@ def goal(g):
 def real_git(monkeypatch):
     """Undo the conftest network guard: these tests use local repos only."""
     import git
-    from core import git_sync
+    from core import git_sync, vault_writer
     monkeypatch.setattr(git_sync, "Repo", git.Repo)
+    monkeypatch.setattr(vault_writer, "Repo", git.Repo)
 
 
 @pytest.fixture
@@ -273,7 +270,6 @@ def test_a4_size_based_rotation_and_dir_created(tmp_path):
 # G-C1 format + docs
 # --------------------------------------------------------------------------
 
-@goal("G-C1")
 def test_c1_tasks_format_document():
     doc = (ROOT / "docs" / "TASKS_FORMAT.md").read_text(encoding="utf-8")
     for needle in ("TASKS_NOTE_PATH", "01 - Projects/🎯 Цели и планы/Задачи.md", "🆔", "⏫", "🔼", "🔽",
@@ -281,7 +277,6 @@ def test_c1_tasks_format_document():
         assert needle in doc, needle
 
 
-@goal("G-C1")
 def test_c1_new_note_has_frontmatter_and_moc_link():
     from core import tasks_md
     text = tasks_md.new_tasks_note(datetime.date(2026, 11, 11))
@@ -290,7 +285,6 @@ def test_c1_new_note_has_frontmatter_and_moc_link():
     assert "## 📥 Входящие" in text and text.rstrip().endswith("🔗 [[Главная (Home)]]")
 
 
-@goal("G-C1")
 def test_c1_settings_path_default_and_per_user(user):
     assert dj_settings.TASKS_NOTE_PATH == "01 - Projects/🎯 Цели и планы/Задачи.md"
     assert dj_settings.TASKS_SYNC_INTERVAL == 60
@@ -302,7 +296,6 @@ def test_c1_settings_path_default_and_per_user(user):
     assert tasks_note_path(user) == "02 - Areas/Мои задачи.md"
 
 
-@goal("G-C1")
 def test_c1_line_format_is_tasks_plugin_compatible():
     from core import tasks_md
     text, info = tasks_md.apply_op("## 📥 Входящие\n", {"op": "add", "text": "Сдать лабу", "due": "2026-11-14",
@@ -318,7 +311,6 @@ def test_c1_line_format_is_tasks_plugin_compatible():
 # G-C2 lossless parser
 # --------------------------------------------------------------------------
 
-@goal("G-C2")
 def test_c2_roundtrip_fixture_and_fields():
     from core import tasks_md
     src = vh.FIXTURE_VAULT[vh.TASKS_NOTE]
@@ -334,7 +326,6 @@ def test_c2_roundtrip_fixture_and_fields():
     assert sub.indent == "    " and sub.id is None
 
 
-@goal("G-C2")
 @pytest.mark.parametrize("newline", ["\n", "\r\n"])
 def test_c2_roundtrip_crlf_and_untouched_bytes_after_edit(newline):
     from core import tasks_md
@@ -346,7 +337,6 @@ def test_c2_roundtrip_crlf_and_untouched_bytes_after_edit(newline):
     assert out.count(newline) == src.count(newline)
 
 
-@goal("G-C2")
 def test_c2_ids_added_and_duplicates_fixed():
     from core import tasks_md
     src = "- [ ] a 🆔 dup111\n- [ ] b 🆔 dup111\n- [ ] c\n"
@@ -355,7 +345,6 @@ def test_c2_ids_added_and_duplicates_fixed():
     assert len(set(ids)) == 3 and ids[0] == "dup111" and all(ids)
 
 
-@goal("G-C2")
 def test_c2_property_roundtrip_hypothesis():
     from hypothesis import given, settings as hset, strategies as st
     from core import tasks_md
@@ -373,7 +362,6 @@ def test_c2_property_roundtrip_hypothesis():
 # G-C3 single write path
 # --------------------------------------------------------------------------
 
-@goal("G-C3")
 @pytest.mark.parametrize("bad", ["../x.md", "/etc/passwd", "C:\\Windows\\x.md", ".git/config", ".obsidian/app.json",
                                  "a/../../x.md", "notes/./../../x.md", "", "dir/"])
 def test_c3_unsafe_paths_rejected(tmp_path, bad):
@@ -383,7 +371,6 @@ def test_c3_unsafe_paths_rejected(tmp_path, bad):
         vault_writer.safe_path(tmp_path / "vault", bad)
 
 
-@goal("G-C3")
 def test_c3_symlink_escape_rejected(tmp_path):
     from core import vault_writer
     vault = tmp_path / "vault"
@@ -397,7 +384,6 @@ def test_c3_symlink_escape_rejected(tmp_path):
         vault_writer.safe_path(vault, "link/x.md")
 
 
-@goal("G-C3")
 def test_c3_add_task_commits_and_pushes_with_site_author(vault_user, remote, tmp_path):
     from core import tasks_service
     tasks_service.add_task(vault_user, text="Новая задача", priority="medium", tags=["dev"])
@@ -407,7 +393,6 @@ def test_c3_add_task_commits_and_pushes_with_site_author(vault_user, remote, tmp
     assert author == "Second Brain" and message.startswith("tasks:")
 
 
-@goal("G-C3")
 def test_c3_concurrent_push_is_retried_without_loss(vault_user, remote, tmp_path, monkeypatch):
     """The phone pushes between our pull and our push: the push is rejected, we pull and re-apply the OPERATION."""
     from core import tasks_service, vault_writer
@@ -430,18 +415,39 @@ def test_c3_concurrent_push_is_retried_without_loss(vault_user, remote, tmp_path
     assert note.count("С сайта") == 1 and note.count("С телефона") == 1
 
 
-@goal("G-C3")
 def test_c3_two_writers_in_parallel(vault_user, other_user, remote, tmp_path, monkeypatch):
-    """Two site clones (e.g. two hosts) push at the same time; both operations survive."""
-    from core import tasks_service
+    """Two site clones (e.g. two hosts) push at the same time; both operations survive.
+
+    The threads run only the git write path (vault_apply): the in-memory SQLite
+    test DB cannot take parallel writes from threads (Postgres in prod can) — D22.
+    """
+    from core import tasks_service, vault_writer
     s = other_user.settings
     s.github_repo_url = str(remote)
     s.save()
     errors = []
+    barrier = threading.Barrier(2)
+    real_push = vault_writer.VaultRepo.push
+
+    first = threading.local()
+    pushes = []
+
+    def synchronised_push(self):
+        if not getattr(first, "done", False):
+            first.done = True
+            try:
+                barrier.wait(timeout=20)   # both commits ready → push at the same moment
+            except threading.BrokenBarrierError:
+                pass
+        pushes.append(1)
+        return real_push(self)
+
+    monkeypatch.setattr(vault_writer.VaultRepo, "push", synchronised_push)
 
     def run(u, text):
         try:
-            tasks_service.add_task(u, text=text)
+            op = {"op": "add", "text": text, "id": tasks_service.tasks_md.generate_id([])}
+            vault_writer.vault_apply(u, tasks_service._note_operation(u, [op]), f"tasks: add {text}")
         except Exception as e:  # pragma: no cover - reported below
             errors.append(e)
 
@@ -451,9 +457,9 @@ def test_c3_two_writers_in_parallel(vault_user, other_user, remote, tmp_path, mo
     [t.join(60) for t in threads]
     note = vh.remote_file(remote, vh.TASKS_NOTE, tmp_path)
     assert errors == [] and note.count("Поток A") == 1 and note.count("Поток B") == 1
+    assert len(pushes) >= 3        # one of the two simultaneous pushes was rejected and retried
 
 
-@goal("G-C3")
 def test_c3_task_deleted_elsewhere_gives_clear_message(vault_user, remote, tmp_path):
     from core import tasks_service
     from core.models import Task
@@ -468,7 +474,6 @@ def test_c3_task_deleted_elsewhere_gives_clear_message(vault_user, remote, tmp_p
     assert not Task.objects.filter(pk=task.pk).exists()
 
 
-@goal("G-C3")
 def test_c3_no_write_permission_is_reported(vault_user, monkeypatch):
     from core import tasks_service, vault_writer
     tasks_service.sync_tasks(vault_user, force=True)
@@ -484,7 +489,6 @@ def test_c3_no_write_permission_is_reported(vault_user, monkeypatch):
     assert "Contents: Read and write" in vault_user.settings.tasks_sync_error
 
 
-@goal("G-C3")
 def test_c3_git_sync_and_writer_share_the_lock(vault_user, tmp_path):
     from core import vault_writer
     from core.rag_engine import get_user_paths
@@ -501,7 +505,6 @@ def test_c3_git_sync_and_writer_share_the_lock(vault_user, tmp_path):
 # G-C4 cache + sync
 # --------------------------------------------------------------------------
 
-@goal("G-C4")
 def test_c4_sync_builds_cache_from_note(vault_user):
     from core import tasks_service
     from core.models import Task
@@ -515,7 +518,6 @@ def test_c4_sync_builds_cache_from_note(vault_user):
     assert vault_user.settings.tasks_last_sync is not None
 
 
-@goal("G-C4")
 def test_c4_interval_respected_and_refresh_forces(vault_user, auth_client, remote, tmp_path):
     from core import tasks_service
     tasks_service.sync_tasks(vault_user, force=True)
@@ -526,7 +528,6 @@ def test_c4_interval_respected_and_refresh_forces(vault_user, auth_client, remot
         assert r.status_code == 200 and r.json()["status"] == "ok" and spy.call_count == 1
 
 
-@goal("G-C4")
 def test_c4_changes_from_obsidian_appear(vault_user, auth_client, remote, tmp_path):
     from core import tasks_service
     from core.models import Task
@@ -537,7 +538,6 @@ def test_c4_changes_from_obsidian_appear(vault_user, auth_client, remote, tmp_pa
     assert Task.objects.get(user=vault_user, vault_id="t7k2m9").status == "done"
 
 
-@goal("G-C4")
 def test_c4_management_command_and_ui_show_last_sync(vault_user, auth_client):
     call_command("sync_tasks", "--all")
     vault_user.settings.refresh_from_db()
@@ -550,7 +550,6 @@ def test_c4_management_command_and_ui_show_last_sync(vault_user, auth_client):
 # G-C5 offline outbox
 # --------------------------------------------------------------------------
 
-@goal("G-C5")
 def test_c5_offline_operations_are_queued_and_flushed_in_order(vault_user, remote, tmp_path, monkeypatch):
     from core import tasks_service, vault_writer
     from core.models import Task, VaultOutbox
@@ -574,7 +573,6 @@ def test_c5_offline_operations_are_queued_and_flushed_in_order(vault_user, remot
     assert all(t.synced for t in Task.objects.filter(user=vault_user))
 
 
-@goal("G-C5")
 def test_c5_unsynced_badge_in_ui(vault_user, auth_client, monkeypatch):
     from core import tasks_service, vault_writer
     tasks_service.sync_tasks(vault_user, force=True)
@@ -588,7 +586,6 @@ def test_c5_unsynced_badge_in_ui(vault_user, auth_client, monkeypatch):
 # G-C6 export of old tasks
 # --------------------------------------------------------------------------
 
-@goal("G-C6")
 def test_c6_export_dry_run_then_real_then_idempotent(vault_user, remote, tmp_path, capsys):
     from core.models import Task
     Task.objects.create(user=vault_user, title="Старая задача", priority="urgent", tags="dev", due_date="2026-12-01")
@@ -608,7 +605,6 @@ def test_c6_export_dry_run_then_real_then_idempotent(vault_user, remote, tmp_pat
 # G-C7 tasks UI
 # --------------------------------------------------------------------------
 
-@goal("G-C7")
 def test_c7_api_edit_fields_and_delete(vault_user, auth_client, remote, tmp_path, post_json):
     from core import tasks_service
     from core.models import Task
@@ -623,7 +619,6 @@ def test_c7_api_edit_fields_and_delete(vault_user, auth_client, remote, tmp_path
     assert "t7k2m9" not in vh.remote_file(remote, vh.TASKS_NOTE, tmp_path)
 
 
-@goal("G-C7")
 def test_c7_each_user_has_own_note(vault_user, other_user, tmp_path, real_git):
     from core import tasks_service
     from core.models import Task
@@ -640,7 +635,6 @@ def test_c7_each_user_has_own_note(vault_user, other_user, tmp_path, real_git):
 
 
 @pytest.mark.e2e
-@goal("G-C7")
 def test_c7_e2e_add_edit_delete_with_confirm(page, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     from tests.e2e.conftest import login
     remote = vh.make_remote(tmp_path)
@@ -673,7 +667,6 @@ def test_c7_e2e_add_edit_delete_with_confirm(page, live_server, e2e_user, tmp_pa
 
 @pytest.mark.e2e
 @pytest.mark.responsive
-@goal("G-C7")
 @pytest.mark.parametrize("width,height", [(320, 568), (390, 844), (768, 1024), (1440, 900)])
 def test_c7_tasks_page_responsive(browser, live_server, e2e_user, width, height):
     from core.models import Task
@@ -698,7 +691,6 @@ def test_c7_tasks_page_responsive(browser, live_server, e2e_user, width, height)
 # G-B1 production config
 # --------------------------------------------------------------------------
 
-@goal("G-B1")
 def test_b1_dockerfile_multistage_nonroot_no_node_in_final():
     df = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     stages = re.split(r"(?m)^FROM ", df)
@@ -714,7 +706,6 @@ def test_b1_dockerfile_multistage_nonroot_no_node_in_final():
         assert item in ignore, item
 
 
-@goal("G-B1")
 def test_b1_compose_services_restart_health_volumes_no_public_ports():
     import yaml
     compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))
@@ -735,7 +726,6 @@ def test_b1_compose_services_restart_health_volumes_no_public_ports():
     assert "Europe/Bucharest" in str(compose)
 
 
-@goal("G-B1")
 def test_b1_entrypoint_waits_for_db_migrates_collects():
     ep = (ROOT / "docker" / "entrypoint.sh").read_text(encoding="utf-8")
     assert ep.startswith("#!/") and "set -euo pipefail" in ep
@@ -744,8 +734,7 @@ def test_b1_entrypoint_waits_for_db_migrates_collects():
     assert ep.index("migrate") < ep.index("collectstatic") < ep.index("gunicorn")
 
 
-@goal("G-B1")
-def test_b1_healthz_ok_without_login_and_db_checked(client):
+def test_b1_healthz_ok_without_login_and_db_checked(client, db):
     r = client.get("/healthz/")
     assert r.status_code == 200 and r.json() == {"status": "ok", "db": "ok"}
     with mock.patch("core.views.health.connection") as conn:
@@ -762,14 +751,12 @@ def _prod_settings(env):
                           capture_output=True, text=True, timeout=120)
 
 
-@goal("G-B1")
 @pytest.mark.parametrize("key", ["", "default-insecure-key-for-dev"])
 def test_b1_insecure_secret_key_refused_in_production(key):
     out = _prod_settings({"DEBUG": "False", "SECRET_KEY": key})
     assert out.returncode != 0 and "SECRET_KEY" in out.stderr
 
 
-@goal("G-B1")
 def test_b1_hosts_and_origins_from_env():
     out = _prod_settings({"DEBUG": "False", "SECRET_KEY": "x" * 60, "ALLOWED_HOSTS": "a.example,b.example",
                           "CSRF_TRUSTED_ORIGINS": "https://a.example"})
@@ -779,17 +766,17 @@ def test_b1_hosts_and_origins_from_env():
     assert "secondbrain-core.com" in default.stdout
 
 
-@goal("G-B1")
 def test_b1_check_deploy_has_no_warnings():
-    env = {k: v for k, v in os.environ.items() if not k.startswith("SECONDBRAIN_")}
-    env.update({"DJANGO_SETTINGS_MODULE": "ai_manager.settings", "DEBUG": "False", "SECRET_KEY": "k" * 64,
+    # Test-runner-only variables (conftest sets DJANGO_ALLOW_ASYNC_UNSAFE for Playwright) are not deployment.
+    env = {k: v for k, v in os.environ.items() if not k.startswith("SECONDBRAIN_") and k != "DJANGO_ALLOW_ASYNC_UNSAFE"}
+    env.update({"DJANGO_SETTINGS_MODULE": "ai_manager.settings", "DEBUG": "False",
+                "SECRET_KEY": "Zq7-Lm2pR9vXc4Tn8Hb1Wd6Ks3Fy0Gj5Ae-Uo2Ri7Pt9Nl4Sx1Vc8Bm3Dh6Qw0",
                 "DB_ENGINE": "sqlite"})
     out = subprocess.run([sys.executable, "manage.py", "check", "--deploy", "--fail-level", "WARNING"],
                          cwd=APP, env=env, capture_output=True, text=True, timeout=180)
     assert out.returncode == 0, out.stdout + out.stderr
 
 
-@goal("G-B1")
 def test_b1_env_example_lists_all_variables():
     ex = (ROOT / ".env.example").read_text(encoding="utf-8")
     for var in ("SECRET_KEY", "DEBUG", "ALLOWED_HOSTS", "CSRF_TRUSTED_ORIGINS", "POSTGRES_PASSWORD", "OLLAMA_HOST",
@@ -798,7 +785,7 @@ def test_b1_env_example_lists_all_variables():
         assert re.search(rf"(?m)^#?\s*{var}=", ex), var
 
 
-# already satisfied before Round 3 (guard, no xfail) — see GOALS.md
+# already satisfied before Round 3 (guard) — see GOALS.md
 def test_b1_auto_hybrid_uses_gemini_when_lan_pc_is_off(configured_user_r3, monkeypatch, settings):
     """OLLAMA_HOST on another PC in the LAN; the PC is off → Gemini answers."""
     from llama_index.core.llms import MockLLM
@@ -843,7 +830,6 @@ def _bash():
     pytest.skip("bash not available")
 
 
-@goal("G-B2")
 @pytest.mark.parametrize("script", SCRIPTS)
 def test_b2_scripts_strict_mode_and_bash_syntax(script):
     path = ROOT / "deploy" / script
@@ -854,7 +840,6 @@ def test_b2_scripts_strict_mode_and_bash_syntax(script):
     assert out.returncode == 0, out.stderr
 
 
-@goal("G-B2")
 def test_b2_shellcheck_clean():
     exe = Path(sys.executable).parent / ("shellcheck.exe" if os.name == "nt" else "shellcheck")
     if not exe.exists():
@@ -866,7 +851,6 @@ def test_b2_shellcheck_clean():
     assert out.returncode == 0, out.stdout + out.stderr
 
 
-@goal("G-B2")
 def test_b2_script_contents():
     d = ROOT / "deploy"
     install = (d / "install.sh").read_text(encoding="utf-8")
@@ -887,7 +871,6 @@ def test_b2_script_contents():
     assert "03:30" in timer and "Persistent=true" in timer
 
 
-@goal("G-B2")
 def test_b2_install_never_prints_env_values():
     install = (ROOT / "deploy" / "install.sh").read_text(encoding="utf-8")
     assert "cat .env" not in install and "echo \"$" not in install.split("check_env")[1].split("}")[0]
@@ -897,7 +880,6 @@ def test_b2_install_never_prints_env_values():
 # G-B3 DEPLOY.md
 # --------------------------------------------------------------------------
 
-@goal("G-B3")
 def test_b3_deploy_doc_sections_and_links():
     doc = (ROOT / "docs" / "DEPLOY.md").read_text(encoding="utf-8")
     for needle in ("Proxmox", "QEMU guest agent", "Start at boot", "unattended-upgrades", "ufw", "SSH", "статический IP",
@@ -913,13 +895,14 @@ def test_b3_deploy_doc_sections_and_links():
 # G-B4 verification of the prod config
 # --------------------------------------------------------------------------
 
-@goal("G-B4")
 def test_b4_compose_config_validates_with_test_env():
     docker = shutil.which("docker")
     if not docker:
         pytest.skip("docker CLI not available")
     env = {**os.environ, "ENV_FILE": ".env.test.example"}
-    out = subprocess.run([docker, "compose", "-f", "docker-compose.yml", "-p", "secondbrain-test", "config", "--quiet"],
+    # --env-file: interpolation uses the dummy file, the real .env is never read (D23).
+    out = subprocess.run([docker, "compose", "--env-file", ".env.test.example", "-f", "docker-compose.yml",
+                          "-p", "secondbrain-test", "config", "--quiet"],
                          cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
     assert out.returncode == 0, out.stderr
     assert (ROOT / ".env.test.example").is_file()

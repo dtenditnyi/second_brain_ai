@@ -9,7 +9,7 @@ also removes tokens that older versions stored in the URL — also on errors.
 """
 import base64
 import os
-import shutil
+
 from urllib.parse import urlsplit
 import logging
 from git import Repo
@@ -64,7 +64,16 @@ def sync_obsidian_repo(repo_url, token, local_dir):
 
     env = auth_env(token, repo_url)
     logger.info("Repository sync started.")
+    from .vault_writer import VaultError, vault_lock
+    try:
+        with vault_lock(local_dir):
+            return _sync_locked(repo_url, local_dir, env)
+    except VaultError as error:
+        logger.warning("Repository sync skipped: %s.", error.kind)
+        return False
 
+
+def _sync_locked(repo_url, local_dir, env):
     try:
         # Existing Git metadata means this directory is a clone that can be pulled.
         if os.path.exists(local_dir) and os.path.exists(os.path.join(local_dir, '.git')):
@@ -80,7 +89,9 @@ def sync_obsidian_repo(repo_url, token, local_dir):
         logger.info("Repository clone missing; cloning repository.")
         # Remove an incomplete prior clone before retrying.
         if os.path.exists(local_dir):
-            shutil.rmtree(local_dir)
+            # Read-only git objects (Windows) made plain rmtree fail (B-32).
+            from .vault_writer import remove_tree
+            remove_tree(local_dir)
         parent_dir = os.path.dirname(local_dir)
         if not os.path.exists(parent_dir):
             os.makedirs(parent_dir, exist_ok=True)

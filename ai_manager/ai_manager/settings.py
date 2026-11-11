@@ -87,17 +87,41 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default-insecure-key-for-dev')
 # Local development turns it on in settings_local.py.
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'secondbrain-core.com',
-]
+INSECURE_SECRET_KEYS = {'', 'default-insecure-key-for-dev', 'change-me-to-a-long-random-string'}
+# Production refuses to start with a missing/default key (Round 3 / G-B1). settings_local
+# and settings_test set SECONDBRAIN_DEV_SETTINGS before importing this module.
+if not DEBUG and SECRET_KEY in INSECURE_SECRET_KEYS and not os.getenv('SECONDBRAIN_DEV_SETTINGS'):
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured(
+        'SECRET_KEY is empty or the insecure default while DEBUG=False. '
+        'Set a long random SECRET_KEY in .env (python -c "import secrets; print(secrets.token_urlsafe(50))").')
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://secondbrain-core.com',
-]
 
+def _env_list(name, default):
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return list(default)
+    return [item.strip() for item in raw.split(',') if item.strip()]
+
+
+ALLOWED_HOSTS = _env_list('ALLOWED_HOSTS', ['localhost', '127.0.0.1', 'secondbrain-core.com'])
+CSRF_TRUSTED_ORIGINS = _env_list('CSRF_TRUSTED_ORIGINS', ['https://secondbrain-core.com'])
+
+# Cloudflare Tunnel terminates TLS and forwards X-Forwarded-Proto: https.
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True') == 'True'
+    # Docker healthchecks call http://127.0.0.1:8000/healthz/ directly (no proxy).
+    SECURE_REDIRECT_EXEMPT = [r'^healthz/$']
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS') or 31536000)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True') == 'True'
+    SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False') == 'True'
+    SECURE_REFERRER_POLICY = 'same-origin'
+# HSTS preload is a one-way commitment for the whole domain: opt-in via env only (D23).
+SILENCED_SYSTEM_CHECKS = ['security.W021']
 # Django application registry: built-in auth/admin infrastructure plus this project app.
 
 INSTALLED_APPS = [
@@ -155,8 +179,13 @@ DATABASES = {
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'mypassword'),
         'HOST': os.environ.get('DB_HOST', 'db'),
         'PORT': os.environ.get('DB_PORT', '5432'),
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE') or 60),
     }
 }
+# DB_ENGINE=sqlite: only for offline checks such as "manage.py check --deploy" in CI;
+# defaults to an in-memory database so no real file is ever opened.
+if os.environ.get('DB_ENGINE') == 'sqlite':
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': os.environ.get('SQLITE_PATH', ':memory:')}}
 
 
 # Built-in validators protect credentials created through Django's user forms.
@@ -252,3 +281,8 @@ CHAT_HISTORY_MESSAGES = _env_int('CHAT_HISTORY_MESSAGES', 6)
 PROMPT_TOKEN_BUDGET_GEMMA = _env_int('PROMPT_TOKEN_BUDGET_GEMMA', 8000)
 PROMPT_TOKEN_BUDGET_GEMINI = _env_int('PROMPT_TOKEN_BUDGET_GEMINI', 30000)
 PROMPT_TOKEN_BUDGET_LOCAL = _env_int('PROMPT_TOKEN_BUDGET_LOCAL', 6000)
+
+# --- Tasks in the Obsidian vault (Round 3, docs/TASKS_FORMAT.md) ---------------
+TASKS_NOTE_PATH = os.getenv('TASKS_NOTE_PATH') or '01 - Projects/🎯 Цели и планы/Задачи.md'
+TASKS_SYNC_INTERVAL = _env_int('TASKS_SYNC_INTERVAL', 60)
+VAULT_PUSH_RETRIES = _env_int('VAULT_PUSH_RETRIES', 4)

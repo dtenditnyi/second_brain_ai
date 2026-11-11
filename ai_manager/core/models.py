@@ -71,6 +71,11 @@ class UserSettings(models.Model):
     last_model_used = models.CharField(max_length=100, blank=True, default="")
     last_model_at = models.DateTimeField(null=True, blank=True)
 
+    # Tasks note in the vault (Round 3 / G-C1): empty = settings.TASKS_NOTE_PATH.
+    tasks_note_path = models.CharField(max_length=300, blank=True, default="")
+    tasks_last_sync = models.DateTimeField(null=True, blank=True)
+    tasks_sync_error = models.TextField(blank=True, default="")
+
     def __str__(self):
         # Provide a concise identifier for Django admin and diagnostic output.
         return f"Settings for {self.user.username}"
@@ -80,7 +85,9 @@ class Task(models.Model):
     STATUS_CHOICES = [
         ('todo', 'To Do'),
         ('in_progress', 'In Progress'),
-        ('done', 'Done')
+        ('done', 'Done'),
+        ('cancelled', 'Cancelled'),     # - [-] in the tasks note (Round 3)
+        ('forwarded', 'Forwarded'),     # - [>] moved to another week (Round 5)
     ]
     
     PRIORITY_CHOICES = [
@@ -98,10 +105,38 @@ class Task(models.Model):
     tags = models.CharField(max_length=100, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Round 3: with a connected vault this row is a CACHE of one line of the tasks
+    # note (docs/TASKS_FORMAT.md); the note is the source of truth.
+    vault_id = models.CharField(max_length=16, blank=True, default="", db_index=True)   # 🆔
+    vault_line = models.TextField(blank=True, default="")     # raw line (identifies lines without 🆔)
+    section = models.CharField(max_length=120, blank=True, default="")
+    position = models.IntegerField(default=0)
+    synced = models.BooleanField(default=True)                # False = waiting in VaultOutbox
+
+    @property
+    def tag_list(self):
+        return [tag.strip().lstrip('#') for tag in (self.tags or '').split(',') if tag.strip()]
+
     def __str__(self):
         # Include the current workflow state in task representations.
         return f"{self.title} ({self.status})"
     
+class VaultOutbox(models.Model):
+    """Vault operations waiting for GitHub to be reachable again (Round 3 / G-C5)."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vault_outbox')
+    kind = models.CharField(max_length=20, default='tasks')
+    op = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    attempts = models.IntegerField(default=0)
+    last_error = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f"{self.user.username}: {self.kind} {self.op.get('op')}"
+
+
 class ChatMessage(models.Model):
     # Store each user or assistant turn so the chat page can restore recent history.
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_messages')

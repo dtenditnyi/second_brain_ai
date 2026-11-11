@@ -24,6 +24,11 @@ urlpatterns = [
     # Task creation and status mutation endpoints used by the task UI.
     path('api/add-task/', views.api_add_task, name='api_add_task'),
     path('api/update-task/', views.api_update_task_status, name='api_update_task'),
+    path('api/delete-task/', views.api_delete_task, name='api_delete_task'),
+    path('api/tasks/sync/', views.api_tasks_sync, name='api_tasks_sync'),
+
+    # Liveness/readiness probe for Docker (no login, no AI, checks the DB).
+    path('healthz/', views.healthz, name='healthz'),
 
     # Superuser-only administrative pages and row mutation endpoints.
     path('system-matrix/', views.admin_dashboard_view, name='admin_dashboard'),

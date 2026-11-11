@@ -2,6 +2,7 @@
 import os
 from datetime import datetime
 from collections import Counter
+from django.conf import settings as django_settings
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import make_aware
@@ -9,6 +10,7 @@ from django.utils.timezone import make_aware
 from ..models import Task, ChatMessage, get_user_settings
 from .. import rag_engine
 from .. import ai_models
+from .. import tasks_service
 from .utils import get_user_config
 
 @login_required(login_url='login')
@@ -16,7 +18,8 @@ def home_view(request):
     # Build the dashboard from the current user's tasks, note files, and preferences.
     # The context is consumed by home.html and its home.js/tasks.js interactions.
     from ..rag_engine import get_user_paths
-    tasks = Task.objects.filter(user=request.user)
+    tasks_state = _sync_tasks_quietly(request.user)
+    tasks = Task.objects.filter(user=request.user).exclude(status__in=('cancelled', 'forwarded'))
     
     top_focus = "General Systems"
     active_tags = tasks.exclude(status='done').exclude(tags__exact='').values_list('tags', flat=True)
@@ -53,6 +56,7 @@ def home_view(request):
         'total_notes_count': len(recent_notes),
         'top_focus': top_focus,
         'models': ai_models.ui_model_config(),
+        'tasks_state': tasks_state,
     }
     return render(request, 'home.html', context)
 
@@ -114,13 +118,36 @@ def notes_view(request):
 @login_required(login_url='login')
 def tasks_view(request):
     # Separate outstanding and recently completed work for the task board template.
+    tasks_state = _sync_tasks_quietly(request.user)
     tasks = Task.objects.filter(user=request.user)
     return render(request, 'tasks.html', {
-        'active_page': 'tasks', 
+        'active_page': 'tasks',
         'config': get_user_config(request.user),
-        'active_tasks': tasks.exclude(status='done').order_by('due_date'),
-        'completed_tasks': tasks.filter(status='done').order_by('-created_at')[:10]
+        'active_tasks': tasks.exclude(status__in=('done', 'cancelled', 'forwarded')).order_by('due_date', 'position'),
+        'completed_tasks': tasks.filter(status__in=('done', 'cancelled', 'forwarded')).order_by('-created_at')[:10],
+        'tasks_state': tasks_state,
+        'allowed_tags': tasks_service.tasks_md.ALLOWED_TAGS,
     })
+
+
+def _sync_tasks_quietly(user):
+    """Sync the tasks note when stale; returns what the page shows about it (Round 3 / G-C4)."""
+    try:
+        result = tasks_service.sync_tasks(user)
+    except Exception as error:  # a page must never fail because of the vault
+        import logging
+        logging.getLogger('core.tasks').error('Task sync failed: %s', type(error).__name__)
+        result = {'status': 'error'}
+    settings = get_user_settings(user)
+    return {
+        'vault': bool(settings.github_repo_url),
+        'note_path': tasks_service.tasks_note_path(user),
+        'last_sync': settings.tasks_last_sync,
+        'error': settings.tasks_sync_error,
+        'status': result.get('status'),
+        'pending': Task.objects.filter(user=user, synced=False).count(),
+    }
+
 
 @login_required(login_url='login')
 def settings_view(request):
@@ -131,5 +158,6 @@ def settings_view(request):
         'config': config,
         # Q7: only whether a token exists is sent to the template, never the token.
         'has_github_token': bool(config.github_token),
+        'default_tasks_note_path': django_settings.TASKS_NOTE_PATH,
         'models': ai_models.ui_model_config(),
     })

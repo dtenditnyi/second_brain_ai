@@ -63,6 +63,8 @@ def no_external_network(monkeypatch):
             raise RuntimeError("network: git repo access attempted in tests")
 
     monkeypatch.setattr(git_sync, "Repo", _ForbiddenRepo)
+    from core import vault_writer
+    monkeypatch.setattr(vault_writer, "Repo", _ForbiddenRepo)
 
     def _offline(*a, **k):
         raise requests.exceptions.ConnectionError("offline in tests")

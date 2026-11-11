@@ -13,6 +13,8 @@ from django.contrib.auth.models import User
 
 from ..models import Task, ChatMessage, UserSettings, get_user_settings
 from .. import rag_engine
+from .. import tasks_service
+from ..vault_writer import UnsafePath, safe_path
 from .utils import parse_json_body
 
 logger = logging.getLogger(__name__)
@@ -93,6 +95,19 @@ def api_save_settings(request):
         if len(email) > User._meta.get_field('email').max_length:
             return JsonResponse({'status': 'error', 'msg': 'Email is too long.'}, status=400)
 
+        tasks_path = data.get('tasks_note_path')
+        if tasks_path is not None:
+            if not isinstance(tasks_path, str) or len(tasks_path) > 300:
+                return JsonResponse({'status': 'error', 'msg': 'Invalid tasks note path.'}, status=400)
+            tasks_path = tasks_path.strip()
+            if tasks_path:
+                try:
+                    import tempfile
+                    safe_path(tempfile.gettempdir(), tasks_path)
+                except UnsafePath as exc:
+                    return JsonResponse({'status': 'error', 'msg': f'Tasks note path: {exc}'}, status=400)
+                if not tasks_path.lower().endswith('.md'):
+                    return JsonResponse({'status': 'error', 'msg': 'Tasks note path must end with .md'}, status=400)
         new_token = data.get('github_token')
         # 255 plain characters still fit the 500-char encrypted column (B-14).
         if isinstance(new_token, str) and len(new_token.strip()) > 255:
@@ -119,6 +134,9 @@ def api_save_settings(request):
             temperature = 0.7
         settings.temperature = max(0.0, min(1.0, temperature))
         settings.github_repo_url = str(field('github_repo_url', settings.github_repo_url)).strip()
+        if tasks_path is not None and tasks_path != settings.tasks_note_path:
+            settings.tasks_note_path = tasks_path
+            settings.tasks_last_sync = None          # re-read the (other) note on next visit
         # Q7: the token is never sent back to the browser. An empty/missing value
         # keeps the stored token; only an explicit clear_github_token removes it.
         if data.get('clear_github_token') is True:
@@ -138,29 +156,33 @@ def api_save_settings(request):
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error'}, status=400)
 
-@login_required(login_url='login')
-def api_add_task(request):
-    # Create a task owned by the authenticated account from the submitted JSON fields.
-    # Returns: JSON containing the new database primary key, or HTTP 400 for other methods.
-    if request.method == "POST":
-        data = parse_json_body(request)
-        if data is None:
-            return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
-        # Validate before writing so bad input yields 400 instead of a 500 (B-04).
-        raw_title, raw_tags = data.get('title') or '', data.get('tags') or ''
-        priority = data.get('priority') or 'medium'
-        raw_due = data.get('due_date') or None
-        if not all(isinstance(v, str) for v in (raw_title, raw_tags, priority)):
-            return _task_error('Title, priority and tags must be strings.')
-        title, tags = raw_title.strip(), raw_tags
+def _clean_task_fields(data, require_title):
+    """Validate task fields from JSON. Returns (fields, error_response)."""
+    fields = {}
+    if 'title' in data or require_title:
+        raw_title = data.get('title') or ''
+        if not isinstance(raw_title, str):
+            return None, _task_error('Title, priority and tags must be strings.')
+        title = raw_title.strip()
         if not title:
-            return _task_error('Task title is required.')
+            return None, _task_error('Task title is required.')
         if len(title) > Task._meta.get_field('title').max_length:
-            return _task_error('Task title is too long.')
-        if priority not in dict(Task.PRIORITY_CHOICES):
-            return _task_error('Unknown priority.')
+            return None, _task_error('Task title is too long.')
+        fields['title'] = title
+    if 'priority' in data or require_title:
+        priority = data.get('priority') or 'medium'
+        if not isinstance(priority, str) or priority not in dict(Task.PRIORITY_CHOICES):
+            return None, _task_error('Unknown priority.' if isinstance(priority, str) else 'Title, priority and tags must be strings.')
+        fields['priority'] = priority
+    if 'tags' in data or require_title:
+        tags = data.get('tags') or ''
+        if not isinstance(tags, str):                       # B-24: lists/dicts rejected
+            return None, _task_error('Title, priority and tags must be strings.')
         if len(tags) > Task._meta.get_field('tags').max_length:
-            return _task_error('Tags are too long.')
+            return None, _task_error('Tags are too long.')
+        fields['tags'] = tags
+    if 'due_date' in data or require_title:
+        raw_due = data.get('due_date') or None
         due_date = None
         if raw_due:
             try:
@@ -168,41 +190,104 @@ def api_add_task(request):
             except ValueError:
                 due_date = None
             if due_date is None:
-                return _task_error('Invalid due date (expected YYYY-MM-DD).')
-        task = Task.objects.create(
-            user=request.user,
-            title=title,
-            priority=priority,
-            due_date=due_date,
-            tags=tags
-        )
-        return JsonResponse({'status': 'ok', 'task_id': task.id})
-    return JsonResponse({'status': 'error'}, status=400)
+                return None, _task_error('Invalid due date (expected YYYY-MM-DD).')
+        fields['due_date'] = due_date
+    if 'status' in data:
+        status = data.get('status')
+        if not isinstance(status, str) or status not in dict(Task.STATUS_CHOICES):
+            return None, _task_error('Unknown task status.')
+        fields['status'] = status
+    return fields, None
+
+
+def _sync_error_response(error):
+    # 409: the vault refused or changed under us; the message is meant for the user.
+    return JsonResponse({'status': 'error', 'msg': str(error)}, status=409)
+
 
 @login_required(login_url='login')
-def api_update_task_status(request):
-    # Update only a task belonging to the caller, preventing cross-account task edits.
-    # Returns: JSON success, or a not-found error when the task is not owned by the user.
+def api_add_task(request):
+    # Create a task. With a connected vault it is written to the tasks note (Round 3),
+    # otherwise it is stored in the database only. Returns the cache row id.
     if request.method == "POST":
         data = parse_json_body(request)
         if data is None:
             return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
-        new_status = data.get('status')
-        if not isinstance(new_status, str) or new_status not in dict(Task.STATUS_CHOICES):
-            return _task_error('Unknown task status.')
+        fields, error = _clean_task_fields(data, require_title=True)
+        if error:
+            return error
+        try:
+            task = tasks_service.add_task(
+                request.user, text=fields['title'], due=fields['due_date'].isoformat() if fields['due_date'] else None,
+                priority=fields['priority'], tags=fields['tags'], status=fields.get('status'))
+        except ValueError as exc:
+            return _task_error(str(exc))
+        except tasks_service.TaskSyncError as exc:
+            return _sync_error_response(exc)
+        return JsonResponse({'status': 'ok', 'task_id': task.id, 'synced': task.synced})
+    return JsonResponse({'status': 'error'}, status=400)
+
+
+@login_required(login_url='login')
+def api_update_task_status(request):
+    # Update status and/or title, due date, priority, tags of the caller's own task.
+    if request.method == "POST":
+        data = parse_json_body(request)
+        if data is None:
+            return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
         try:
             task_id = int(data.get('task_id'))
         except (TypeError, ValueError):
+            if 'status' in data and (not isinstance(data.get('status'), str) or data.get('status') not in dict(Task.STATUS_CHOICES)):
+                return _task_error('Unknown task status.')
             return _task_error('Invalid task id.')
-        try:
-            task = Task.objects.get(id=task_id, user=request.user)
-            task.status = new_status
-            task.save()
-            return JsonResponse({'status': 'ok'})
-        except Task.DoesNotExist:
+        fields, error = _clean_task_fields(data, require_title=False)
+        if error:
+            return error
+        if not fields:
+            return _task_error('Unknown task status.')
+        if not Task.objects.filter(id=task_id, user=request.user).exists():
             return JsonResponse({'status': 'error', 'msg': 'Task not found'}, status=404)
+        try:
+            task = tasks_service.update_task(request.user, task_id, **fields)
+        except ValueError as exc:
+            return _task_error(str(exc))
+        except tasks_service.TaskSyncError as exc:
+            return _sync_error_response(exc)
+        return JsonResponse({'status': 'ok'})
     # Non-POST requests previously fell through and returned None → HTTP 500 (B-04).
     return JsonResponse({'status': 'error'}, status=400)
+
+
+@login_required(login_url='login')
+def api_delete_task(request):
+    if request.method != "POST":
+        return JsonResponse({'status': 'error'}, status=400)
+    data = parse_json_body(request)
+    if data is None:
+        return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
+    try:
+        task_id = int(data.get('task_id'))
+    except (TypeError, ValueError):
+        return _task_error('Invalid task id.')
+    if not Task.objects.filter(id=task_id, user=request.user).exists():
+        return JsonResponse({'status': 'error', 'msg': 'Task not found'}, status=404)
+    try:
+        tasks_service.delete_task(request.user, task_id)
+    except tasks_service.TaskSyncError as exc:
+        return _sync_error_response(exc)
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required(login_url='login')
+def api_tasks_sync(request):
+    # "Refresh" button: sync the tasks note now (Round 3 / G-C4).
+    if request.method != "POST":
+        return JsonResponse({'status': 'error'}, status=400)
+    result = tasks_service.sync_tasks(request.user, force=True)
+    code = 200 if result.get('status') in ('ok', 'local', 'fresh') else 503
+    return JsonResponse(result, status=code)
+
 
 @login_required(login_url='login')
 def api_get_note_content(request):
