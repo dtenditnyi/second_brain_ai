@@ -62,3 +62,8 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 - Files: static/js/markdown.js, static/vendor/{marked,purify,highlight}.min.js, templates/ai-chat.html, templates/home.html, static/js/chat.js, static/js/home.js, static/css/input.css (+styles.css), package.json, tests/test_pages.py, tests/acceptance/test_round3.py
 - Checks: acceptance `-k a1` 13 passed; old e2e (errors/flows/round2) 38 passed; fast suite 269 passed, 57 xfailed.
 - Deviation: sanitize test refined (D20); `test_chat_page_lists_notes_and_history` updated to the raw-Markdown contract + new escaping test.
+
+### 2026-11-11 16:05 — Round 3 / G-A2, G-A3 — Core Matrix on tablets and in both themes
+- Cards below 1280 px (2 columns from 768), fluid table from 1280; console follows the operator theme/accent via tokens; admin.js uses classes instead of hard-coded purple colours.
+- Files: templates/admin_dashboard.html, static/css/input.css (+styles.css), static/js/admin.js, core/views/admin.py, tests/e2e/test_responsive_round2.py, tests/acceptance/test_round3.py
+- Checks: acceptance `-k "a2 or a3"` 8 passed; admin + e2e admin/matrix 88 passed (2 Round-2 scroll-hint tests replaced, D21); fast suite 270 passed, 56 xfailed.

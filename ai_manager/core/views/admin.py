@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 
 from ..models import UserSettings, Task, ChatMessage
-from .utils import parse_json_body
+from .utils import parse_json_body, get_user_config
 
 @user_passes_test(lambda u: u.is_superuser, login_url='login')
 def admin_dashboard_view(request):
@@ -19,6 +19,8 @@ def admin_dashboard_view(request):
         'settings': UserSettings.objects.all().order_by('id'),
         'tasks': Task.objects.all().order_by('-id'),
         'messages': ChatMessage.objects.all().order_by('-id')[:100],
+        # The console follows the operator's own theme/accent (Round 3 / G-A3).
+        'config': get_user_config(request.user),
     }
     return render(request, 'admin_dashboard.html', context)
 

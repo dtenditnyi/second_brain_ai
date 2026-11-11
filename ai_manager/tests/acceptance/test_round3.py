@@ -179,7 +179,6 @@ def test_a1_wide_markdown_does_not_overflow_at_320(browser, live_server, e2e_use
 
 @pytest.mark.e2e
 @pytest.mark.responsive
-@goal("G-A2")
 @pytest.mark.parametrize("width", [768, 834, 1024, 1279])
 def test_a2_core_matrix_no_horizontal_scroll_on_tablets(browser, live_server, e2e_admin, e2e_user, width):
     from core.models import Task
@@ -215,7 +214,6 @@ def test_a2_core_matrix_is_a_table_from_1280(browser, live_server, e2e_admin):
         ctx.close()
 
 
-@goal("G-A3")
 def test_a3_core_matrix_uses_user_theme(admin_client_, superuser):
     from core.models import UserSettings
     UserSettings.objects.filter(user=superuser).update(theme="light", accent_color="green")
