@@ -834,7 +834,7 @@ def _bash():
 def test_b2_scripts_strict_mode_and_bash_syntax(script):
     path = ROOT / "deploy" / script
     text = path.read_text(encoding="utf-8")
-    assert text.startswith("#!/usr/bin/env bash") and "set -euo pipefail" in text
+    assert text.startswith("#!/usr/bin/env bash") and re.search(r"(?m)^set -E?euo pipefail$", text)
     assert "\r\n" not in text
     out = subprocess.run([_bash(), "-n", str(path)], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr

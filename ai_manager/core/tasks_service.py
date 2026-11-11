@@ -178,6 +178,7 @@ def _sync_now(user):
     """Flush the outbox, pull, rebuild the cache. Returns a status dict (never raises VaultError)."""
     from .models import VaultOutbox
     s = _settings(user)
+    repair_error = ""
     try:
         if VaultOutbox.objects.filter(user=user).exists():
             if _write(user, []) is None:
@@ -186,8 +187,13 @@ def _sync_now(user):
         if text and _has_duplicate_ids(text):
             # e.g. a line copied in Obsidian: give the copies new IDs right away,
             # otherwise one task is hidden and edits hit the wrong line (B-34).
-            if _write(user, [{"op": "ensure_ids"}]) is not None:
-                text = _read_note(user)
+            # Best effort: a read-only token or a git error must not block the read —
+            # the cache rebuild keeps duplicates apart by line anyway (B-44).
+            try:
+                if _write(user, [{"op": "ensure_ids"}]) is not None:
+                    text = _read_note(user)
+            except TaskSyncError as error:
+                repair_error = str(error)
     except TaskSyncError as error:
         return {"status": "error", "error": str(error)}
     except VaultError as error:
@@ -195,7 +201,7 @@ def _sync_now(user):
         return {"status": "offline" if error.kind == "offline" else "error", "error": error.message}
     _cache_from_note(user, text or "")
     s.tasks_last_sync = timezone.now()
-    s.tasks_sync_error = ""
+    s.tasks_sync_error = repair_error          # e.g. read-only token could not fix duplicate IDs
     s.save(update_fields=["tasks_last_sync", "tasks_sync_error"])
     return {"status": "ok", "synced_at": s.tasks_last_sync.isoformat(), "note_exists": text is not None}
 

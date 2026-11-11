@@ -101,3 +101,8 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 - Files: core/{tasks_md,tasks_service,vault_writer,paths,rag_engine}.py, core/management/commands/sync_tasks.py, core/views/{api,pages}.py, static/js/markdown.js, tests/{conftest,test_round3_regressions}.py, tests/e2e/test_e2e_round3.py, tests/acceptance/test_round3.py, deploy/{restore,update,install}.sh, docker/entrypoint.sh, Dockerfile, docker-compose.yml, .dockerignore, .env.example, docs/{BUGS,DEPLOY}.md, docs/audit/{DECISIONS,round3/GOALS}.md
 - Checks: regressions 51 passed + e2e 2 passed; fast suite 466 passed; shellcheck/bash -n clean; compose config OK.
 - Problem: during the M11 mutation check a `git checkout --` restored markdown.js to the last commit (losing the uncommitted B-40 hook); the file was restored from the pre-mutation backup and re-verified (hook present, tests green). Lesson: mutate committed files only.
+
+### 2026-11-11 19:20 — Round 3 / verification 2 follow-up
+- VERIFY-2 (`docs/audit/round3/VERIFY-2.md`): all VERIFY-1 defects fixed incl. both highs; M1/M8/M11 caught; regressions R1 (read-only token + duplicate IDs → empty list), R2 (unclosed `---` hides tasks); R3 (ERR trap needs `set -E`); R4 test gaps (N2+N16, N3, N13 survived); R5 (sub-items after blank line).
+- Fixed as B-44…B-48 with tests; re-ran the surviving mutations myself (backup-copy restore, not `git checkout`): N2+N16 → `test_b34_duplicates_are_kept_apart…` fails, N3 → `test_n3_…` fails, N13 → `test_n13_…` fails (real Windows junction). Spec allows 2 verifier rounds → no third agent round; Round 4's verifier re-checks shared modules.
+- Checks: regressions 58 passed; fast suite 474 passed.

@@ -134,7 +134,10 @@ def parse(text: str) -> TaskNote:
     lines = _split_lines(text)
     tasks, section = [], None
     fence = None                      # opening fence ("```", "````", "~~~"…) while inside a code block
-    in_frontmatter = bool(lines) and lines[0].rstrip("\r\n") == "---"
+    # Frontmatter only when the opening "---" is really closed later (B-45): an
+    # unclosed "---" (e.g. a horizontal rule at the top) must not hide the tasks.
+    in_frontmatter = bool(lines) and lines[0].rstrip("\r\n") == "---" and any(
+        line.rstrip("\r\n").rstrip() in ("---", "...") for line in lines[1:])
     for index, line in enumerate(lines):
         eol_match = _EOL_RE.search(line)
         eol = eol_match.group(1) if eol_match else ""
@@ -360,12 +363,23 @@ def apply_op(text: str, op: dict, today: _dt.date | None = None):
         # into an indented (code) block under the heading (B-41).
         end = task.index + 1
         own = len(task.indent.expandtabs(4))
-        while end < len(note.lines):
-            content = note.lines[end].rstrip("\r\n")
+        def deeper(line):
+            content = line.rstrip("\r\n")
             indent = len(content) - len(content.lstrip(" \t"))
-            if not content.strip() or len(content[:indent].expandtabs(4)) <= own:
-                break
-            end += 1
+            return bool(content.strip()) and len(content[:indent].expandtabs(4)) > own
+
+        while end < len(note.lines):
+            if deeper(note.lines[end]):
+                end += 1
+                continue
+            # Blank lines inside the sub-item block belong to it when deeper lines follow (B-48).
+            look = end
+            while look < len(note.lines) and not note.lines[look].strip():
+                look += 1
+            if look > end and look < len(note.lines) and deeper(note.lines[look]):
+                end = look
+                continue
+            break
         del note.lines[task.index:end]
         return serialize(note), {"id": task.id}
     if kind != "update":

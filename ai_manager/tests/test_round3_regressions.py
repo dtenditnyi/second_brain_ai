@@ -59,8 +59,11 @@ def test_b34_duplicates_are_kept_apart_even_when_the_fix_cannot_be_pushed(vuser,
     text = "## 📥 Входящие\n- [ ] A 🆔 same11\n- [ ] B 🆔 same11\n"
     monkeypatch.setattr(ts, "_read_note", lambda user: text)
     monkeypatch.setattr(ts, "_write", lambda user, ops: None)       # offline
-    ts.sync_tasks(vuser, force=True)
-    assert set(Task.objects.filter(user=vuser).values_list("title", flat=True)) == {"A", "B"}
+    for _ in range(2):                                              # the 2nd sync used to collapse them (VERIFY-2 R4)
+        ts.sync_tasks(vuser, force=True)
+        rows = list(Task.objects.filter(user=vuser).values_list("title", "vault_id", "vault_line"))
+        assert {r[0] for r in rows} == {"A", "B"} and len(rows) == 2
+    assert [r[1] for r in rows if r[0] == "A"] == ["same11"] and [r[1] for r in rows if r[0] == "B"] == [""]
 
 
 # --- B-35 tags ------------------------------------------------------------------------
@@ -237,3 +240,66 @@ def test_m8_healthz_requires_the_query_to_succeed(client, db):
     with mock.patch("core.views.health.connection") as conn:
         r = client.get("/healthz/")
         assert conn.cursor.return_value.__enter__.return_value.execute.call_args[0][0] == "SELECT 1"
+
+
+# --- VERIFY-2 follow-up (B-44 … B-48, mutation gaps N3 / N13) -------------------------
+
+def test_b44_read_only_token_with_duplicate_ids_still_shows_tasks(vuser, monkeypatch):
+    text = "## 📥 Входящие\n- [ ] A 🆔 same11\n- [ ] B 🆔 same11\n"
+    monkeypatch.setattr(ts, "_read_note", lambda user: text)
+
+    def denied(user, ops):
+        raise ts.TaskSyncError(vw.PERMISSION_HINT)
+
+    monkeypatch.setattr(ts, "_write", denied)
+    result = ts.sync_tasks(vuser, force=True)
+    assert result["status"] == "ok"
+    assert set(Task.objects.filter(user=vuser).values_list("title", flat=True)) == {"A", "B"}
+    vuser.settings.refresh_from_db()
+    assert "Contents: Read and write" in vuser.settings.tasks_sync_error
+
+
+def test_n3_sync_repairs_duplicate_ids_in_the_note(vuser, remote, tmp_path):
+    phone = vh.clone(remote, tmp_path / "phone")
+    vh.commit_and_push(phone, vh.TASKS_NOTE, vh.FIXTURE_VAULT[vh.TASKS_NOTE].replace(
+        "- [ ] Задача без ID #planning", "- [ ] Копия 🆔 t7k2m9"))
+    ts.sync_tasks(vuser, force=True)
+    ids = [t.id for t in tasks_md.parse(vh.remote_file(remote, vh.TASKS_NOTE, tmp_path)).tasks if t.id]
+    assert len(ids) == len(set(ids)) and ids.count("t7k2m9") == 1
+
+
+@pytest.mark.parametrize("text", ["---\n## In\n- [ ] a 🆔 aaaaaa\n", "---\n- [ ] top task\n"])
+def test_b45_unclosed_leading_dashes_are_not_frontmatter(text):
+    note = tasks_md.parse(text)
+    assert len(note.tasks) == 1
+    out, _ = tasks_md.apply_op(text, {"op": "add", "text": "new"})
+    assert len(tasks_md.parse(out).tasks) == 2
+
+
+def test_b46_update_script_fires_err_trap_inside_functions():
+    text = (ROOT / "deploy" / "update.sh").read_text(encoding="utf-8")
+    assert "set -Eeuo pipefail" in text
+
+
+def test_b48_delete_parent_with_blank_line_inside_subitems():
+    src = "- [ ] p 🆔 pppppp\n\tnote\n\n    - [ ] child\n- [ ] n 🆔 nnnnnn\n"
+    out, _ = tasks_md.apply_op(src, {"op": "delete", "id": "pppppp"})
+    assert out == "- [ ] n 🆔 nnnnnn\n"
+    keep = "- [ ] p 🆔 pppppp\n\n- [ ] n 🆔 nnnnnn\n"
+    assert tasks_md.apply_op(keep, {"op": "delete", "id": "pppppp"})[0] == "\n- [ ] n 🆔 nnnnnn\n"
+
+
+def test_n13_link_to_git_folder_inside_vault_is_rejected(tmp_path):
+    vault = tmp_path / "vault"
+    (vault / ".git").mkdir(parents=True)
+    link = vault / "innocent"
+    try:
+        os.symlink(vault / ".git", link, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        if os.name != "nt":
+            pytest.skip("symlinks not permitted")
+        r = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(vault / ".git")], capture_output=True)
+        if r.returncode != 0:
+            pytest.skip("cannot create a junction")
+    with pytest.raises(vw.UnsafePath):
+        vw.safe_path(vault, "innocent/config")

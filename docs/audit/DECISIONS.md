@@ -134,3 +134,4 @@ Each entry: context · options · chosen · why · how to roll back.
 - Duplicate IDs: fixed by a write at sync time (one commit) rather than only "on the next write" — correctness of the cache beats "no commit on read" (B-34).
 - Tags from Obsidian that are not in the allowed list are kept on edit; the allowed list applies to tags the site adds (B-35).
 - Scheduler: one long-lived `sync_tasks --loop` process instead of a new process per minute (B-38).
+- (after VERIFY-2) The duplicate-ID repair at sync time is best effort: a read-only token or git error keeps the error message but still rebuilds the cache (B-44). Frontmatter is recognised only when the opening `---` is closed (B-45). Test change: `test_b2_scripts_strict_mode_and_bash_syntax` now accepts `set -Eeuo pipefail` (strictly stronger than the required `set -euo pipefail`; `-E` was needed for B-46).

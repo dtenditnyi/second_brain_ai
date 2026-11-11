@@ -4,7 +4,8 @@
 # If the new version does not become healthy, it rolls back to the previous commit and
 # image. Database migrations are not reverted automatically: restore the backup made
 # at the start (deploy/restore.sh) if a migration broke something.
-set -euo pipefail
+# -E: the ERR trap must also fire inside shell functions such as compose (B-46)
+set -Eeuo pipefail
 
 # shellcheck source=deploy/common.sh
 source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
