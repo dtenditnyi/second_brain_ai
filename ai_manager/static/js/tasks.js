@@ -90,7 +90,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (openButton) openButton.addEventListener('click', () => setModal(true));
+    const fieldIds = { id: 'task-id', title: 'task-title', priority: 'task-priority', due: 'task-date', tags: 'task-tags' };
+    const field = (key) => document.getElementById(fieldIds[key]);
+
+    // Same dialog for "create" and "edit" (Round 3 / G-C7).
+    function openForm(card) {
+        const heading = document.getElementById('task-modal-title');
+        const errorBox = document.getElementById('task-form-error');
+        if (errorBox) errorBox.classList.add('hidden');
+        field('id').value = card ? card.dataset.id : '';
+        field('title').value = card ? card.dataset.title : '';
+        field('priority').value = card ? (card.dataset.priority || 'medium') : 'medium';
+        field('due').value = card ? (card.dataset.due || '') : '';
+        field('tags').value = card ? (card.dataset.tags || '') : '';
+        if (heading) heading.textContent = card ? 'Edit Task' : 'Create New Task';
+        setModal(true);
+    }
+
+    if (openButton) openButton.addEventListener('click', () => openForm(null));
+    document.querySelectorAll('.task-edit').forEach((btn) => btn.addEventListener('click', () => openForm(btn.closest('.task-card'))));
+
+    // Delete with confirmation; the line is removed from the tasks note.
+    document.querySelectorAll('.task-delete').forEach((btn) => btn.addEventListener('click', async () => {
+        const card = btn.closest('.task-card');
+        if (!window.confirm(`Delete the task "${card.dataset.title}"? This cannot be undone.`)) return;
+        btn.disabled = true;
+        try {
+            const response = await fetch('/api/delete-task/', {
+                method: 'POST', headers: window.jsonHeaders(), body: JSON.stringify({ task_id: card.dataset.id })
+            });
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.msg || `HTTP ${response.status}`);
+            }
+            window.location.reload();
+        } catch (error) {
+            btn.disabled = false;
+            showError(`Could not delete the task: ${error.message}`);
+        }
+    }));
+
+    // "Refresh": pull the tasks note now.
+    const refresh = document.getElementById('tasks-refresh');
+    if (refresh) refresh.addEventListener('click', async () => {
+        refresh.disabled = true;
+        refresh.textContent = 'Syncing…';
+        try {
+            const response = await fetch('/api/tasks/sync/', { method: 'POST', headers: window.jsonHeaders() });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+            window.location.reload();
+        } catch (error) {
+            refresh.disabled = false;
+            refresh.textContent = '↻ Refresh';
+            showError(`Sync failed: ${error.message}`);
+        }
+    });
     document.querySelectorAll('[data-close-task-modal]').forEach((el) => el.addEventListener('click', () => setModal(false)));
     if (modal) {
         modal.addEventListener('click', (e) => { if (e.target === modal) setModal(false); });
@@ -105,15 +160,17 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const submit = addTaskForm.querySelector('button[type=submit]');
             const errorBox = document.getElementById('task-form-error');
+            const editingId = field('id') ? field('id').value : '';
             const payload = {
                 title: document.getElementById('task-title').value,
                 priority: document.getElementById('task-priority').value,
                 due_date: document.getElementById('task-date').value,
                 tags: document.getElementById('task-tags').value
             };
+            if (editingId) payload.task_id = editingId;
             if (submit) submit.disabled = true;
             try {
-                const response = await fetch('/api/add-task/', {
+                const response = await fetch(editingId ? '/api/update-task/' : '/api/add-task/', {
                     method: 'POST',
                     headers: window.jsonHeaders(),
                     body: JSON.stringify(payload)
@@ -125,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 // Report validation errors instead of silently keeping the modal open (B-18).
                 const data = await response.json().catch(() => ({}));
-                const message = `Failed to create task: ${data.msg || response.status}`;
+                const message = `Failed to ${editingId ? 'save' : 'create'} task: ${data.msg || response.status}`;
                 if (errorBox) { errorBox.textContent = message; errorBox.classList.remove('hidden'); }
             } catch (error) {
                 console.error('Error creating task:', error);

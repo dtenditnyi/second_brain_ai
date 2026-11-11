@@ -95,6 +95,14 @@
               <p class="field-hint" id="token-status">Needed only for private repositories.</p>
             {% endif %}
           </div>
+          <!-- Round 3: tasks live in one note of the vault (docs/TASKS_FORMAT.md). -->
+          <div class="field md:col-span-2">
+            <label for="tasks-note-path" class="field-label">Tasks note</label>
+            <input type="text" id="tasks-note-path" maxlength="300" autocapitalize="none" spellcheck="false" class="input-field rounded-lg px-4 py-2 w-full"
+                   value="{{ config.tasks_note_path }}" placeholder="{{ default_tasks_note_path }}" />
+            <p class="field-hint">Path inside the vault (empty = <code>{{ default_tasks_note_path }}</code>). The site writes tasks back to this note, so the token needs <strong class="text-soft">Contents: Read and write</strong> access to the vault repository.</p>
+            {% if config.tasks_sync_error %}<p class="alert alert-warning" id="tasks-sync-error" role="alert">{{ config.tasks_sync_error }}</p>{% endif %}
+          </div>
         </div>
 
         <div class="flex flex-col gap-6 border-t border-line pt-6">

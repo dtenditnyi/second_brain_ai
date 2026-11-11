@@ -1,0 +1,1 @@
+{% if task.priority == 'urgent' %}<span class="badge badge-danger">Urgent</span>{% elif task.priority == 'high' %}<span class="badge badge-warning">High</span>{% elif task.priority == 'medium' %}<span class="badge badge-info">Medium</span>{% else %}<span class="badge badge-muted">Low</span>{% endif %}

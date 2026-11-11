@@ -60,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
             temperature: tempSlider?.value || 0.7,
             github_repo_url: document.getElementById('github-repo')?.value || '',
             github_token: tokenInput?.value || '',
-            clear_github_token: Boolean(clearToken && clearToken.checked)
+            clear_github_token: Boolean(clearToken && clearToken.checked),
+            tasks_note_path: document.getElementById('tasks-note-path')?.value ?? ''
         };
 
         try {
