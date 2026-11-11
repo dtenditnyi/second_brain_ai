@@ -121,3 +121,7 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 ### 2026-11-11 — Round 4 / part E — providers, agent, agent UI
 - `core/ai_providers.py` (Gemini chain / Ollama / Claude, one `chat()`), Claude in RAG chat + Settings (provider, model, auto-apply option); `core/agent.py` (8 tools, overlay → batch, apply/reject/revert, rules note, injection-safe results, limits, content-free logs); chat "Агент" toggle + diff card (`agent_chat.js`).
 - Tests: E acceptance 26 passed (incl. e2e/responsive), `test_agent_providers.py` 7 passed; fast suite 530 passed; chat e2e 69 passed.
+
+### 2026-11-11 — Round 4 / part API — REST API v1 + Link2Note contract
+- `core/api_v1.py` (token auth, rights by path segments, rate limit, call log, Idempotency-Key, contract errors), `url_normalize.py` (port of the bot's normalize), `frontmatter.py` (byte-exact PATCH), tokens in Settings, `/ask` sources + provider, docker network `secondbrain`, `docs/API.md`, DEPLOY §12, contract files in `docs/link2note/`. B-51 (longpaths).
+- Tests: `test_api_contract.py` 95 passed with vault_writer; R4 acceptance 63 non-e2e passed, no xfail left; compose config OK.

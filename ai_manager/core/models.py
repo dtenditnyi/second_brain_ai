@@ -161,13 +161,20 @@ class AgentBatch(models.Model):
 
 
 class ApiToken(models.Model):
-    """Personal REST API token (Round 4 / G-API1). Only the SHA-256 hash is stored."""
-    SCOPES = ('read', 'write', 'ai')
+    """Personal REST API token (Round 4 / G-API1). Only the SHA-256 hash is stored.
+
+    Rights (Link2Note contract): scopes read / write / delete / ai; ``write_paths`` and
+    ``delete_paths`` limit write/delete to these folders or notes (whole path segments);
+    an empty list means the whole vault.
+    """
+    SCOPES = ('read', 'write', 'delete', 'ai')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_tokens')
     name = models.CharField(max_length=60)
     prefix = models.CharField(max_length=12)
     token_hash = models.CharField(max_length=64, unique=True)
     scopes = models.JSONField(default=list)
+    write_paths = models.JSONField(default=list, blank=True)
+    delete_paths = models.JSONField(default=list, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
     revoked_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -177,7 +184,7 @@ class ApiToken(models.Model):
         ordering = ['-id']
 
     @classmethod
-    def create_for(cls, user, name, scopes, expires_at=None):
+    def create_for(cls, user, name, scopes, expires_at=None, write_paths=None, delete_paths=None):
         import hashlib
         import secrets
         scopes = [s for s in cls.SCOPES if s in (scopes or [])]
@@ -185,7 +192,8 @@ class ApiToken(models.Model):
             raise ValueError("Нужно хотя бы одно право: read, write или ai.")
         raw = "sb_" + secrets.token_urlsafe(32)
         obj = cls.objects.create(user=user, name=str(name or "token")[:60], prefix=raw[:10],
-                                 token_hash=hashlib.sha256(raw.encode()).hexdigest(), scopes=scopes, expires_at=expires_at)
+                                 token_hash=hashlib.sha256(raw.encode()).hexdigest(), scopes=scopes, expires_at=expires_at,
+                                 write_paths=clean_rights_paths(write_paths), delete_paths=clean_rights_paths(delete_paths))
         return obj, raw
 
     @classmethod
@@ -208,6 +216,38 @@ class ApiToken(models.Model):
     def active(self):
         from django.utils import timezone
         return self.revoked_at is None and (self.expires_at is None or self.expires_at > timezone.now())
+
+
+def clean_rights_paths(paths):
+    """Normalise token rights paths: NFC, '/' separators, no empty / '..' / hidden segments."""
+    import unicodedata
+    if isinstance(paths, str):
+        paths = paths.replace(';', '\n').splitlines()
+    out = []
+    for raw in paths or []:
+        rel = unicodedata.normalize('NFC', str(raw).replace('\\', '/').strip().strip('/'))
+        if not rel:
+            continue
+        parts = rel.split('/')
+        if any(p in ('', '.', '..') or p.startswith('.') or ':' in p for p in parts):
+            raise ValueError(f"Недопустимый путь в правах токена: {raw}")
+        if rel not in out:
+            out.append(rel)
+    return out
+
+
+class IdempotencyRecord(models.Model):
+    """Stored final answer of a mutating API request by ``Idempotency-Key`` (kept ≥ 7 days)."""
+    token = models.ForeignKey(ApiToken, on_delete=models.CASCADE, related_name='idempotency_records')
+    key = models.CharField(max_length=200)
+    fingerprint = models.CharField(max_length=64)
+    in_progress = models.BooleanField(default=True)
+    status = models.IntegerField(default=0)
+    body = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['token', 'key'], name='uniq_idempotency_key_per_token')]
 
 
 class ApiCallLog(models.Model):

@@ -104,7 +104,8 @@ def _env_list(name, default):
     return [item.strip() for item in raw.split(',') if item.strip()]
 
 
-ALLOWED_HOSTS = _env_list('ALLOWED_HOSTS', ['localhost', '127.0.0.1', 'secondbrain-core.com'])
+# secondbrain-web: the Link2Note bot calls http://secondbrain-web:8000/api/v1 inside the docker network.
+ALLOWED_HOSTS = _env_list('ALLOWED_HOSTS', ['localhost', '127.0.0.1', 'secondbrain-core.com', 'secondbrain-web'])
 CSRF_TRUSTED_ORIGINS = _env_list('CSRF_TRUSTED_ORIGINS', ['https://secondbrain-core.com'])
 
 # Cloudflare Tunnel terminates TLS and forwards X-Forwarded-Proto: https.
@@ -114,8 +115,9 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True') == 'True'
-    # Docker healthchecks call http://127.0.0.1:8000/healthz/ directly (no proxy).
-    SECURE_REDIRECT_EXEMPT = [r'^healthz/$']
+    # Docker healthchecks call http://127.0.0.1:8000/healthz/ directly (no proxy); the bot calls
+    # the token-only REST API over the internal docker network (http://secondbrain-web:8000/api/v1).
+    SECURE_REDIRECT_EXEMPT = [r'^healthz/$', r'^api/v1/']
     SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS') or 31536000)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True') == 'True'
     SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False') == 'True'
@@ -303,5 +305,9 @@ VAULT_RULES_NOTE = os.getenv('VAULT_RULES_NOTE') or ''
 # Quick capture target ("inbox") and the weekly notes root.
 CAPTURE_INBOX_NOTE = os.getenv('CAPTURE_INBOX_NOTE') or '05 - Fleeting/📥 Входящие.md'
 WEEKLY_ROOT = os.getenv('WEEKLY_ROOT') or '06 - Daily'
+# The ONE list of allowed note/task tags (Link2Note's contract/allowed_tags.json ⊆ this list, incl. "fun").
+ALLOWED_TAGS = [t.strip() for t in (os.getenv('ALLOWED_TAGS') or
+                'university,dsa,physics,databases,economics,electronics,romanian,nuclear,dev,ai,homelab,'
+                'driving,cooking,sport,health,finance,planning,games,books,personal,obsidian,fun').split(',') if t.strip()]
 # REST API: requests per minute per token.
 API_RATE_LIMIT_PER_MINUTE = _env_int('API_RATE_LIMIT_PER_MINUTE', 60)

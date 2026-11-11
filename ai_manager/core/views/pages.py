@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import make_aware
 
-from ..models import Task, ChatMessage, get_user_settings
+from ..models import ApiToken, Task, ChatMessage, get_user_settings
 from .. import rag_engine
 from .. import ai_models, ai_providers
 from .. import tasks_service
@@ -168,4 +168,6 @@ def settings_view(request):
         'claude_models': ai_providers.CLAUDE_MODELS,
         'claude_available': ai_providers.claude_available(),
         'default_claude_model': django_settings.ANTHROPIC_MODEL,
+        'api_tokens': request.user.api_tokens.all(),
+        'token_scopes': ApiToken.SCOPES,
     })

@@ -58,6 +58,11 @@ services:
     command: ["web"]
     ports:
       - "${WEB_BIND:-127.0.0.1:8000}:8000"
+    # Shared network with the Link2Note bot (it calls http://secondbrain-web:8000/api/v1).
+    networks:
+      default:
+      secondbrain:
+        aliases: ["${SECOND_BRAIN_CONTAINER:-secondbrain-web}"]
     healthcheck:
       test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz/', timeout=5).status == 200 else 1)"]
       interval: 30s
@@ -90,6 +95,11 @@ services:
       web:
         condition: service_healthy
     logging: *logging
+
+networks:
+  # Created by this stack; the bot's compose joins it as `external: true` (DOCKER_NETWORK).
+  secondbrain:
+    name: ${DOCKER_NETWORK:-secondbrain}
 
 volumes:
   postgres_data:

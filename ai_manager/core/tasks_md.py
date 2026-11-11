@@ -18,11 +18,20 @@ import re
 import secrets
 from dataclasses import dataclass, field
 
-ALLOWED_TAGS = (
+DEFAULT_ALLOWED_TAGS = (
     "university", "dsa", "physics", "databases", "economics", "electronics", "romanian", "nuclear", "dev",
     "ai", "homelab", "driving", "cooking", "sport", "health", "finance", "planning", "games", "books",
-    "personal", "obsidian",
+    "personal", "obsidian", "fun",
 )
+
+
+ALLOWED_TAGS = DEFAULT_ALLOWED_TAGS
+
+
+def configure_allowed_tags(tags):
+    """Set the ONE allowed-tags list (settings.ALLOWED_TAGS, applied in CoreConfig.ready)."""
+    global ALLOWED_TAGS
+    ALLOWED_TAGS = tuple(t for t in (tags or ()) if t) or DEFAULT_ALLOWED_TAGS
 
 STATUS_BY_MARK = {" ": "todo", "/": "in_progress", "x": "done", "X": "done", "-": "cancelled", ">": "forwarded"}
 MARK_BY_STATUS = {"todo": " ", "in_progress": "/", "done": "x", "cancelled": "-", "forwarded": ">"}

@@ -146,3 +146,10 @@ Each entry: context · options · chosen · why · how to roll back.
 - Agent writes only to an in-memory overlay → `AgentBatch` with per-operation diffs; apply replays the selected ops in one commit only if each file's SHA is unchanged (else nothing is written). Auto-apply (option) = append / create / add_task only.
 - `search_notes` = titles/aliases + full text + the already-open vector index (does not load embeddings on its own). Progress lines are shown when the run returns (no streaming) — simpler and enough for ≤ 8 steps.
 - At the step limit the model gets one last turn to answer in text (tools still declared: Claude requires them while tool blocks are in the history). "Откатить" has no confirm dialog: a revert is itself reversible.
+
+## D27. REST API v1 and the Link2Note contract (R4 / G-API1…API7)
+- Contract (`docs/link2note/API_CONTRACT.md`) wins over GOALS; GOALS endpoints stay as aliases on the same routes (slash optional). `POST /notes` with `name` = ready Markdown (contract), with `title` = site template. Test change: `DELETE /tasks/{id}` → 204 (contract), was 200 in the GOALS test.
+- `write_paths`/`delete_paths` empty = whole vault (owner tokens); the bot token lists its folders. Task delete counts as a write to the tasks note. Agent apply via API checks every changed path against `write_paths`.
+- No push queue for API writes: offline/locked → `503 vault_unavailable` + `Retry-After`; the bot retries with the same Idempotency-Key (5xx is not cached), so `pushed` is always true. `sha` = SHA-256 of the text (same as the editor).
+- Capture: «Входящие» = one note `CAPTURE_INBOX_NOTE` (entries before the `🔗` line); weekly = latest `type: weekly` note in `06 - Daily` not in the future. Docker: stack creates network `secondbrain`, web alias `secondbrain-web`; `/api/v1/` exempt from the https redirect (internal http).
+- Allowed tags: one setting `ALLOWED_TAGS` (+ `fun`), applied to the pure parser in `CoreConfig.ready`.

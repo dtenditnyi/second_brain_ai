@@ -1,7 +1,8 @@
 """Named URL routes for browser pages, authenticated APIs, and superuser tools."""
-from django.urls import path
+from django.urls import path, re_path
 from . import views
-from .views import agent_api, notes_api
+from . import api_v1
+from .views import agent_api, notes_api, tokens_api
 
 urlpatterns = [
     # Public authentication pages manage registration, login, and session exit.
@@ -42,6 +43,29 @@ urlpatterns = [
     path('api/agent/batch/<int:batch_id>/apply/', agent_api.agent_apply, name='api_agent_apply'),
     path('api/agent/batch/<int:batch_id>/reject/', agent_api.agent_reject, name='api_agent_reject'),
     path('api/agent/batch/<int:batch_id>/revert/', agent_api.agent_revert, name='api_agent_revert'),
+
+    # API tokens in Settings (Round 4): shown once, only the hash is stored.
+    path('api/tokens/create/', tokens_api.token_create, name='api_tokens_create'),
+    path('api/tokens/revoke/', tokens_api.token_revoke, name='api_tokens_revoke'),
+
+    # REST API v1 (Round 4, Link2Note contract docs/link2note/API_CONTRACT.md). Token-only,
+    # trailing slash optional (the bot calls /api/v1/notes, older clients /api/v1/notes/).
+    re_path(r'^api/v1/health/?$', api_v1.health, name='api_v1_health'),
+    re_path(r'^api/v1/sync/?$', api_v1.sync_status, name='api_v1_sync'),
+    re_path(r'^api/v1/schema/?$', api_v1.schema, name='api_v1_schema'),
+    re_path(r'^api/v1/notes/?$', api_v1.notes_collection, name='api_v1_notes'),
+    re_path(r'^api/v1/notes/search/?$', api_v1.notes_search, name='api_v1_notes_search'),
+    re_path(r'^api/v1/notes/lookup/?$', api_v1.notes_lookup, name='api_v1_notes_lookup'),
+    re_path(r'^api/v1/notes/append/?$', api_v1.notes_append, name='api_v1_notes_append'),
+    re_path(r'^api/v1/notes/(?P<rest>.+)$', api_v1.note_item, name='api_v1_note_item'),
+    re_path(r'^api/v1/folders/?$', api_v1.folders, name='api_v1_folders'),
+    re_path(r'^api/v1/capture/?$', api_v1.capture, name='api_v1_capture'),
+    re_path(r'^api/v1/tasks/?$', api_v1.tasks_collection, name='api_v1_tasks'),
+    re_path(r'^api/v1/tasks/(?P<task_id>[^/]+)/?$', api_v1.task_item, name='api_v1_task_item'),
+    re_path(r'^api/v1/ask/?$', api_v1.ask, name='api_v1_ask'),
+    re_path(r'^api/v1/agent/?$', api_v1.agent_run, name='api_v1_agent'),
+    re_path(r'^api/v1/agent/(?P<batch_id>\d+)/(?P<action>apply|reject|revert)/?$', api_v1.agent_action,
+            name='api_v1_agent_action'),
 
     # Liveness/readiness probe for Docker (no login, no AI, checks the DB).
     path('healthz/', views.healthz, name='healthz'),

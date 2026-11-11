@@ -173,9 +173,14 @@ def classify_git_error(error) -> str:
 
 
 def _pin_autocrlf(repo):
-    """Set core.autocrlf=false in this clone only; True when it was changed."""
+    """Set core.autocrlf=false (and core.longpaths=true, B-51) in this clone only;
+    True when autocrlf was changed (the checkout must then be renormalised)."""
     with repo.config_reader() as reader:
         current = str(reader.get_value("core", "autocrlf", "")).lower()
+        longpaths = str(reader.get_value("core", "longpaths", "")).lower()
+    if longpaths != "true":            # Git for Windows: note names up to 120 chars in deep folders
+        with repo.config_writer() as writer:
+            writer.set_value("core", "longpaths", "true")
     if current == "false":
         return False
     with repo.config_writer() as writer:

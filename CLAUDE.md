@@ -22,6 +22,15 @@ AI: `core/rag_engine.py` (LlamaIndex + Chroma + HuggingFace embeddings; Ollama l
   `core/tasks_service.py` (cache + outbox); `manage.py sync_tasks`, `export_tasks_to_note`.
   Tests use local bare repos (`tests/vault_helpers.py`); conftest blocks real git unless a test patches `Repo`.
 
+## Round 4 (editor, agent, API)
+- Notes editor: `core/notes_service.py` (save with SHA conflicts, offline outbox, rename with link update, per-note re-index),
+  `core/views/notes_api.py`, `static/js/note_editor.js` + bundled CodeMirror `static/vendor/sb-editor.js`.
+- AI: `core/ai_providers.py` (Gemini chain / Ollama / Claude, one `chat()`), `core/agent.py` (tools → overlay →
+  `AgentBatch`, apply/reject/revert; never writes without confirmation), chat UI `static/js/agent_chat.js`.
+- REST API: `core/api_v1.py` (+ `url_normalize.py`, `frontmatter.py`), docs `docs/API.md`; the Link2Note contract
+  `docs/link2note/API_CONTRACT.md` + `contract/*.json` is checked by `tests/test_api_contract.py`. Allowed tags: ONE setting `ALLOWED_TAGS`.
+- Tests: `settings_test` adds `tests/serial_middleware.py` (live_server + in-memory SQLite → one request at a time).
+
 ## Commands (run from `ai_manager/`, Windows venv at `../venv`)
 - Local server on a SQLite **copy** of the DB (never the prod DB). On a fresh checkout create the copy first
   (only if missing): `cp db.sqlite3 audit_copy_db.sqlite3` (path override: env `AUDIT_SQLITE_PATH`). Default port 8000.

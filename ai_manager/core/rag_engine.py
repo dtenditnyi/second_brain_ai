@@ -290,7 +290,7 @@ def _open_index(paths, sync_success):
     return index, chroma_collection.count()
 
 
-def _retrieve_chunks(index, query, selected_files, top_k):
+def _retrieve_chunks(index, query, selected_files, top_k, sources=None):
     """Top-k note chunks; selected files narrow the search, none = whole vault."""
     options = {}
     if selected_files:
@@ -303,6 +303,11 @@ def _retrieve_chunks(index, query, selected_files, top_k):
             condition=FilterCondition.OR,
         )
     nodes = index.as_retriever(similarity_top_k=top_k, **options).retrieve(query)
+    if sources is not None:            # REST API /ask lists the notes behind the answer
+        for node in nodes:
+            path = str((node.metadata or {}).get("file_path") or "")
+            if path and path not in sources:
+                sources.append(path)
     return [node.get_content() for node in nodes]
 
 
@@ -314,12 +319,14 @@ def _budget_for(provider, model):
     return getattr(django_settings, 'PROMPT_TOKEN_BUDGET_GEMINI', 30000)
 
 
-def ask_second_brain(user_query, user, selected_files=None, history=None, smart=False):
+def ask_second_brain(user_query, user, selected_files=None, history=None, smart=False, provider=None, sources=None):
     """Run the retrieval-augmented pipeline for one user and return the answer text.
 
     history: previous (role, text) turns of this user (see load_chat_history);
     smart: use GEMINI_MODEL_SMART as the first cloud model (status report,
     "Smart answer" toggle). Errors are returned as "System …" texts.
+    provider: 'gemini' | 'claude' | 'ollama' overrides the Settings choice (REST API /ask);
+    sources: optional list filled with the absolute paths of the retrieved notes.
     """
     selected_files = selected_files or []
     history = history or []
@@ -328,6 +335,11 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
     user_settings = get_user_settings(user)
     paths = get_user_paths(user)
     ai_strategy = user_settings.ai_strategy or 'auto'
+    cloud_choice = user_settings.cloud_provider or 'gemini'
+    if provider == 'ollama':
+        ai_strategy = 'local_only'
+    elif provider in ('gemini', 'claude'):
+        ai_strategy, cloud_choice = 'cloud_only', provider
     try:
         temp = float(user_settings.temperature)
     except (TypeError, ValueError):
@@ -377,9 +389,9 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
             candidates = [('gemini', model) for model in ai_models.gemini_chain(smart=smart)]
             # Claude (Round 4 / G-E1) first when chosen in Settings; Gemini stays the fallback.
             from . import ai_providers
-            if (user_settings.cloud_provider or 'gemini') == 'claude' and ai_providers.claude_available():
+            if cloud_choice == 'claude' and ai_providers.claude_available():
                 candidates.insert(0, ('claude', ai_providers.ClaudeProvider(user_settings.claude_model).model))
-        chunks = _retrieve_chunks(_user_indexes[user.id], user_query, selected_files, SIMILARITY_TOP_K)
+        chunks = _retrieve_chunks(_user_indexes[user.id], user_query, selected_files, SIMILARITY_TOP_K, sources)
 
         display_name = user_settings.display_name or user.username
         system_prompt = (

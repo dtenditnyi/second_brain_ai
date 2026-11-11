@@ -752,7 +752,6 @@ def api(client, method, url, raw, payload=None):
     return getattr(client, method)(url, **kwargs)
 
 
-@goal("G-API1")
 def test_api1_token_lifecycle(vclient, vuser):
     r = post(vclient, "/api/tokens/create/", {"name": "telegram", "scopes": ["read", "write"]})
     raw = r.json()["token"]
@@ -774,7 +773,6 @@ def test_api1_only_hash_stored(vuser):
     assert obj.token_hash == hashlib.sha256(raw.encode()).hexdigest()
 
 
-@goal("G-API1")
 def test_api1_scopes(vuser):
     from core.models import ApiToken
     _, read_only = ApiToken.create_for(vuser, name="r", scopes=["read"])
@@ -784,7 +782,6 @@ def test_api1_scopes(vuser):
     assert api(c, "post", "/api/v1/ask/", read_only, {"question": "x"}).status_code == 403
 
 
-@goal("G-API1")
 def test_api1_expired_and_revoked(vuser):
     from django.utils import timezone
     from core.models import ApiToken
@@ -795,7 +792,6 @@ def test_api1_expired_and_revoked(vuser):
     assert c.get("/api/v1/sync/").status_code == 401
 
 
-@goal("G-API1")
 def test_api1_rate_limit(vuser, settings):
     from core.models import ApiToken
     settings.API_RATE_LIMIT_PER_MINUTE = 3
@@ -805,7 +801,6 @@ def test_api1_rate_limit(vuser, settings):
     assert codes[:3] == [200, 200, 200] and codes[3] == 429
 
 
-@goal("G-API1")
 def test_api1_log_no_content(vuser, token):
     from core.models import ApiCallLog
     api(Client(), "post", "/api/v1/capture/", token, {"text": "СЕКРЕТНЫЙ ТЕКСТ", "target": "inbox"})
@@ -813,7 +808,6 @@ def test_api1_log_no_content(vuser, token):
     assert rows and "СЕКРЕТНЫЙ" not in json.dumps(rows, ensure_ascii=False, default=str)
 
 
-@goal("G-API1")
 def test_api1_session_cookie_not_accepted(vclient):
     assert vclient.get("/api/v1/sync/").status_code == 401
     assert vclient.post("/api/v1/tasks/", data="{}", content_type="application/json").status_code == 401
@@ -821,7 +815,6 @@ def test_api1_session_cookie_not_accepted(vclient):
 
 # --------------------------------------------------------------------------- API2 endpoints
 
-@goal("G-API2")
 def test_api2_notes_read_search_list_create_append(vuser, token, remote, tmp_path):
     c = Client()
     r = api(c, "get", "/api/v1/notes/search/?q=Second", token)
@@ -835,7 +828,6 @@ def test_api2_notes_read_search_list_create_append(vuser, token, remote, tmp_pat
     assert api(c, "post", "/api/v1/notes/append/", token, {"path": "../x.md", "text": "y"}).status_code == 400
 
 
-@goal("G-API2")
 def test_api2_quick_capture_inbox_and_week(vuser, token, remote, tmp_path, settings):
     c = Client()
     r = api(c, "post", "/api/v1/capture/", token, {"text": "мысль из телеги", "target": "inbox"})
@@ -848,7 +840,6 @@ def test_api2_quick_capture_inbox_and_week(vuser, token, remote, tmp_path, setti
     assert "в неделю" in week
 
 
-@goal("G-API2")
 def test_api2_tasks_crud_and_filters(vuser, token, remote, tmp_path):
     c = Client()
     r = api(c, "post", "/api/v1/tasks/", token, {"text": "Задача из бота", "due": "2026-12-01", "priority": "high", "tags": ["dev"]})
@@ -859,12 +850,11 @@ def test_api2_tasks_crud_and_filters(vuser, token, remote, tmp_path):
     assert [t["id"] for t in listing] == [tid]
     assert api(c, "patch", f"/api/v1/tasks/{tid}/", token, {"status": "done"}).status_code == 200
     assert f"- [x] Задача из бота" in vh.remote_file(remote, vh.TASKS_NOTE, tmp_path)
-    assert api(c, "delete", f"/api/v1/tasks/{tid}/", token).status_code == 200
+    assert api(c, "delete", f"/api/v1/tasks/{tid}/", token).status_code == 204      # contract: 204 (D27)
     assert tid not in vh.remote_file(remote, vh.TASKS_NOTE, tmp_path)
     assert api(c, "patch", "/api/v1/tasks/nope00/", token, {"status": "done"}).status_code == 404
 
 
-@goal("G-API2")
 def test_api2_ask_and_sync(vuser, token):
     c = Client()
     with mock.patch("core.rag_engine.ask_second_brain", return_value="ответ") as ask:
@@ -874,7 +864,6 @@ def test_api2_ask_and_sync(vuser, token):
     assert {"last_sync", "pending", "error"} <= set(s)
 
 
-@goal("G-API2")
 def test_api2_agent_flow(vuser, token, remote, tmp_path):
     from core import agent
     prov = ScriptedProvider([{"tools": [("append_to_note", {"path": NOTE, "text": "через API"})]}, {"text": "ok"}])
@@ -889,7 +878,6 @@ def test_api2_agent_flow(vuser, token, remote, tmp_path):
     assert api(c, "post", f"/api/v1/agent/{data['batch_id']}/reject/", token, {}).status_code == 409
 
 
-@goal("G-API3")
 def test_api3_isolation(vuser, token, other_user, tmp_path, real_git):
     from core.models import ApiToken
     other_remote = vh.make_remote(tmp_path, files={"bob.md": "секрет Боба\n"}, name="bob.git")
@@ -909,7 +897,6 @@ def test_api3_isolation(vuser, token, other_user, tmp_path, real_git):
     assert api(c, "post", f"/api/v1/agent/{batch}/apply/", bob, {}).status_code == 404
 
 
-@goal("G-API4")
 def test_api4_schema_and_docs(vuser, token):
     schema = api(Client(), "get", "/api/v1/schema/", token).json()
     assert schema["openapi"].startswith("3.") and "/api/v1/tasks/" in schema["paths"]
@@ -919,7 +906,6 @@ def test_api4_schema_and_docs(vuser, token):
         assert needle in doc, needle
 
 
-@goal("G-API6")
 def test_api6_deploy_doc():
     doc = (ROOT / "docs" / "DEPLOY.md").read_text(encoding="utf-8")
     assert "/api/v1/" in doc and "curl" in doc and "токен" in doc.lower() and "бот" in doc.lower()

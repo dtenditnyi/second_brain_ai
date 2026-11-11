@@ -289,3 +289,34 @@ ls logs/deploy/                        # журналы install/update/backup/re
 
 Первая настоящая сборка и запуск выполняются на сервере через `deploy/install.sh`. Если что-то
 пойдёт не так, смотрите раздел 10 и журнал в `logs/deploy/`.
+
+## 12. REST API и Telegram-бот Link2Note (Round 4)
+
+API сайта — `/api/v1/` (описание: `docs/API.md`, контракт с ботом: `docs/link2note/API_CONTRACT.md`).
+Снаружи оно доступно через тот же Cloudflare Tunnel: `https://secondbrain-core.com/api/v1/…`.
+Бот на сервере ходит **внутри docker-сети** `secondbrain`: стек сайта создаёт её сам, контейнер `web`
+в ней доступен по имени `secondbrain-web` (`http://secondbrain-web:8000/api/v1`, без Cloudflare;
+для `/api/v1/` нет перенаправления на https, `secondbrain-web` уже есть в `ALLOWED_HOSTS` по умолчанию —
+если вы задали `ALLOWED_HOSTS` в `.env` сами, допишите туда `secondbrain-web`).
+
+**Выдать токен боту:**
+1. Откройте сайт → **Настройки → API tokens**.
+2. Название `link2note`, права `read`, `write`, `delete`, `ai`.
+3. Write folders (по одной на строку):
+   `03 - Resources/📥 Из ссылок`, `05 - Fleeting/📥 Входящие.md`, `01 - Projects/🎯 Цели и планы/Задачи.md`.
+   Delete folders: `03 - Resources/📥 Из ссылок`.
+4. **Create token**, скопируйте токен `sb_…` (показывается один раз) в `.env` бота: `SECOND_BRAIN_API_TOKEN=sb_…`.
+5. Потерянный или лишний токен — **Revoke**; бот сразу получит `401`.
+
+**Проверить API с сервера:**
+```bash
+curl -s http://127.0.0.1:8000/api/v1/health                      # {"status": "ok", ...}
+curl -s -H "Authorization: Bearer sb_..." "http://127.0.0.1:8000/api/v1/tasks?status=open"
+docker compose exec web python -c "import urllib.request; print(urllib.request.urlopen('http://secondbrain-web:8000/api/v1/health').read())"
+```
+Полная проверка контракта — скриптом бота (в папке Link2Note, создаёт и удаляет тестовую заметку):
+```bash
+SECOND_BRAIN_API_URL=http://127.0.0.1:8000/api/v1 SECOND_BRAIN_API_TOKEN=sb_... python scripts/check_second_brain_api.py --all
+```
+Тег `fun` (нужен боту) уже есть в списке разрешённых (`ALLOWED_TAGS`); если у вас в хранилище есть заметка
+с правилами тегов — допишите `fun` и туда.

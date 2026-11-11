@@ -157,9 +157,61 @@
 
       <p id="settings-status" class="alert hidden" role="status"></p>
       <button type="button" id="save-settings-button" class="btn btn-primary w-full py-3 uppercase tracking-wider">Save System Configuration</button>
+
+      <!-- Round 4: personal tokens for the REST API (Telegram bot). Shown once; only the hash is stored. -->
+      <section class="glass-card card p-5 sm:p-6" aria-labelledby="tokens-title">
+        <h2 id="tokens-title" class="text-xl font-semibold text-fg mb-2 flex items-center gap-2"><span aria-hidden="true">🔑</span> API tokens</h2>
+        <p class="field-hint mb-4">For the Telegram bot and scripts: <code>Authorization: Bearer sb_…</code>, see <code>docs/API.md</code>. Empty folder lists = the whole vault.</p>
+        <ul id="token-list" class="flex flex-col gap-2 mb-6">
+          {% for t in api_tokens %}
+          <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-3" data-token-id="{{ t.pk }}">
+            <div class="min-w-0 text-sm">
+              <p class="font-semibold text-fg break-words">{{ t.name }} <span class="text-muted font-mono">{{ t.prefix }}…</span>
+                {% if t.revoked_at %}<span class="badge badge-danger">revoked</span>{% elif not t.active %}<span class="badge badge-danger">expired</span>{% endif %}</p>
+              <p class="text-muted break-words">Scopes: {{ t.scopes|join:", " }}{% if t.write_paths %} · write: {{ t.write_paths|join:"; " }}{% endif %}{% if t.delete_paths %} · delete: {{ t.delete_paths|join:"; " }}{% endif %}</p>
+              <p class="text-muted">Created {{ t.created_at|date:"Y-m-d" }}{% if t.expires_at %} · expires {{ t.expires_at|date:"Y-m-d" }}{% endif %}{% if t.last_used_at %} · last used {{ t.last_used_at|timesince }} ago{% endif %}</p>
+            </div>
+            {% if not t.revoked_at %}<button type="button" class="btn btn-danger min-h-11" data-revoke-token="{{ t.pk }}">Revoke</button>{% endif %}
+          </li>
+          {% empty %}
+          <li class="empty-state">No tokens yet.</li>
+          {% endfor %}
+        </ul>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="field">
+            <label for="token-name" class="field-label">Name</label>
+            <input id="token-name" type="text" maxlength="60" class="input-field rounded-lg px-4 py-2 w-full" placeholder="telegram-bot" />
+          </div>
+          <div class="field">
+            <label for="token-expires" class="field-label">Expires after (days, empty = never)</label>
+            <input id="token-expires" type="number" min="1" max="3650" inputmode="numeric" class="input-field rounded-lg px-4 py-2 w-full" />
+          </div>
+          <fieldset class="field md:col-span-2">
+            <legend class="field-label">Scopes</legend>
+            <div class="flex flex-wrap gap-x-4">
+              {% for scope in token_scopes %}<label class="flex items-center gap-2 min-h-11 cursor-pointer"><span class="tap-zone"><input type="checkbox" name="token-scope" value="{{ scope }}" {% if scope == 'read' %}checked{% endif %}></span>{{ scope }}</label>{% endfor %}
+            </div>
+          </fieldset>
+          <div class="field">
+            <label for="token-write-paths" class="field-label">Write folders/notes (one per line)</label>
+            <textarea id="token-write-paths" rows="3" class="input-field rounded-lg px-4 py-2 w-full" placeholder="03 - Resources/📥 Из ссылок"></textarea>
+          </div>
+          <div class="field">
+            <label for="token-delete-paths" class="field-label">Delete folders (one per line)</label>
+            <textarea id="token-delete-paths" rows="3" class="input-field rounded-lg px-4 py-2 w-full" placeholder="03 - Resources/📥 Из ссылок"></textarea>
+          </div>
+        </div>
+        <p id="token-error" class="alert alert-danger hidden mt-3" role="alert"></p>
+        <div id="token-created" class="alert alert-success hidden mt-3" role="status">
+          <p class="font-semibold">Copy the token now — it is shown only once:</p>
+          <code id="token-value" class="block break-all font-mono mt-1 select-all"></code>
+        </div>
+        <button type="button" id="token-create-button" class="btn btn-primary min-h-11 mt-4">Create token</button>
+      </section>
     </div>
   </main>
 
   <!-- Collects settings and sends them to the authenticated save endpoint. -->
   <script src="{% static 'js/settings.js' %}"></script>
+  <script src="{% static 'js/api_tokens.js' %}"></script>
 {% endblock %}
