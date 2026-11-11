@@ -1,7 +1,7 @@
 """Named URL routes for browser pages, authenticated APIs, and superuser tools."""
 from django.urls import path
 from . import views
-from .views import notes_api
+from .views import agent_api, notes_api
 
 urlpatterns = [
     # Public authentication pages manage registration, login, and session exit.
@@ -36,6 +36,12 @@ urlpatterns = [
     path('api/notes/create/', notes_api.notes_create, name='api_notes_create'),
     path('api/notes/delete/', notes_api.notes_delete, name='api_notes_delete'),
     path('api/notes/rename/', notes_api.notes_rename, name='api_notes_rename'),
+
+    # AI agent (Round 4): run → batch of proposed changes → apply / reject / revert.
+    path('api/agent/run/', agent_api.agent_run, name='api_agent_run'),
+    path('api/agent/batch/<int:batch_id>/apply/', agent_api.agent_apply, name='api_agent_apply'),
+    path('api/agent/batch/<int:batch_id>/reject/', agent_api.agent_reject, name='api_agent_reject'),
+    path('api/agent/batch/<int:batch_id>/revert/', agent_api.agent_revert, name='api_agent_revert'),
 
     # Liveness/readiness probe for Docker (no login, no AI, checks the DB).
     path('healthz/', views.healthz, name='healthz'),

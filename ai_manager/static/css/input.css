@@ -799,3 +799,21 @@ body.scroll-locked .scroll-container {
 .diff-view .diff-del { display: block; color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
 .diff-view .diff-hunk { display: block; color: var(--info); }
 .diff-view .diff-ctx { display: block; color: var(--text-secondary); }
+
+/* ---- Round 4: chat "Agent" mode (agent_chat.js) ---- */
+.chat-bubble:has(.agent-diff-card) { max-width: 100%; width: 100%; min-width: 0; }
+.agent-steps { list-style: none; margin: 0 0 0.5rem; padding: 0; font-size: 0.875rem; color: var(--text-muted); }
+.agent-step::before { content: "› "; color: var(--active-accent); }
+.agent-step.is-failed { color: var(--danger); }
+.agent-diff-card { margin-top: 0.75rem; padding: 0.75rem; border: 1px solid var(--border-glass); border-radius: 0.75rem; min-width: 0; }
+.agent-change { min-width: 0; }
+.agent-diff, .agent-final-text {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.8125rem; line-height: 1.45;
+    white-space: pre-wrap; overflow-wrap: anywhere; max-height: 22rem; overflow-y: auto; margin: 0;
+    padding: 0.5rem 0.75rem; border-radius: 0.5rem; background: color-mix(in srgb, var(--active-accent) 5%, transparent);
+}
+.agent-diff .diff-add { display: block; color: var(--success); background: color-mix(in srgb, var(--success) 10%, transparent); }
+.agent-diff .diff-del { display: block; color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.agent-diff .diff-hunk { display: block; opacity: 0.75; }
+.agent-view-switch { display: inline-flex; gap: 0.25rem; }
+.agent-view-switch [aria-pressed="true"] { border-color: var(--active-accent); background: color-mix(in srgb, var(--active-accent) 12%, transparent); }

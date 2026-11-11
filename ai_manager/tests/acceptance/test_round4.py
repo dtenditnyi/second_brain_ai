@@ -416,14 +416,12 @@ def test_d1_editor_responsive(browser, live_server, e2e_user, tmp_path, real_git
 
 # =========================================================================== E — providers & agent
 
-@goal("G-E1")
 def test_e1_provider_ids_and_defaults(settings):
     from core import ai_providers
     assert settings.ANTHROPIC_MODEL == "claude-haiku-5-5"
     assert {m["id"] for m in ai_providers.CLAUDE_MODELS} == {"claude-haiku-5-5", "claude-sonnet-5-5"}
 
 
-@goal("G-E1")
 def test_e1_claude_rag_answer(vuser, note_writer, monkeypatch, settings):
     from core import ai_providers, rag_engine
     settings.ANTHROPIC_API_KEY = "test-key"
@@ -449,7 +447,6 @@ def test_e1_claude_rag_answer(vuser, note_writer, monkeypatch, settings):
     assert s.last_model_used.startswith("Claude")
 
 
-@goal("G-E1")
 def test_e1_settings_provider_choice_and_claude_needs_key(auth_client, user, settings):
     settings.ANTHROPIC_API_KEY = ""
     html = auth_client.get("/settings/").content.decode()
@@ -463,7 +460,6 @@ def test_e1_settings_provider_choice_and_claude_needs_key(auth_client, user, set
 
 # --------------------------------------------------------------------------- E2 tools
 
-@goal("G-E2")
 def test_e2_each_tool(vuser, remote, tmp_path):
     from core import agent
     prov = ScriptedProvider([
@@ -486,7 +482,6 @@ def test_e2_each_tool(vuser, remote, tmp_path):
     assert run.text == "Сделал."
 
 
-@goal("G-E2")
 def test_e2_no_delete_tool():
     from core import agent
     names = {t["name"] for t in agent.TOOL_SPECS}
@@ -495,7 +490,6 @@ def test_e2_no_delete_tool():
     assert not any("delete" in n or "remove" in n for n in names)
 
 
-@goal("G-E2")
 @pytest.mark.parametrize("args", [{"path": "../x.md", "text": "y"}, {"path": ".obsidian/app.json", "text": "y"},
                                   {"path": ".git/config", "text": "y"}, {"path": "99 - Cache/a.png", "text": "y"}])
 def test_e2_dangerous_paths_rejected(vuser, args):
@@ -506,7 +500,6 @@ def test_e2_dangerous_paths_rejected(vuser, args):
     assert "error" in json.dumps(prov.calls[1]["messages"], ensure_ascii=False, default=str).lower()
 
 
-@goal("G-E2")
 def test_e2_replace_requires_exact_fragment(vuser):
     from core import agent
     prov = ScriptedProvider([{"tools": [("replace_in_note", {"path": NOTE, "old": "нет такого", "new": "x"})]}, {"text": "ok"}])
@@ -525,7 +518,6 @@ def _agent_with_changes(vuser):
     return agent.run_agent(vuser, "Допиши заметку", provider=prov)
 
 
-@goal("G-E3")
 def test_e3_agent_does_not_write_without_confirmation(vuser, remote, tmp_path):
     before = vh.remote_log(remote)
     run = _agent_with_changes(vuser)
@@ -534,7 +526,6 @@ def test_e3_agent_does_not_write_without_confirmation(vuser, remote, tmp_path):
     assert "+Добавлено агентом" in diff[NOTE]
 
 
-@goal("G-E3")
 def test_e3_apply_selected_one_commit(vuser, remote, tmp_path):
     from core import agent
     run = _agent_with_changes(vuser)
@@ -547,7 +538,6 @@ def test_e3_apply_selected_one_commit(vuser, remote, tmp_path):
     assert "Новая.md" not in files
 
 
-@goal("G-E3")
 def test_e3_reject(vuser, remote):
     from core import agent
     run = _agent_with_changes(vuser)
@@ -559,7 +549,6 @@ def test_e3_reject(vuser, remote):
         agent.apply_batch(vuser, run.batch.pk)
 
 
-@goal("G-E3")
 def test_e3_revert(vuser, remote, tmp_path):
     from core import agent
     run = _agent_with_changes(vuser)
@@ -569,7 +558,6 @@ def test_e3_revert(vuser, remote, tmp_path):
     assert vh.remote_log(remote)[0][1].startswith("Revert") or "revert" in vh.remote_log(remote)[0][1].lower()
 
 
-@goal("G-E3")
 def test_e3_auto_apply_additions_only(vuser, remote, tmp_path):
     from core import agent
     s = vuser.settings
@@ -584,7 +572,6 @@ def test_e3_auto_apply_additions_only(vuser, remote, tmp_path):
     assert [c["kind"] for c in run.batch.changes if c.get("pending", True)] == ["replace"]
 
 
-@goal("G-E3")
 def test_e3_conflict_on_apply(vuser, remote, tmp_path):
     from core import agent
     prov = ScriptedProvider([{"tools": [("replace_in_note", {"path": NOTE, "old": "- [/] Round 3", "new": "- [x] Round 3"})]},
@@ -600,7 +587,6 @@ def test_e3_conflict_on_apply(vuser, remote, tmp_path):
 
 # --------------------------------------------------------------------------- E4 rules / injection
 
-@goal("G-E4")
 def test_e4_rules_from_note_and_default(vuser, remote, tmp_path, settings):
     from core import agent
     prov = ScriptedProvider([{"text": "ok"}])
@@ -615,7 +601,6 @@ def test_e4_rules_from_note_and_default(vuser, remote, tmp_path, settings):
     assert "ОСОБОЕ ПРАВИЛО ВЛАДЕЛЬЦА" in prov2.calls[0]["system"]
 
 
-@goal("G-E4")
 def test_e4_prompt_injection_in_note_is_data(vuser, remote, tmp_path):
     from core import agent
     phone = vh.clone(remote, tmp_path / "phone")
@@ -635,7 +620,6 @@ def test_e4_prompt_injection_in_note_is_data(vuser, remote, tmp_path):
 
 # --------------------------------------------------------------------------- E5 limits
 
-@goal("G-E5")
 def test_e5_step_limit(vuser):
     from core import agent
     prov = ScriptedProvider([{"tools": [("list_folder", {"path": ""})]}] * 20)
@@ -643,7 +627,6 @@ def test_e5_step_limit(vuser):
     assert len(run.steps) <= 8 and len(prov.calls) <= 9 and "лимит" in run.text.lower()
 
 
-@goal("G-E5")
 def test_e5_gemini_agent_fallback_on_429(vuser, monkeypatch, settings):
     from core import ai_providers
     settings.GEMINI_FALLBACK_MODELS = ["gemini-3.1-flash-lite"]
@@ -663,7 +646,6 @@ def test_e5_gemini_agent_fallback_on_429(vuser, monkeypatch, settings):
     assert reply.text == "ok" and tried == [settings.GEMINI_MODEL_DEFAULT, "gemini-3.1-flash-lite"]
 
 
-@goal("G-E5")
 def test_e5_no_tool_model_unavailable(vuser, settings):
     from core import agent, ai_providers
     s = vuser.settings
@@ -677,7 +659,6 @@ def test_e5_no_tool_model_unavailable(vuser, settings):
     assert run.batch is None and "недоступен" in run.text.lower()
 
 
-@goal("G-E5")
 def test_e5_logs_have_no_content(vuser, caplog):
     from core import agent
     agent.logger.propagate = True
@@ -694,7 +675,6 @@ def test_e5_logs_have_no_content(vuser, caplog):
 # --------------------------------------------------------------------------- E6 UI
 
 @pytest.mark.e2e
-@goal("G-E6")
 def test_e6_agent_flow_e2e(page, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     from core import agent
     from tests.e2e.conftest import login
@@ -727,7 +707,6 @@ def test_e6_agent_flow_e2e(page, live_server, e2e_user, tmp_path, real_git, isol
 
 @pytest.mark.e2e
 @pytest.mark.responsive
-@goal("G-E6")
 @pytest.mark.parametrize("width", [320, 390, 1440])
 def test_e6_agent_card_responsive(browser, live_server, e2e_user, tmp_path, real_git, isolated_vault, width):
     from core import agent

@@ -122,6 +122,29 @@
             </ul>
           </div>
 
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="field">
+              <label for="cloud-provider" class="field-label">Cloud provider</label>
+              <select id="cloud-provider" name="cloud_provider" class="input-field rounded-lg px-4 py-2 w-full">
+                <option value="gemini" {% if config.cloud_provider != 'claude' %}selected{% endif %}>Gemini (fallback chain)</option>
+                <option value="claude" {% if config.cloud_provider == 'claude' and claude_available %}selected{% endif %}{% if not claude_available %} disabled{% endif %}>Claude (Anthropic){% if not claude_available %} — нет ANTHROPIC_API_KEY{% endif %}</option>
+              </select>
+              <p class="field-hint">Used for “Cloud Only” and when the PC is off. Claude falls back to Gemini on limits.</p>
+            </div>
+            <div class="field">
+              <label for="claude-model" class="field-label">Claude model</label>
+              <select id="claude-model" name="claude_model" class="input-field rounded-lg px-4 py-2 w-full"{% if not claude_available %} disabled{% endif %}>
+                {% for m in claude_models %}<option value="{{ m.id }}" {% if config.claude_model == m.id or not config.claude_model and m.id == default_claude_model %}selected{% endif %}>{{ m.name }}</option>{% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <label class="flex items-start gap-3 min-h-11 cursor-pointer">
+            <input type="checkbox" id="agent-auto-apply" class="mt-1 h-5 w-5 accent-[var(--active-accent)]" {% if config.agent_auto_apply_additions %}checked{% endif %} />
+            <span><span class="text-fg font-medium">Agent: apply additions without confirmation</span>
+              <span class="field-hint block">Only appends, new notes and new tasks; edits of existing text always wait for “Apply”. Off by default.</span></span>
+          </label>
+
           <div class="field w-full md:w-1/2">
             <label for="ai-temperature" class="field-label flex justify-between">
               <span>Creativity temperature</span>

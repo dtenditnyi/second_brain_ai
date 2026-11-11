@@ -9,7 +9,7 @@ from django.utils.timezone import make_aware
 
 from ..models import Task, ChatMessage, get_user_settings
 from .. import rag_engine
-from .. import ai_models
+from .. import ai_models, ai_providers
 from .. import tasks_service
 from .utils import get_user_config
 
@@ -165,4 +165,7 @@ def settings_view(request):
         'has_github_token': bool(config.github_token),
         'default_tasks_note_path': django_settings.TASKS_NOTE_PATH,
         'models': ai_models.ui_model_config(),
+        'claude_models': ai_providers.CLAUDE_MODELS,
+        'claude_available': ai_providers.claude_available(),
+        'default_claude_model': django_settings.ANTHROPIC_MODEL,
     })

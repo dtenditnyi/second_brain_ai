@@ -117,3 +117,7 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 ### 2026-11-11 — Round 4 / part D — notes editor
 - Editor (CM6 bundle, preview, `[[` autocomplete, Ctrl+S/Esc, phone tabs), create from template, save with conflicts + offline outbox, rename with link update (one commit), delete, per-note re-index. B-49 (autocrlf), B-50 (e2e serial requests).
 - Tests: D acceptance 26 + e2e/responsive 10 passed; fast suite green.
+
+### 2026-11-11 — Round 4 / part E — providers, agent, agent UI
+- `core/ai_providers.py` (Gemini chain / Ollama / Claude, one `chat()`), Claude in RAG chat + Settings (provider, model, auto-apply option); `core/agent.py` (8 tools, overlay → batch, apply/reject/revert, rules note, injection-safe results, limits, content-free logs); chat "Агент" toggle + diff card (`agent_chat.js`).
+- Tests: E acceptance 26 passed (incl. e2e/responsive), `test_agent_providers.py` 7 passed; fast suite 530 passed; chat e2e 69 passed.

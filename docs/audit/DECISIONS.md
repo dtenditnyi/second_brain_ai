@@ -140,3 +140,9 @@ Each entry: context · options · chosen · why · how to roll back.
 - Editor: CodeMirror 6 bundled once into `static/vendor/sb-editor.js` (no CDN); preview uses the same sanitising renderer as chat.
 - Templates: Templater is not executed; only `tp.date.now("…")` (YYYY/YY/MM/M/DD/D) and `tp.file.title` are substituted, the rest stays as text.
 - Attachments (non-`.md`) are read-only from the site; offline saves go to `VaultOutbox`, a conflicting flush writes a "(конфликт …)" copy (nothing lost).
+
+## D26. Providers and agent (R4 / G-E1…E6)
+- Claude IDs `claude-haiku-5-5` (default) / `claude-sonnet-5-5` (current Claude 5 family IDs); no `temperature` is sent to Claude. In the RAG chat Claude goes first, the Gemini chain is its fallback on limits.
+- Agent writes only to an in-memory overlay → `AgentBatch` with per-operation diffs; apply replays the selected ops in one commit only if each file's SHA is unchanged (else nothing is written). Auto-apply (option) = append / create / add_task only.
+- `search_notes` = titles/aliases + full text + the already-open vector index (does not load embeddings on its own). Progress lines are shown when the run returns (no streaming) — simpler and enough for ≤ 8 steps.
+- At the step limit the model gets one last turn to answer in text (tools still declared: Claude requires them while tool blocks are in the history). "Откатить" has no confirm dialog: a revert is itself reversible.

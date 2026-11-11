@@ -375,6 +375,10 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
             candidates = [('ollama', django_settings.OLLAMA_MODEL)]
         else:
             candidates = [('gemini', model) for model in ai_models.gemini_chain(smart=smart)]
+            # Claude (Round 4 / G-E1) first when chosen in Settings; Gemini stays the fallback.
+            from . import ai_providers
+            if (user_settings.cloud_provider or 'gemini') == 'claude' and ai_providers.claude_available():
+                candidates.insert(0, ('claude', ai_providers.ClaudeProvider(user_settings.claude_model).model))
         chunks = _retrieve_chunks(_user_indexes[user.id], user_query, selected_files, SIMILARITY_TOP_K)
 
         display_name = user_settings.display_name or user.username
@@ -390,8 +394,18 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
             usable = chunks[:SIMILARITY_TOP_K_GEMMA] if gemma else chunks
             messages, used_chunks, used_history = build_messages(
                 system_prompt, usable, history, user_query, _budget_for(provider, model), inline_system=gemma)
-            llm = _get_llm(user.id, provider, model, temp)
             started = time.monotonic()
+            if provider == 'claude':
+                from . import ai_providers
+                claude = ai_providers.ClaudeProvider(model)
+                answer = claude.chat(messages[0].content, [
+                    {"role": "user" if m.role == MessageRole.USER else "assistant", "content": m.content}
+                    for m in messages[1:]]).text
+                logger.info("LLM answered: provider=claude, model=%s, chunks=%s, history=%s, seconds=%.1f.",
+                            model, len(used_chunks), len(used_history), time.monotonic() - started)
+                _record_model(user_settings, claude.label)
+                return answer
+            llm = _get_llm(user.id, provider, model, temp)
             reply = llm.chat(messages)
             label = ai_models.ollama_label() if provider == 'ollama' else ai_models.model_info(model)['name']
             logger.info("LLM answered: provider=%s, model=%s, chunks=%s, history=%s, seconds=%.1f.",
@@ -404,11 +418,15 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
             try:
                 return attempt(provider, model)
             except Exception as error:
-                kind = classify_llm_error(error) if provider == 'gemini' else None
+                if provider == 'claude':
+                    kind = getattr(error, 'kind', None)
+                    kind = kind if kind in ('quota', 'unavailable') else None
+                else:
+                    kind = classify_llm_error(error) if provider == 'gemini' else None
                 if kind is None:
                     raise
                 failures.append(kind)
-                logger.warning("Gemini model %s failed (%s: %s); trying the next model.",
+                logger.warning("Cloud model %s failed (%s: %s); trying the next model.",
                                model, kind, type(error).__name__)
 
         # Every cloud model failed with quota/unavailable errors.

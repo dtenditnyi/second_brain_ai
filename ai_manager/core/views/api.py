@@ -108,6 +108,19 @@ def api_save_settings(request):
                     return JsonResponse({'status': 'error', 'msg': f'Tasks note path: {exc}'}, status=400)
                 if not tasks_path.lower().endswith('.md'):
                     return JsonResponse({'status': 'error', 'msg': 'Tasks note path must end with .md'}, status=400)
+        # Round 4 / G-E1: cloud provider (Gemini / Claude) and Claude model; Claude needs a key.
+        from .. import ai_providers
+        cloud_provider = data.get('cloud_provider')
+        if cloud_provider is not None and cloud_provider not in ('gemini', 'claude'):
+            return JsonResponse({'status': 'error', 'msg': 'Unknown AI provider.'}, status=400)
+        if cloud_provider == 'claude' and not ai_providers.claude_available():
+            return JsonResponse({'status': 'error', 'msg': 'Claude is unavailable: ANTHROPIC_API_KEY is not set on the server.'}, status=400)
+        claude_model = data.get('claude_model')
+        if claude_model is not None and claude_model != '' and claude_model not in ai_providers.CLAUDE_MODEL_IDS:
+            return JsonResponse({'status': 'error', 'msg': 'Unknown Claude model.'}, status=400)
+        auto_apply = data.get('agent_auto_apply_additions')
+        if auto_apply is not None and not isinstance(auto_apply, bool):
+            return JsonResponse({'status': 'error', 'msg': 'Invalid value for agent_auto_apply_additions.'}, status=400)
         new_token = data.get('github_token')
         # 255 plain characters still fit the 500-char encrypted column (B-14).
         if isinstance(new_token, str) and len(new_token.strip()) > 255:
@@ -126,6 +139,12 @@ def api_save_settings(request):
         ai_strategy = data.get('ai_strategy', settings.ai_strategy)
         if ai_strategy in {'auto', 'local_only', 'cloud_only'}:
             settings.ai_strategy = ai_strategy
+        if cloud_provider is not None:
+            settings.cloud_provider = cloud_provider
+        if claude_model is not None:
+            settings.claude_model = claude_model
+        if auto_apply is not None:
+            settings.agent_auto_apply_additions = auto_apply
         # Bound the sampling temperature to the UI's supported range and recover
         # from malformed client values without rejecting unrelated preferences.
         try:

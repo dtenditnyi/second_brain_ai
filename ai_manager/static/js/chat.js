@@ -151,6 +151,16 @@ document.addEventListener('DOMContentLoaded', () => {
         input.value = '';
         resizeInput();
         const loadingId = appendMessage('ai', null);
+        const agentToggle = document.getElementById('agent-mode-toggle');
+        if (agentToggle && agentToggle.checked && window.SBAgent) {
+            // Agent mode (Round 4): proposed changes come back as a diff card.
+            try {
+                await window.SBAgent.run(message, document.getElementById(loadingId), scrollToBottom);
+            } finally {
+                sending = false;
+            }
+            return;
+        }
 
         try {
             const response = await fetch('/api/send-message/', {
