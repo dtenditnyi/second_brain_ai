@@ -22,10 +22,14 @@ load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-LOGS_DIR = BASE_DIR / 'logs'
+# Logs live outside git (only logs/.gitkeep is tracked); the folder is created at
+# start-up and can be moved with LOG_DIR (Docker: a volume). Round 3 / G-A4.
+LOGS_DIR = Path(os.getenv('LOG_DIR') or BASE_DIR / 'logs')
 os.makedirs(LOGS_DIR, exist_ok=True)
+LOG_MAX_BYTES = int(os.getenv('LOG_MAX_BYTES') or 5 * 1024 * 1024)
+LOG_BACKUP_COUNT = int(os.getenv('LOG_BACKUP_COUNT') or 5)
 
-# Route AI/vector events and application/Git events to separate weekly log files.
+# Route AI/vector events and application/Git events to separate size-rotated log files.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -36,20 +40,18 @@ LOGGING = {
     },
     'handlers': {
         'rag_file': {
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': LOGS_DIR / 'rag_engine.log',
-            'when': 'W0',
-            'interval': 1,
-            'backupCount': 4,
+            'maxBytes': LOG_MAX_BYTES,
+            'backupCount': LOG_BACKUP_COUNT,
             'encoding': 'utf-8',
             'formatter': 'telemetry',
         },
         'system_file': {
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': LOGS_DIR / 'system.log',
-            'when': 'W0',
-            'interval': 1,
-            'backupCount': 4,
+            'maxBytes': LOG_MAX_BYTES,
+            'backupCount': LOG_BACKUP_COUNT,
             'encoding': 'utf-8',
             'formatter': 'telemetry',
         },

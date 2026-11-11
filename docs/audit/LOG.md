@@ -67,3 +67,8 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 - Cards below 1280 px (2 columns from 768), fluid table from 1280; console follows the operator theme/accent via tokens; admin.js uses classes instead of hard-coded purple colours.
 - Files: templates/admin_dashboard.html, static/css/input.css (+styles.css), static/js/admin.js, core/views/admin.py, tests/e2e/test_responsive_round2.py, tests/acceptance/test_round3.py
 - Checks: acceptance `-k "a2 or a3"` 8 passed; admin + e2e admin/matrix 88 passed (2 Round-2 scroll-hint tests replaced, D21); fast suite 270 passed, 56 xfailed.
+
+### 2026-11-11 16:15 — Round 3 / G-A4 — logs outside git, size rotation
+- `git rm --cached` for `ai_manager/logs/{rag_engine,system}.log` (the files stay on disk, ignored; old history unchanged — no rewriting), `logs/.gitkeep`, `.gitignore` rules; `RotatingFileHandler` (`LOG_MAX_BYTES` 5 MB × `LOG_BACKUP_COUNT` 5); `LOG_DIR` env, folder created at start.
+- Files: .gitignore, ai_manager/logs/.gitkeep, ai_manager/ai_manager/settings.py, tests/acceptance/test_round3.py
+- Checks: acceptance `-k a4` 2 passed; fast suite 272 passed, 54 xfailed.

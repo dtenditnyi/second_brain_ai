@@ -245,7 +245,6 @@ def test_a3_core_matrix_contrast_aa(browser, live_server, e2e_admin, theme):
 # G-A4 logs outside git, rotation
 # --------------------------------------------------------------------------
 
-@goal("G-A4")
 def test_a4_logs_not_tracked_and_ignored():
     tracked = subprocess.run(["git", "ls-files", "ai_manager/logs"], cwd=ROOT, capture_output=True, text=True).stdout.split()
     assert tracked == ["ai_manager/logs/.gitkeep"], tracked
@@ -253,7 +252,6 @@ def test_a4_logs_not_tracked_and_ignored():
     assert "ai_manager/logs/*" in ignore and "!ai_manager/logs/.gitkeep" in ignore
 
 
-@goal("G-A4")
 def test_a4_size_based_rotation_and_dir_created(tmp_path):
     out = subprocess.run([sys.executable, "-c",
                           "import json; from django.conf import settings as s; import os;"

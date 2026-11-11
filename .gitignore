@@ -33,3 +33,7 @@ test-results/
 
 # start.ps1 run logs
 logs/runs/
+
+# Application logs (Round 3 / G-A4): only the folder placeholder is tracked
+ai_manager/logs/*
+!ai_manager/logs/.gitkeep
