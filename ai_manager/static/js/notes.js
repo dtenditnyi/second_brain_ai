@@ -16,12 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load one note for requests originating from the file list, a wiki link, or a backlink.
     // Parameters: noteName is the vault filename without the .md suffix.
     // Returns: a promise that resolves after the page regions reflect the API result.
-    async function loadNoteArchitecture(noteName, userInitiated = true) {
-        if (!noteName) return;
+    // Round 4: a note can also be opened by its vault-relative path (opts.path).
+    async function loadNoteArchitecture(noteName, userInitiated = true, opts = {}) {
+        if (!noteName && !opts.path) return;
+        noteName = noteName || opts.path.split('/').pop().replace(/\.md$/i, '');
 
         // Highlight the selected source note before the network request completes.
         fileItems.forEach(item => {
-            if (item.getAttribute('data-filename') === noteName) {
+            const same = opts.path ? item.getAttribute('data-path') === opts.path
+                                   : item.getAttribute('data-filename') === noteName;
+            if (same) {
                 item.classList.add('text-fg', 'bg-accent/10', 'border-accent/40');
                 item.setAttribute('aria-current', 'true');
             } else {
@@ -47,20 +51,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Encode the filename because vault names may contain spaces or Unicode.
-            const response = await fetch(`/api/get-note/?name=${encodeURIComponent(noteName)}`);
+            const query = opts.path ? `path=${encodeURIComponent(opts.path)}` : `name=${encodeURIComponent(noteName)}`;
+            const response = await fetch(`/api/get-note/?${query}`);
             const data = await response.json();
 
             if (data.status === 'ok') {
                 // The API returns rendered Markdown plus backlink metadata for this note.
                 contentArea.innerHTML = `
                     <header class="mb-6 sm:mb-8 border-b border-line pb-5 sm:pb-6">
-                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-fg mb-2 tracking-tight break-words">${window.escapeHtml(noteName)}</h1>
-                        <p class="text-xs text-accent uppercase tracking-widest font-mono font-semibold">Markdown note</p>
+                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-fg mb-2 tracking-tight break-words">${window.escapeHtml(data.name || noteName)}</h1>
+                        <p class="text-xs text-accent uppercase tracking-widest font-mono font-semibold break-all">${window.escapeHtml(data.path || 'Markdown note')}</p>
+                        ${data.editable ? `
+                        <div class="flex flex-wrap gap-2 mt-4" data-note-actions data-path="${window.escapeHtml(data.path)}">
+                            <button type="button" class="btn btn-primary min-h-11" data-note-action="edit">✏️ Edit</button>
+                            <button type="button" class="btn btn-ghost min-h-11" data-note-action="rename">Rename</button>
+                            <button type="button" class="btn btn-danger min-h-11" data-note-action="delete">Delete</button>
+                        </div>` : ''}
                     </header>
                     <div class="text-soft leading-relaxed space-y-6 markdown-body">
                         ${data.html_content}
                     </div>
                 `;
+
+                currentNote = { name: data.name || noteName, path: data.path, editable: !!data.editable };
+                document.dispatchEvent(new CustomEvent('sb:note-loaded', { detail: currentNote }));
 
                 // Replace stale backlink cards so the right panel matches the new note.
                 mentionsFeed.innerHTML = '';
@@ -104,10 +118,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Explorer items are static, so bind their click handlers once at initialization.
     fileItems.forEach(item => {
         item.addEventListener('click', () => {
+            if (window.SBNotes.beforeLeave && !window.SBNotes.beforeLeave()) return;
             const targetNoteName = item.getAttribute('data-filename');
-            loadNoteArchitecture(targetNoteName);
+            loadNoteArchitecture(targetNoteName, true, { path: item.getAttribute('data-path') || undefined });
         });
     });
+
+    // Round 4: the editor (note_editor.js) re-opens the read view through this hook.
+    let currentNote = null;
+    window.SBNotes = {
+        open: (path, userInitiated = false) => loadNoteArchitecture(null, userInitiated, { path }),
+        current: () => currentNote,
+        beforeLeave: null,
+    };
+    const initialPath = new URLSearchParams(window.location.search).get('path');
+    if (initialPath) loadNoteArchitecture(null, false, { path: initialPath });
 
     // Delegate wiki-link clicks because their anchors are injected after each API call.
     contentArea.addEventListener('click', (e) => {

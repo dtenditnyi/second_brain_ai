@@ -63,7 +63,7 @@ def test_repo_clone_pull_commit_push_cycle(tmp_path, real_git):
     remote = vh.make_remote(tmp_path, files={"a.md": "one\n"})
     repo = vw.VaultRepo(tmp_path / "clone", str(remote))
     repo.pull()
-    (tmp_path / "clone" / "a.md").write_text("two\n", encoding="utf-8")
+    (tmp_path / "clone" / "a.md").write_bytes(b"two\n")  # byte-exact: autocrlf=false since B-49
     assert repo.commit(["a.md"], "edit") is True
     assert repo.commit(["a.md"], "nothing new") is False
     repo.push()
@@ -92,7 +92,7 @@ def test_push_to_empty_remote(tmp_path, real_git):
     vh.git(tmp_path, "init", "--bare", "-b", "main", str(remote))
     repo = vw.VaultRepo(tmp_path / "clone", str(remote))
     repo.pull()
-    (tmp_path / "clone" / "n.md").write_text("first\n", encoding="utf-8")
+    (tmp_path / "clone" / "n.md").write_bytes(b"first\n")
     assert repo.commit(["n.md"], "first commit")
     repo.push()
     assert vh.remote_file(remote, "n.md", tmp_path) == "first\n"

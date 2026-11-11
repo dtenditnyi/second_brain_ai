@@ -172,6 +172,17 @@ def classify_git_error(error) -> str:
     return "git"
 
 
+def _pin_autocrlf(repo):
+    """Set core.autocrlf=false in this clone only; True when it was changed."""
+    with repo.config_reader() as reader:
+        current = str(reader.get_value("core", "autocrlf", "")).lower()
+    if current == "false":
+        return False
+    with repo.config_writer() as writer:
+        writer.set_value("core", "autocrlf", "false")
+    return True
+
+
 class VaultRepo:
     """One user's local clone (a cache of the remote vault)."""
 
@@ -209,6 +220,9 @@ class VaultRepo:
                 Repo.clone_from(self.repo_url, self.local_dir, env=self.env)
             repo = Repo(self.local_dir)
             repo.remotes.origin.set_url(self.repo_url)
+            # Notes must stay byte-exact (Git for Windows defaults to autocrlf=true,
+            # which would hand the editor CRLF text and break hashes/diffs — B-49).
+            renormalize = _pin_autocrlf(repo)
             self._git("fetch", "--prune", "origin")
             remote_branches = [ref.remote_head for ref in repo.remotes.origin.refs if ref.remote_head != "HEAD"]
             if not remote_branches:          # empty remote: nothing to reset to
@@ -221,6 +235,8 @@ class VaultRepo:
             self.branch = current if current in remote_branches else (
                 "main" if "main" in remote_branches else remote_branches[0])
             self._git("checkout", "-B", self.branch, f"origin/{self.branch}")
+            if renormalize:                  # drop CRLF copies checked out earlier
+                self._git("rm", "-r", "--cached", "--quiet", "--ignore-unmatch", ".")
             self._git("reset", "--hard", f"origin/{self.branch}")
             self._git("clean", "-fd")
         self._run(run)
@@ -258,28 +274,60 @@ def vault_read(user, reader):
         return reader(repo.local_dir)
 
 
-def vault_apply(user, operation, message, retries=None):
-    """Apply ``operation(root) -> (changed_rel_paths, result)`` and push it; returns ``result``.
+def vault_apply(user, operation, message, retries=None, with_commit=False):
+    """Apply ``operation(root) -> (changed_rel_paths, result)`` and push it; returns ``result``
+    (or ``(result, commit_sha)`` with ``with_commit=True``; sha is None when nothing changed).
 
     Raises VaultError(kind=offline|permission|conflict|locked|git).
     """
     from django.conf import settings as dj_settings
     retries = getattr(dj_settings, "VAULT_PUSH_RETRIES", 4) if retries is None else retries
     repo = _user_repo(user)
+    done = (lambda result, sha=None: (result, sha)) if with_commit else (lambda result, sha=None: result)
     with vault_lock(repo.local_dir):
         for attempt in range(retries + 1):
             repo.pull()
             changed, result = operation(repo.local_dir)
             if not changed:
-                return result
+                return done(result)
             for rel in changed:
                 safe_path(repo.local_dir, rel)
             if not repo.commit(list(changed), message):
-                return result
+                return done(result)
             try:
                 repo.push()
-                return result
+                return done(result, repo.head().strip())
             except VaultError as error:
                 if error.kind != "conflict" or attempt == retries:
                     raise
         raise VaultError("conflict", "Не удалось отправить изменения: хранилище слишком часто меняется, попробуйте ещё раз.")
+
+
+def vault_revert(user, sha, retries=None):
+    """Revert one commit of the site (e.g. an applied AI batch) with a revert commit and push it.
+
+    Raises VaultError("conflict") when later edits touch the same lines (nothing is pushed then).
+    """
+    from django.conf import settings as dj_settings
+    if not re.fullmatch(r"[0-9a-f]{7,40}", str(sha or "")):
+        raise VaultError("git", "Некорректный идентификатор коммита.")
+    retries = getattr(dj_settings, "VAULT_PUSH_RETRIES", 4) if retries is None else retries
+    repo = _user_repo(user)
+    with vault_lock(repo.local_dir):
+        for attempt in range(retries + 1):
+            repo.pull()
+            try:
+                repo._run(lambda: repo._git("revert", "--no-edit", sha))
+            except VaultError as error:
+                try:
+                    repo._git("revert", "--abort")       # leave the clone clean; next pull resets anyway
+                except Exception:
+                    pass
+                raise VaultError("conflict", "Откат невозможен: эти строки уже изменены после применения.") from error
+            try:
+                repo.push()
+                return repo.head().strip()
+            except VaultError as error:
+                if error.kind != "conflict" or attempt == retries:
+                    raise
+        raise VaultError("conflict", "Не удалось отправить откат, попробуйте ещё раз.")

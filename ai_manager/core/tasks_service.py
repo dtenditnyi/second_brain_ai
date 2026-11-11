@@ -96,7 +96,7 @@ def _commit_message(ops):
 def _write(user, ops):
     """Send queued + new operations in order. Returns results for ``ops`` or None (queued offline)."""
     from .models import VaultOutbox
-    pending = list(VaultOutbox.objects.filter(user=user).order_by("id"))
+    pending = list(VaultOutbox.objects.filter(user=user, kind="tasks").order_by("id"))
     all_ops = [row.op for row in pending] + list(ops)
     try:
         results = vault_apply(user, _note_operation(user, all_ops), _commit_message(all_ops))
@@ -180,7 +180,11 @@ def _sync_now(user):
     s = _settings(user)
     repair_error = ""
     try:
-        if VaultOutbox.objects.filter(user=user).exists():
+        # Queued offline note saves first (Round 4), then queued task operations.
+        from . import notes_service
+        if not notes_service.flush_outbox(user):
+            return {"status": "offline", "error": s.tasks_sync_error}
+        if VaultOutbox.objects.filter(user=user, kind="tasks").exists():
             if _write(user, []) is None:
                 return {"status": "offline", "error": s.tasks_sync_error}
         text = _read_note(user)

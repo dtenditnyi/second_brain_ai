@@ -286,3 +286,22 @@ PROMPT_TOKEN_BUDGET_LOCAL = _env_int('PROMPT_TOKEN_BUDGET_LOCAL', 6000)
 TASKS_NOTE_PATH = os.getenv('TASKS_NOTE_PATH') or '01 - Projects/🎯 Цели и планы/Задачи.md'
 TASKS_SYNC_INTERVAL = _env_int('TASKS_SYNC_INTERVAL', 60)
 VAULT_PUSH_RETRIES = _env_int('VAULT_PUSH_RETRIES', 4)
+
+# --- Round 4: notes editor, AI agent, Claude, REST API -----------------------
+# Claude (Anthropic API). Without a key the provider is unavailable in Settings.
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY') or ''
+ANTHROPIC_MODEL = os.getenv('ANTHROPIC_MODEL') or 'claude-haiku-5-5'
+# Agent: Gemini model with a large daily limit; tool-step and token limits per request.
+GEMINI_MODEL_AGENT = os.getenv('GEMINI_MODEL_AGENT') or GEMINI_MODEL_DEFAULT
+AGENT_MAX_STEPS = _env_int('AGENT_MAX_STEPS', 8)
+AGENT_TOKEN_BUDGET = _env_int('AGENT_TOKEN_BUDGET', 60000)
+# Ollama models that support tool calling (prefix match); others cannot run the agent.
+OLLAMA_TOOL_MODELS = [m.strip() for m in (os.getenv('OLLAMA_TOOL_MODELS') or
+                      'llama3.1,llama3.2,llama3.3,qwen2.5,qwen3,mistral-nemo,mistral-small,command-r').split(',') if m.strip()]
+# Optional vault note with the owner's rules for the agent (added to the built-in rules).
+VAULT_RULES_NOTE = os.getenv('VAULT_RULES_NOTE') or ''
+# Quick capture target ("inbox") and the weekly notes root.
+CAPTURE_INBOX_NOTE = os.getenv('CAPTURE_INBOX_NOTE') or '05 - Fleeting/📥 Входящие.md'
+WEEKLY_ROOT = os.getenv('WEEKLY_ROOT') or '06 - Daily'
+# REST API: requests per minute per token.
+API_RATE_LIMIT_PER_MINUTE = _env_int('API_RATE_LIMIT_PER_MINUTE', 60)

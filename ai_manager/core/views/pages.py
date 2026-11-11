@@ -102,17 +102,22 @@ def notes_view(request):
     if settings.github_repo_url and not os.path.exists(git_folder):
         sync_obsidian_repo(settings.github_repo_url, settings.github_token, paths["notes_dir"])
 
-    synced_notes = []
+    # Round 4: each entry carries its vault-relative path (the editor works by path).
+    entries = []
     if os.path.exists(paths["notes_dir"]):
         for root, dirs, files in os.walk(paths["notes_dir"]):
-            for file in files:
+            dirs[:] = sorted(d for d in dirs if d not in (".git", ".obsidian", ".trash"))
+            for file in sorted(files):
                 if file.endswith(".md"):
-                    synced_notes.append(file.replace(".md", ""))
-                    
+                    rel = os.path.relpath(os.path.join(root, file), paths["notes_dir"]).replace(os.sep, "/")
+                    entries.append({"name": file[:-3], "path": rel})
+
     return render(request, 'notes.html', {
-        'active_page': 'notes', 
+        'active_page': 'notes',
         'config': get_user_config(request.user),
-        'user_notes': synced_notes
+        'user_notes': [e["name"] for e in entries],
+        'note_entries': entries,
+        'vault_editable': bool(settings.github_repo_url),
     })
 
 @login_required(login_url='login')

@@ -113,3 +113,7 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 ### 2026-11-11 20:10 — Round 4 / goals — GOALS.md + acceptance tests
 - Branch `feature/round4` from `feature/round3` (0885f78). `docs/audit/round4/GOALS.md` (D1–D6, E1–E6, API1–API6), `tests/acceptance/test_round4.py` (77 tests, scripted fake AI provider, local git repos).
 - First run: 77 xfailed (`docs/audit/round4/acceptance-start.txt`). Modules were drafted in the session scratchpad during the Round 3 verification (notes_service, ai_providers, agent, api_v1, weekly) — not yet in the repo.
+
+### 2026-11-11 — Round 4 / part D — notes editor
+- Editor (CM6 bundle, preview, `[[` autocomplete, Ctrl+S/Esc, phone tabs), create from template, save with conflicts + offline outbox, rename with link update (one commit), delete, per-note re-index. B-49 (autocrlf), B-50 (e2e serial requests).
+- Tests: D acceptance 26 + e2e/responsive 10 passed; fast suite green.

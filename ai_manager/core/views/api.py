@@ -296,19 +296,31 @@ def api_get_note_content(request):
     # Returns: rendered HTML and backlink snippets, or a JSON error response.
     from ..paths import get_user_paths
     note_name = request.GET.get('name')
-    if not note_name:
+    note_path = request.GET.get('path')
+    if not note_name and not note_path:
         return JsonResponse({'status': 'error', 'msg': 'No note name provided.'}, status=400)
 
     paths = get_user_paths(request.user)
-    target_file_name = f"{note_name}.md"
     current_file_path = None
-    
-    if os.path.exists(paths["notes_dir"]):
-        for root, dirs, files in os.walk(paths["notes_dir"]):
-            if target_file_name in files:
-                current_file_path = os.path.join(root, target_file_name)
-                break
-                
+    if note_path:
+        # Round 4: open by vault-relative path (validated: no escape, .md only).
+        try:
+            candidate = safe_path(paths["notes_dir"], note_path)
+        except UnsafePath:
+            candidate = None
+        if candidate is not None and candidate.suffix.lower() == ".md" and candidate.is_file():
+            current_file_path = str(candidate)
+            note_name = candidate.stem
+    else:
+        target_file_name = f"{note_name}.md"
+        if os.path.exists(paths["notes_dir"]):
+            for root, dirs, files in os.walk(paths["notes_dir"]):
+                dirs[:] = sorted(d for d in dirs if d not in (".git", ".obsidian", ".trash"))
+                if target_file_name in files:
+                    current_file_path = os.path.join(root, target_file_name)
+                    break
+    target_file_name = f"{note_name}.md"
+
     if not current_file_path:
         return JsonResponse({'status': 'error', 'msg': 'Note not found in the secure vault.'}, status=404)
 
@@ -341,7 +353,10 @@ def api_get_note_content(request):
             return f'<a href="#" class="wiki-link text-[var(--active-accent)] border-b border-dashed border-[var(--active-accent)] hover:text-white transition-colors" data-note="{escape(note_target.strip())}">{escape(note_display.strip())}</a>'
 
         html_content = markdown.markdown(re.sub(r'\[\[(.*?)\]\]', replace_wiki_links, raw_markdown), extensions=['fenced_code', 'tables'])
-        return JsonResponse({'status': 'ok', 'html_content': html_content, 'backlinks': linked_mentions})
+        rel_path = os.path.relpath(current_file_path, paths["notes_dir"]).replace(os.sep, "/")
+        return JsonResponse({'status': 'ok', 'html_content': html_content, 'backlinks': linked_mentions,
+                             'name': note_name, 'path': rel_path,
+                             'editable': bool(get_user_settings(request.user).github_repo_url)})
     except Exception as e:
         return JsonResponse({'status': 'error', 'msg': str(e)}, status=500)
 

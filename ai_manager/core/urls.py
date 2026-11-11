@@ -1,6 +1,7 @@
 """Named URL routes for browser pages, authenticated APIs, and superuser tools."""
 from django.urls import path
-from . import views 
+from . import views
+from .views import notes_api
 
 urlpatterns = [
     # Public authentication pages manage registration, login, and session exit.
@@ -26,6 +27,15 @@ urlpatterns = [
     path('api/update-task/', views.api_update_task_status, name='api_update_task'),
     path('api/delete-task/', views.api_delete_task, name='api_delete_task'),
     path('api/tasks/sync/', views.api_tasks_sync, name='api_tasks_sync'),
+
+    # Note editor (Round 4): read raw text + hash, save with conflict check, create/delete/rename.
+    path('api/notes/names/', notes_api.notes_names, name='api_notes_names'),
+    path('api/notes/meta/', notes_api.notes_meta, name='api_notes_meta'),
+    path('api/notes/raw/', notes_api.notes_raw, name='api_notes_raw'),
+    path('api/notes/save/', notes_api.notes_save, name='api_notes_save'),
+    path('api/notes/create/', notes_api.notes_create, name='api_notes_create'),
+    path('api/notes/delete/', notes_api.notes_delete, name='api_notes_delete'),
+    path('api/notes/rename/', notes_api.notes_rename, name='api_notes_rename'),
 
     # Liveness/readiness probe for Docker (no login, no AI, checks the DB).
     path('healthz/', views.healthz, name='healthz'),

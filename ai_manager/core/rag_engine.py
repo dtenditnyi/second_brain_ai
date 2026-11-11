@@ -428,3 +428,34 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
     except Exception as e:
         logger.error("RAG request failed: %s.", type(e).__name__)
         return f"System Error: {str(e)}"
+
+
+def reindex_notes(user, changed=(), removed=()):
+    """Re-index only these vault notes in the user's Chroma collection (Round 4 / G-D5).
+
+    ``changed``/``removed`` are vault-relative paths. Vectors of every listed note are
+    deleted (matched by file name + path metadata), then changed notes that still exist
+    are read and inserted again. Used after edits made by the site, the agent or the API.
+    """
+    from pathlib import Path
+    paths = get_user_paths(user)
+    root = Path(paths["notes_dir"])
+    targets = [p for p in list(changed) + list(removed) if str(p).lower().endswith(".md")]
+    if not targets:
+        return 0
+    ensure_embed_model()
+    db = chromadb.PersistentClient(path=DB_DIR)
+    collection = db.get_or_create_collection(paths["collection_name"])
+    for rel in targets:
+        full = (root / rel)
+        for candidate in {str(full), str(full.resolve()), os.path.abspath(str(full))}:
+            collection.delete(where={"file_path": candidate})
+    existing = [str(root / rel) for rel in changed if (root / rel).is_file()]
+    if existing:
+        vector_store = ChromaVectorStore(chroma_collection=collection)
+        index = VectorStoreIndex.from_vector_store(vector_store)
+        for document in SimpleDirectoryReader(input_files=existing).load_data():
+            index.insert(document)
+    _user_chat_engines.pop(user.id, None)       # cached session sees the new vectors on next question
+    logger.info("Re-indexed notes: changed=%s removed=%s.", len(existing), len(list(removed)))
+    return len(existing)

@@ -75,14 +75,12 @@ class ScriptedProvider:
 
 # =========================================================================== D — editor
 
-@goal("G-D1")
 def test_d1_editor_assets_local():
     assert (APP / "static" / "vendor" / "sb-editor.js").is_file()
     html = (APP / "templates" / "notes.html").read_text(encoding="utf-8")
     assert "vendor/sb-editor.js" in html and "js/note_editor.js" in html and "cdn" not in html.lower()
 
 
-@goal("G-D1")
 def test_d1_names_endpoint_lists_names_and_aliases(vclient):
     data = vclient.get("/api/notes/names/").json()
     by = {n["name"]: n for n in data["notes"]}
@@ -90,7 +88,6 @@ def test_d1_names_endpoint_lists_names_and_aliases(vclient):
     assert not any(n["path"].startswith(".obsidian") for n in data["notes"])
 
 
-@goal("G-D1")
 def test_d1_raw_note_has_content_and_hash(vclient):
     data = vclient.get("/api/notes/raw/", {"path": NOTE}).json()
     assert data["content"] == vh.FIXTURE_VAULT[NOTE]
@@ -98,7 +95,6 @@ def test_d1_raw_note_has_content_and_hash(vclient):
 
 
 @pytest.mark.e2e
-@goal("G-D1")
 def test_d1_edit_preview_save_e2e(page, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     from tests.e2e.conftest import login
     remote = vh.make_remote(tmp_path)
@@ -126,7 +122,6 @@ def test_d1_edit_preview_save_e2e(page, live_server, e2e_user, tmp_path, real_gi
 
 
 @pytest.mark.e2e
-@goal("G-D1")
 def test_d1_phone_tabs_e2e(browser, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     from tests.e2e.conftest import login
     remote = vh.make_remote(tmp_path)
@@ -150,7 +145,6 @@ def test_d1_phone_tabs_e2e(browser, live_server, e2e_user, tmp_path, real_git, i
 
 # --------------------------------------------------------------------------- D2 create
 
-@goal("G-D2")
 def test_d2_create_from_template_substitutes_dates_only(vuser, remote, tmp_path):
     from core import notes_service
     phone = vh.clone(remote, tmp_path / "phone")
@@ -165,7 +159,6 @@ def test_d2_create_from_template_substitutes_dates_only(vuser, remote, tmp_path)
     assert vh.remote_log(remote)[0][1] == f"notes: create {path} via site"
 
 
-@goal("G-D2")
 def test_d2_create_without_template_has_frontmatter_and_moc(vuser, remote, tmp_path):
     from core import notes_service
     path = notes_service.create_note(vuser, folder="04 - Permanent", title="Закон Ома", tags=["physics"],
@@ -175,7 +168,6 @@ def test_d2_create_without_template_has_frontmatter_and_moc(vuser, remote, tmp_p
     assert text.rstrip().endswith("🔗 [[Университет]]")
 
 
-@goal("G-D2")
 @pytest.mark.parametrize("folder,title", [("..", "x"), (".obsidian", "x"), ("05 - Fleeting", "a/b"),
                                           ("05 - Fleeting", ""), ("00 - Maps of content", "Университет")])
 def test_d2_create_rejects_existing_and_bad_paths(vuser, folder, title):
@@ -184,7 +176,6 @@ def test_d2_create_rejects_existing_and_bad_paths(vuser, folder, title):
         notes_service.create_note(vuser, folder=folder, title=title)
 
 
-@goal("G-D2")
 def test_d2_meta_lists_folders_templates_mocs(vclient):
     meta = vclient.get("/api/notes/meta/").json()
     assert "01 - Projects/🚀 Активные" in meta["folders"] and ".obsidian" not in meta["folders"]
@@ -193,7 +184,6 @@ def test_d2_meta_lists_folders_templates_mocs(vclient):
 
 # --------------------------------------------------------------------------- D3 save + conflicts
 
-@goal("G-D3")
 def test_d3_save_commits_with_message(vclient, remote, tmp_path):
     raw = vclient.get("/api/notes/raw/", {"path": NOTE}).json()
     r = post(vclient, "/api/notes/save/", {"path": NOTE, "content": raw["content"] + "\nновая строка\n", "base_sha": raw["sha"]})
@@ -202,7 +192,6 @@ def test_d3_save_commits_with_message(vclient, remote, tmp_path):
     assert vh.remote_log(remote)[0] == ["Second Brain", f"notes: edit {NOTE} via site"]
 
 
-@goal("G-D3")
 def test_d3_conflict_returns_diff_and_keeps_remote(vclient, remote, tmp_path):
     raw = vclient.get("/api/notes/raw/", {"path": NOTE}).json()
     phone = vh.clone(remote, tmp_path / "phone")
@@ -214,7 +203,6 @@ def test_d3_conflict_returns_diff_and_keeps_remote(vclient, remote, tmp_path):
     assert "моё" not in vh.remote_file(remote, NOTE, tmp_path)
 
 
-@goal("G-D3")
 def test_d3_force_my_version(vclient, remote, tmp_path):
     raw = vclient.get("/api/notes/raw/", {"path": NOTE}).json()
     phone = vh.clone(remote, tmp_path / "phone")
@@ -225,7 +213,6 @@ def test_d3_force_my_version(vclient, remote, tmp_path):
     assert r.status_code == 200 and vh.remote_file(remote, NOTE, tmp_path) == "моя версия\n"
 
 
-@goal("G-D3")
 def test_d3_offline_queue_and_conflict_copy(vuser, remote, tmp_path, monkeypatch):
     from core import notes_service, tasks_service, vault_writer
     raw = notes_service.read_note(vuser, NOTE)
@@ -245,7 +232,6 @@ def test_d3_offline_queue_and_conflict_copy(vuser, remote, tmp_path, monkeypatch
 
 
 @pytest.mark.e2e
-@goal("G-D3")
 def test_d3_conflict_dialog_e2e(page, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     from tests.e2e.conftest import login
     remote = vh.make_remote(tmp_path)
@@ -272,7 +258,6 @@ def test_d3_conflict_dialog_e2e(page, live_server, e2e_user, tmp_path, real_git,
 
 
 @pytest.mark.e2e
-@goal("G-D3")
 def test_d3_draft_autosave_e2e(page, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     from tests.e2e.conftest import login
     remote = vh.make_remote(tmp_path)
@@ -293,7 +278,6 @@ def test_d3_draft_autosave_e2e(page, live_server, e2e_user, tmp_path, real_git, 
 
 # --------------------------------------------------------------------------- D4 delete / rename
 
-@goal("G-D4")
 def test_d4_rename_updates_links_in_one_commit(vuser, remote, tmp_path):
     from core import notes_service
     phone = vh.clone(remote, tmp_path / "phone")
@@ -309,7 +293,6 @@ def test_d4_rename_updates_links_in_one_commit(vuser, remote, tmp_path):
     assert "05 - Fleeting/ссылки.md" in result["updated"]
 
 
-@goal("G-D4")
 def test_d4_rename_preview_lists_files(vclient, remote, tmp_path):
     before = vh.remote_log(remote)
     r = post(vclient, "/api/notes/rename/", {"path": "00 - Maps of content/Университет.md",
@@ -318,7 +301,6 @@ def test_d4_rename_preview_lists_files(vclient, remote, tmp_path):
     assert vh.remote_log(remote) == before
 
 
-@goal("G-D4")
 def test_d4_delete(vclient, remote, tmp_path):
     r = post(vclient, "/api/notes/delete/", {"path": "05 - Fleeting/../00 - Maps of content/Университет.md"})
     assert r.status_code == 400
@@ -328,7 +310,6 @@ def test_d4_delete(vclient, remote, tmp_path):
     assert "Университет.md" not in files and vh.remote_log(remote)[0][1].startswith("notes: delete")
 
 
-@goal("G-D4")
 @pytest.mark.parametrize("bad", [".obsidian/app.json", ".git/config", "../outside.md", "99 - Cache/img.png",
                                  "C:/x.md", "notes/.GIT/x.md"])
 def test_d4_forbidden_paths(vclient, bad):
@@ -340,7 +321,6 @@ def test_d4_forbidden_paths(vclient, bad):
 
 
 @pytest.mark.e2e
-@goal("G-D4")
 def test_d4_delete_rename_confirm_e2e(page, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     from tests.e2e.conftest import login
     remote = vh.make_remote(tmp_path)
@@ -364,7 +344,6 @@ def test_d4_delete_rename_confirm_e2e(page, live_server, e2e_user, tmp_path, rea
 
 # --------------------------------------------------------------------------- D5 / D6
 
-@goal("G-D5")
 def test_d5_reindex_only_changed_note(vuser, monkeypatch):
     from core import notes_service, rag_engine
     calls = []
@@ -376,7 +355,6 @@ def test_d5_reindex_only_changed_note(vuser, monkeypatch):
     assert "00 - Maps of content/Учёба.md" in calls[1][0] and calls[1][1] == ["00 - Maps of content/Университет.md"]
 
 
-@goal("G-D5")
 def test_d5_reindex_updates_chroma_for_one_file(vuser, isolated_vault, note_writer):
     """Real LlamaIndex + Chroma (fake embeddings): only the given file's vectors change."""
     from core import rag_engine
@@ -395,7 +373,6 @@ def test_d5_reindex_updates_chroma_for_one_file(vuser, isolated_vault, note_writ
 
 
 @pytest.mark.e2e
-@goal("G-D6")
 def test_d6_preview_xss_e2e(page, live_server, e2e_user, tmp_path, real_git, isolated_vault):
     from tests.e2e.conftest import login
     remote = vh.make_remote(tmp_path, files={"x.md": "start\n"})
@@ -414,7 +391,6 @@ def test_d6_preview_xss_e2e(page, live_server, e2e_user, tmp_path, real_git, iso
 
 @pytest.mark.e2e
 @pytest.mark.responsive
-@goal("G-D1")
 @pytest.mark.parametrize("width,height", [(320, 568), (390, 844), (768, 1024), (1440, 900)])
 def test_d1_editor_responsive(browser, live_server, e2e_user, tmp_path, real_git, isolated_vault, width, height):
     from tests.e2e.conftest import login
@@ -811,7 +787,6 @@ def test_api1_token_lifecycle(vclient, vuser):
     assert api(c, "get", "/api/v1/sync/", raw).status_code == 401
 
 
-@goal("G-API1")
 def test_api1_only_hash_stored(vuser):
     from core.models import ApiToken
     obj, raw = ApiToken.create_for(vuser, name="x", scopes=["read"])

@@ -37,3 +37,6 @@ SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_HSTS_SECONDS = 0
+
+# live_server + in-memory SQLite: one request at a time (tests/serial_middleware.py).
+MIDDLEWARE = ['tests.serial_middleware.SerialRequestsMiddleware', *MIDDLEWARE]  # noqa: F405

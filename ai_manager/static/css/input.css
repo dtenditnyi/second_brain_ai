@@ -765,3 +765,37 @@ body.scroll-locked .scroll-container {
 /* Core Matrix console states (R3 / G-A3): theme-aware, no hard-coded colours. */
 .console .btn.is-success { background: var(--success); border-color: var(--success); color: var(--bg-base); }
 .console .btn.is-error { background: var(--danger); border-color: var(--danger); color: var(--bg-base); }
+
+/* Note editor (R4 / G-D1): CodeMirror + live preview side by side from lg, tabs on phones. */
+.note-editor-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; min-height: 0; }
+@media (min-width: 1024px) { .note-editor-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.note-editor-pane {
+    min-width: 0;
+    height: clamp(320px, 62vh, 900px);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--bg-base) 55%, transparent);
+    overflow: hidden;
+}
+.note-editor-pane .cm-editor { height: 100%; }
+.note-editor-pane .cm-editor.cm-focused { outline: 2px solid color-mix(in srgb, var(--active-accent) 55%, transparent); outline-offset: -2px; }
+.note-preview-pane { min-width: 0; height: clamp(320px, 62vh, 900px); overflow-y: auto; padding: 0.75rem 1rem;
+    border: 1px solid var(--border-glass); border-radius: var(--radius-sm); }
+@media (max-width: 1023.98px) {
+    .note-editor-grid[data-tab="text"] .note-preview-pane,
+    .note-editor-grid[data-tab="preview"] .note-editor-pane { display: none; }
+}
+.note-tabs { display: flex; gap: 0.25rem; padding: 0.25rem; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); }
+.note-tabs [role="tab"] { flex: 1; min-height: 2.75rem; border-radius: calc(var(--radius-sm) - 2px); font-weight: 600; font-size: 0.875rem; color: var(--text-secondary); }
+.note-tabs [role="tab"][aria-selected="true"] { background: color-mix(in srgb, var(--active-accent) 16%, transparent); color: var(--text-primary); }
+@media (min-width: 1024px) { .note-tabs { display: none; } }
+.note-props { font-size: 0.75rem; color: var(--text-muted); border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 0.4rem 0.75rem; }
+.note-props > summary { cursor: pointer; font-weight: 600; }
+.note-props pre { white-space: pre-wrap; word-break: break-word; margin-top: 0.35rem; }
+
+/* Unified diffs (conflict dialog, agent cards). */
+.diff-view { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: color-mix(in srgb, var(--bg-base) 60%, transparent); }
+.diff-view .diff-add { display: block; color: var(--success); background: color-mix(in srgb, var(--success) 10%, transparent); }
+.diff-view .diff-del { display: block; color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.diff-view .diff-hunk { display: block; color: var(--info); }
+.diff-view .diff-ctx { display: block; color: var(--text-secondary); }

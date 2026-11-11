@@ -53,7 +53,8 @@ FIXTURE_VAULT = {
 
 
 def git(cwd, *args, check=True):
-    return subprocess.run(["git", *args], cwd=cwd, env={**os.environ, **GIT_ENV},
+    # quotepath=off: non-ASCII paths (Cyrillic note names) come back readable, not octal-escaped.
+    return subprocess.run(["git", "-c", "core.quotepath=off", *args], cwd=cwd, env={**os.environ, **GIT_ENV},
                            capture_output=True, text=True, encoding="utf-8", check=check)
 
 

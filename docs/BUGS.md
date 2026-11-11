@@ -161,3 +161,5 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 - B-40: DOMPurify hook removes non-local `src` while sanitising (inert document → no request); a plain link is shown instead.
 - B-41: sub-items are deleted with their parent; fences close only with the same char and ≥ length; frontmatter skipped; "protected branch"/GH006 → permission.
 - B-42/B-43: see table.
+| B-49 | data (R4 / D) | Git for Windows `core.autocrlf=true` gave the editor CRLF text → hash/diff mismatch and CRLF commits from the site | `test_round4::test_d1_raw_note_has_content_and_hash`, `test_vault_writer::test_repo_clone_pull_commit_push_cycle` (byte-exact) | FIXED (R4 part D) |
+| B-50 | tests (R4 / D) | e2e: live_server shares one in-memory SQLite connection; parallel requests (note + editor names) failed with `InterfaceError` | test-only `tests/serial_middleware.py` in `settings_test`; D e2e stable | FIXED (R4 part D) |

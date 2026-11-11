@@ -135,3 +135,8 @@ Each entry: context · options · chosen · why · how to roll back.
 - Tags from Obsidian that are not in the allowed list are kept on edit; the allowed list applies to tags the site adds (B-35).
 - Scheduler: one long-lived `sync_tasks --loop` process instead of a new process per minute (B-38).
 - (after VERIFY-2) The duplicate-ID repair at sync time is best effort: a read-only token or git error keeps the error message but still rebuilds the cache (B-44). Frontmatter is recognised only when the opening `---` is closed (B-45). Test change: `test_b2_scripts_strict_mode_and_bash_syntax` now accepts `set -Eeuo pipefail` (strictly stronger than the required `set -euo pipefail`; `-E` was needed for B-46).
+
+## D25. Note editor (R4 / G-D1…D5)
+- Editor: CodeMirror 6 bundled once into `static/vendor/sb-editor.js` (no CDN); preview uses the same sanitising renderer as chat.
+- Templates: Templater is not executed; only `tp.date.now("…")` (YYYY/YY/MM/M/DD/D) and `tp.file.title` are substituted, the rest stays as text.
+- Attachments (non-`.md`) are read-only from the site; offline saves go to `VaultOutbox`, a conflicting flush writes a "(конфликт …)" copy (nothing lost).

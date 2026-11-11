@@ -76,6 +76,12 @@ class UserSettings(models.Model):
     tasks_last_sync = models.DateTimeField(null=True, blank=True)
     tasks_sync_error = models.TextField(blank=True, default="")
 
+    # Round 4: cloud provider for chat/agent (Gemini or Claude), Claude model, agent option.
+    CLOUD_PROVIDER_CHOICES = [('gemini', 'Gemini'), ('claude', 'Claude')]
+    cloud_provider = models.CharField(max_length=20, choices=CLOUD_PROVIDER_CHOICES, default='gemini')
+    claude_model = models.CharField(max_length=40, blank=True, default='')
+    agent_auto_apply_additions = models.BooleanField(default=False)
+
     def __str__(self):
         # Provide a concise identifier for Django admin and diagnostic output.
         return f"Settings for {self.user.username}"
@@ -135,6 +141,83 @@ class VaultOutbox(models.Model):
 
     def __str__(self):
         return f"{self.user.username}: {self.kind} {self.op.get('op')}"
+
+
+class AgentBatch(models.Model):
+    """Changes proposed by the AI agent; applied only after confirmation (Round 4 / G-E3)."""
+    STATUS_CHOICES = [('pending', 'ожидает'), ('partial', 'применён частично'), ('applied', 'применён'),
+                      ('rejected', 'отклонён'), ('reverted', 'откачен')]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='agent_batches')
+    request = models.CharField(max_length=500)
+    provider = models.CharField(max_length=60, blank=True, default='')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    changes = models.JSONField(default=list)        # [{kind, path, diff, after, pending, op}]
+    commits = models.JSONField(default=list)        # shas of the "ai: …" commits
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-id']
+
+
+class ApiToken(models.Model):
+    """Personal REST API token (Round 4 / G-API1). Only the SHA-256 hash is stored."""
+    SCOPES = ('read', 'write', 'ai')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_tokens')
+    name = models.CharField(max_length=60)
+    prefix = models.CharField(max_length=12)
+    token_hash = models.CharField(max_length=64, unique=True)
+    scopes = models.JSONField(default=list)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-id']
+
+    @classmethod
+    def create_for(cls, user, name, scopes, expires_at=None):
+        import hashlib
+        import secrets
+        scopes = [s for s in cls.SCOPES if s in (scopes or [])]
+        if not scopes:
+            raise ValueError("Нужно хотя бы одно право: read, write или ai.")
+        raw = "sb_" + secrets.token_urlsafe(32)
+        obj = cls.objects.create(user=user, name=str(name or "token")[:60], prefix=raw[:10],
+                                 token_hash=hashlib.sha256(raw.encode()).hexdigest(), scopes=scopes, expires_at=expires_at)
+        return obj, raw
+
+    @classmethod
+    def authenticate(cls, raw):
+        import hashlib
+        from django.utils import timezone
+        if not raw or not str(raw).startswith("sb_"):
+            return None
+        token = cls.objects.select_related('user').filter(
+            token_hash=hashlib.sha256(str(raw).encode()).hexdigest(), revoked_at__isnull=True).first()
+        if token is None or (token.expires_at and token.expires_at <= timezone.now()) or not token.user.is_active:
+            return None
+        return token
+
+    def touch(self):
+        from django.utils import timezone
+        ApiToken.objects.filter(pk=self.pk).update(last_used_at=timezone.now())
+
+    @property
+    def active(self):
+        from django.utils import timezone
+        return self.revoked_at is None and (self.expires_at is None or self.expires_at > timezone.now())
+
+
+class ApiCallLog(models.Model):
+    """API call journal without bodies or note contents (also used for the rate limit)."""
+    token = models.ForeignKey(ApiToken, on_delete=models.CASCADE, related_name='calls')
+    method = models.CharField(max_length=10)
+    path = models.CharField(max_length=200)
+    status = models.IntegerField()
+    duration_ms = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
 
 class ChatMessage(models.Model):

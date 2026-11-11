@@ -1,7 +1,7 @@
 # STATUS
 
-- Rounds 1–2: DONE (merged into `main` as 6ed60c4).
-- **Round 3 = DONE** (`feature/round3`, pushed): all goals, no xfail, 825 passed / 1 skipped, two verifier rounds (`docs/audit/round3/VERIFY-1.md`, `VERIFY-2.md`), REPORT "Round 3".
-- **Current: Round 4** (branch `feature/round4` from `feature/round3`). Goals: `docs/audit/round4/GOALS.md`.
-- Done: Round 4 acceptance tests (77 xfail). In progress: part D (editor) → E (agent, Claude) → API.
-- **Следующий шаг:** commit Round 4 GOALS + acceptance tests (all xfail), acceptance-start.txt; then implement D (notes_service drafted in the session scratchpad r4/).
+- Rounds 1–3: DONE (Round 3 on `feature/round3`, 825 passed).
+- **Current: Round 4** (`feature/round4`). Method: `docs/audit/PROMPT_LEAN.md`. Goals: `docs/audit/round4/GOALS.md`.
+- Done: acceptance tests; **part D (editor)** — D xfail removed, fast suite green.
+- Next: part E (`core/ai_providers.py`, `core/agent.py`, agent UI) → part API (Link2Note contract, PROMPT_LEAN §8) → end of round.
+- **Следующий шаг:** part E — read acceptance tests `test_e*` in `tests/acceptance/test_round4.py` (lines ~440–785), implement providers + agent.
