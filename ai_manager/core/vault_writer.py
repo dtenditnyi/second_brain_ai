@@ -31,6 +31,7 @@ AUTHOR_NAME = "Second Brain"
 AUTHOR_EMAIL = "second-brain@localhost"
 FORBIDDEN_PARTS = {".git", ".obsidian", ".trash"}
 _DRIVE_RE = re.compile(r"^[A-Za-z]:")
+_RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
 
 PERMISSION_HINT = ("GitHub отклонил запись: у токена нет права записи в репозиторий хранилища. "
                    "Создайте fine-grained PAT с доступом «Contents: Read and write» и сохраните его в Настройках.")
@@ -61,19 +62,30 @@ def safe_path(root, rel) -> Path:
         raise UnsafePath("Путь указывает на папку, а не на файл.")
     if rel.startswith(("/", "\\")) or _DRIVE_RE.match(rel) or os.path.isabs(rel):
         raise UnsafePath("Абсолютные пути запрещены.")
-    parts = PurePosixPath(rel.replace("\\", "/")).parts
-    if any(part == ".." for part in parts) or ".." in rel.replace("\\", "/").split("/"):
+    raw_parts = rel.replace("\\", "/").split("/")
+    if ".." in raw_parts:
         raise UnsafePath("Переход вверх по папкам («..») запрещён.")
-    if any(part in FORBIDDEN_PARTS for part in parts):
-        raise UnsafePath("Служебные папки (.git, .obsidian) изменять нельзя.")
+    if ":" in rel or any(ord(ch) < 32 for ch in rel):
+        raise UnsafePath("Недопустимые символы в пути (':' или управляющие символы).")
+    parts = PurePosixPath(rel.replace("\\", "/")).parts
+    for part in parts:
+        # Windows ignores trailing dots/spaces and letter case: ".GIT." is ".git" (B-36).
+        if part != part.rstrip(" .") and part not in (".",):
+            raise UnsafePath("Имена файлов и папок не могут заканчиваться точкой или пробелом.")
+        if part.casefold() in FORBIDDEN_PARTS:
+            raise UnsafePath("Служебные папки (.git, .obsidian) изменять нельзя.")
+        if part.split(".")[0].upper() in _RESERVED_NAMES:
+            raise UnsafePath("Зарезервированное имя Windows (CON, NUL, COM1…) недопустимо.")
     root_resolved = Path(root).resolve()
     target = (root_resolved / Path(*parts)).resolve()
     try:
-        target.relative_to(root_resolved)
+        inside = target.relative_to(root_resolved)
     except ValueError:
         raise UnsafePath("Путь ведёт за пределы хранилища (символическая ссылка?).") from None
     if target == root_resolved:
         raise UnsafePath("Путь указывает на корень хранилища.")
+    if any(part.casefold().rstrip(" .") in FORBIDDEN_PARTS for part in inside.parts):
+        raise UnsafePath("Служебные папки (.git, .obsidian) изменять нельзя.")
     return target
 
 
@@ -148,6 +160,8 @@ def classify_git_error(error) -> str:
     if any(s in text for s in ("[rejected]", "fetch first", "non-fast-forward", "failed to push some refs",
                                "updates were rejected", "cannot lock ref", "stale info")):
         return "conflict"
+    if any(s in text for s in ("protected branch", "gh006", "pre-receive hook declined")):
+        return "permission"   # retrying cannot help (B-41)
     if any(s in text for s in ("403", "permission to", "permission denied", "authentication failed",
                                "write access", "access denied", "could not read username", "invalid username",
                                "the requested url returned error: 401")):
@@ -229,7 +243,7 @@ class VaultRepo:
 
 def _user_repo(user):
     from .models import get_user_settings
-    from .rag_engine import get_user_paths
+    from .paths import get_user_paths
     settings = get_user_settings(user)
     if not settings.github_repo_url:
         raise VaultError("git", "Хранилище не подключено: укажите репозиторий GitHub в Настройках.")

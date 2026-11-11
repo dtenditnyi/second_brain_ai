@@ -169,3 +169,37 @@ Logs: `logs/runs/run_YYYY-MM-DD_HH-mm-ss.log` (last 30 kept) and `logs/runs/hist
 
 ## R2.7 Commits (Round 2)
 758145b Q13 PAT not in .git/config · 2cb8e41 Q5 remove app_config.json · 5a76f6a Q11 + B-26 Core Matrix self-protection · c52427f Q1/Q8/Q9 DEBUG, 404/500, AI config · 4a751f6 Q2/Q3/Q6/Q7/Q12/Q14 + B-14 + Gemini chain · e3dcb36 design system + Round 2 UI · 80bf980 launcher, .env.example, README/CLAUDE.md · 8bcb359 retry sync after empty index · 49ee379 verifier findings · d0c3234 docs + screenshots · 1afdf64 final-audit findings · (last commit: final docs)
+
+---
+
+# Round 3 — Markdown in chat, Core Matrix polish, tasks in an Obsidian note, home-server production
+
+Branch `feature/round3` (from `main` after merging `feature/audit`, 6ed60c4). Task: `docs/audit/PROMPT_ROUNDS_3-5.md` → Round 3. Goals and criteria: `docs/audit/round3/GOALS.md`.
+
+## R3.1 What was done
+- **A1 Markdown in AI answers** (chat + status report): marked + DOMPurify + highlight.js, served locally from `static/vendor/`. Supports headings, lists, tables, code with highlighting and a "Copy" button, quotes, checkboxes and callouts. `[[wiki-links]]` open the note, and external links use `noopener`. Raw HTML from the model is shown as text (D20). The history and new answers use the same renderer.
+- **A2/A3 Core Matrix**: cards up to 1279 px (two columns on tablets), a table from 1280 px. It follows the operator's theme and accent through the design system, and contrast passes AA in both themes.
+- **A4 Logs**: removed from git (`logs/.gitkeep`), size rotation (5 MB × 5), `LOG_DIR`.
+- **C Tasks**: all tasks now live in **one Obsidian note** (`01 - Projects/🎯 Цели и планы/Задачи.md` by default, configurable per user). Format: `docs/TASKS_FORMAT.md` (Tasks/Dataview emoji, stable `🆔`).
+  - Parser: lossless (byte-for-byte round trip, property tests).
+  - Writing: one path for every write — lock, then pull, then the operation, then commit as "Second Brain", then push. A rejected push re-applies the *operation*, so nothing is lost.
+  - Offline: changes go to an outbox and the task shows as "не синхронизировано".
+  - Commands: `sync_tasks` and `export_tasks_to_note` (dry run, idempotent).
+  - Tasks UI: edit, delete with confirmation, sync status, Refresh button.
+  - Users without a vault keep database tasks. Old database tasks are not lost when a vault is connected (D22).
+- **B Production**:
+  - Multi-stage Dockerfile: CSS built in node, CPU-only torch, non-root, git included.
+  - Entrypoint: wait for the DB, migrate, collectstatic, gunicorn (2 workers, 300 s timeout).
+  - Compose: `db`, `web`, `scheduler` (`sync_tasks`) and `tunnel`, with healthchecks (`/healthz/`, `pg_isready`), volumes, no public ports, log rotation, `Europe/Bucharest`.
+  - Production settings: refuses an empty or default `SECRET_KEY`, takes hosts and origins from env, sets secure cookies and HSTS; `check --deploy` is clean.
+  - Scripts: `deploy/install|update(rollback)|backup|restore|status|migrate-from-old-pc.sh`, systemd units, and `docs/DEPLOY.md` (Russian, step by step).
+
+## R3.2 Not verified live (limits of this environment)
+- **Docker:** the Docker daemon was **not started**. Docker Desktop would also start the old production stack (rule 0.3). So there was no image build, no `up`, no live backup/restore, and no `docker kill` restart test. Checked instead: `docker compose config` with a dummy env file, `bash -n` and shellcheck for every script, plus tests for `/healthz/`, `SECRET_KEY`, env settings and `check --deploy`.
+- **GitHub:** a push to a real GitHub repository was not tried. All git tests use local bare repositories, including concurrent pushes and two writers in parallel.
+
+## R3.3 What the owner needs to do
+1. On the new Ubuntu VM, follow `docs/DEPLOY.md`: fill `.env` (`SECRET_KEY`, `POSTGRES_PASSWORD`, `CLOUDFLARE_TUNNEL_TOKEN`, `GEMINI_API_KEY`, `OLLAMA_HOST`), then run `bash deploy/install.sh`.
+2. Create a fine-grained PAT with **Contents: Read and write** for `myObsidian` and enter it in Settings with the repository URL.
+3. Move the old data: `deploy/migrate-from-old-pc.sh --dump` (old PC) → `--restore` (server). Then run `export_tasks_to_note --user … --dry-run`, and finally the same command without `--dry-run`.
+4. Set the Cloudflare Tunnel public hostname → `http://web:8000`.

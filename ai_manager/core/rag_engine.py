@@ -107,13 +107,8 @@ def reset_chat_engine(user_id=None):
         _user_llms.clear()
 
 
-def get_user_paths(user):
-    """Filesystem and Chroma collection locations derived from the user ID."""
-    user_folder = f"user_{user.id}"
-    return {
-        "notes_dir": os.path.join(BASE_DIR, 'obsidian_data', user_folder),
-        "collection_name": f"collection_user_{user.id}"
-    }
+# get_user_paths lives in core.paths (light module, B-38); re-exported here.
+from .paths import get_user_paths  # noqa: E402,F401
 
 
 # --- conversation memory & token budget --------------------------------------

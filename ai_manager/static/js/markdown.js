@@ -50,8 +50,27 @@
         configured = true;
     }
 
+    let hookInstalled = false;
+    function installImageHook() {
+        if (hookInstalled || !window.DOMPurify) return;
+        // External images would be fetched by the browser: a prompt injection in a note
+        // could exfiltrate data through the image URL (B-40). Only same-site images
+        // load; others are replaced by a plain link in decorate(). The hook runs while
+        // sanitising (inert document), so no request is ever made.
+        window.DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+            if (node.tagName !== 'IMG') return;
+            const src = node.getAttribute('src') || '';
+            if (!/^\/(?!\/)/.test(src)) {
+                node.setAttribute('data-blocked-src', src);
+                node.removeAttribute('src');
+            }
+        });
+        hookInstalled = true;
+    }
+
     function sanitize(html) {
         if (!window.DOMPurify) return escapeHtml(html);
+        installImageHook();
         return window.DOMPurify.sanitize(html, {
             USE_PROFILES: { html: true },
             FORBID_TAGS: ['style', 'form', 'iframe', 'object', 'embed', 'button', 'textarea', 'select', 'option'],
@@ -94,6 +113,22 @@
 
     function decorate(root) {
         toCallouts(root);
+        root.querySelectorAll('img[data-blocked-src]').forEach((img) => {
+            const url = img.getAttribute('data-blocked-src');
+            const span = document.createElement('span');
+            span.className = 'blocked-image';
+            span.append('🖼 ');
+            if (/^https?:\/\//i.test(url)) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.textContent = img.getAttribute('alt') || 'external image';
+                link.title = `External image not loaded: ${url}`;
+                span.append(link);
+            } else {
+                span.append(img.getAttribute('alt') || 'image');
+            }
+            img.replaceWith(span);
+        });
         root.querySelectorAll('a[href]').forEach((a) => {
             const href = a.getAttribute('href') || '';
             if (/^https?:|^mailto:/i.test(href)) {

@@ -294,7 +294,7 @@ def api_get_note_content(request):
     # Load a Markdown note, convert Obsidian wiki links, and find inbound mentions.
     # Parameters: the GET query parameter "name" identifies the requested note.
     # Returns: rendered HTML and backlink snippets, or a JSON error response.
-    from ..rag_engine import get_user_paths
+    from ..paths import get_user_paths
     note_name = request.GET.get('name')
     if not note_name:
         return JsonResponse({'status': 'error', 'msg': 'No note name provided.'}, status=400)

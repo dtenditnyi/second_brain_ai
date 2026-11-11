@@ -128,3 +128,9 @@ Each entry: context · options · chosen · why · how to roll back.
 - Security: SECRET_KEY empty/default → `ImproperlyConfigured` when DEBUG=False (dev/test settings set `SECONDBRAIN_DEV_SETTINGS`); secure cookies, HSTS 1 year incl. subdomains, SSL redirect with `/healthz/` exempt (Docker healthcheck is plain http). `security.W021` (HSTS preload) silenced: preloading is a one-way commitment for the domain → opt-in via `SECURE_HSTS_PRELOAD`.
 - Docker daemon not started on this PC (rule 0.3: the old prod stack has restart policies). Verified offline instead: `docker compose config` with `.env.test.example` (`--env-file` so the real `.env` is never read for interpolation), `bash -n`, shellcheck (`-S warning`), unit/acceptance tests for `/healthz/`, SECRET_KEY, env settings, `check --deploy`.
 - Test fixes before implementation (not weakening): `check --deploy` test used `"k"*64` as SECRET_KEY, which Django correctly flags (W009) → realistic random test key; the conftest's `DJANGO_ALLOW_ASYNC_UNSAFE` (Playwright) leaked into the subprocess → stripped there; `/healthz/` test lacked DB access → `db` fixture.
+
+## D24. Fixes after VERIFY-1 (Round 3)
+- External images in AI answers are not loaded at all (only same-site paths); a link is shown instead (B-40). A CSP was considered but would also need nonce work for the inline scripts in the templates — left for Round 5 (F7 security pass).
+- Duplicate IDs: fixed by a write at sync time (one commit) rather than only "on the next write" — correctness of the cache beats "no commit on read" (B-34).
+- Tags from Obsidian that are not in the allowed list are kept on edit; the allowed list applies to tags the site adds (B-35).
+- Scheduler: one long-lived `sync_tasks --loop` process instead of a new process per minute (B-38).

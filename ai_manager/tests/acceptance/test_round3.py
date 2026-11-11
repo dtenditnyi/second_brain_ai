@@ -906,3 +906,14 @@ def test_b4_compose_config_validates_with_test_env():
                          cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
     assert out.returncode == 0, out.stderr
     assert (ROOT / ".env.test.example").is_file()
+
+
+# G-C1 (VERIFY-1 spec gap): unknown fields of a task line survive an edit made on the site
+def test_c1_unknown_fields_survive_a_site_edit(vault_user, remote, tmp_path):
+    from core import tasks_service
+    from core.models import Task
+    tasks_service.sync_tasks(vault_user, force=True)
+    task = Task.objects.get(user=vault_user, vault_id="a1b2c3")       # "- [/] Дописать отчёт 🔼 #dev 🆔 a1b2c3 ⏳ 2026-11-12"
+    tasks_service.update_task(vault_user, task.pk, title="Дописать отчёт v2", status="done")
+    line = [l for l in vh.remote_file(remote, vh.TASKS_NOTE, tmp_path).splitlines() if "a1b2c3" in l][0]
+    assert line.startswith("- [x] Дописать отчёт v2 🔼 #dev") and "⏳ 2026-11-12" in line and "✅ " in line

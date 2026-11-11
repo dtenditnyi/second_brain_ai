@@ -1,4 +1,5 @@
 # Keep the build context small and never ship secrets or local data (Round 3 / G-B1).
+# Patterns use **/ so they also match inside ai_manager/ (B-37).
 .git
 .gitattributes
 .env
@@ -7,20 +8,24 @@
 !.env.test.example
 venv/
 env/
-**/__pycache__/
-*.pyc
-**/node_modules/
-*.sqlite3
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/*.sqlite3
+**/*.sqlite3-journal
+**/.coverage
+**/.pytest_cache
 logs/
 ai_manager/logs/
-ai_manager/chroma_db/
-chroma_db/
-chroma_data/
-ai_manager/obsidian_data/
-obsidian_data/
+**/chroma_db
+**/chroma_data
+**/obsidian_data
 ai_manager/staticfiles/
+ai_manager/tests/
 docs/audit/responsive/
-ai_manager/cloudflared.exe
-cloudflared.exe
+docs/audit/round*/responsive/
+**/cloudflared.exe
 test-results/
+backups/
 .claude/
+.deployed_commit

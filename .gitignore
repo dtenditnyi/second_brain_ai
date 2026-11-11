@@ -39,3 +39,4 @@ ai_manager/logs/*
 !ai_manager/logs/.gitkeep
 .coverage
 backups/
+.deployed_commit

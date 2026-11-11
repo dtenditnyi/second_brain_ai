@@ -57,6 +57,8 @@ else
     fail "web did not become healthy — see the log above and docs/DEPLOY.md («Сайт не открывается»)"
 fi
 
+git -C "$REPO_DIR" rev-parse HEAD > "$REPO_DIR/.deployed_commit"
+
 step "7/7 systemd: start at boot + daily backup 03:30"
 for unit in secondbrain.service secondbrain-backup.service secondbrain-backup.timer; do
     sed "s#__REPO_DIR__#${REPO_DIR}#g; s#__USER__#${USER}#g" "$DEPLOY_DIR/systemd/$unit" \

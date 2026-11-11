@@ -28,9 +28,16 @@ compose up -d db
 ok "web and scheduler stopped"
 
 step "restore"
-# The dump was made with --clean --if-exists, so existing tables are dropped first.
-gunzip -c "$dump" | compose exec -T db sh -c 'psql -v ON_ERROR_STOP=1 -q -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-ok "database restored"
+# The schema is recreated first and everything runs in ONE transaction: a dump from an
+# older version (fewer tables, e.g. from the old PC) cannot leave a half-dropped
+# database, and any error rolls the whole restore back (B-33). Migrations to the
+# current version run when web starts again.
+{
+    echo "DROP SCHEMA IF EXISTS public CASCADE;"
+    echo "CREATE SCHEMA public;"
+    gunzip -c "$dump"
+} | compose exec -T db sh -c 'psql --single-transaction -v ON_ERROR_STOP=1 -q -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+ok "database restored (migrations run when web starts)"
 
 step "start again"
 compose up -d

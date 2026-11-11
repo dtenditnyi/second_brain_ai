@@ -3,11 +3,17 @@
 Run periodically in production (the compose `scheduler` service does it every
 TASKS_SYNC_INTERVAL seconds). Sends queued offline operations first.
 """
+import argparse
+
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 
 from core import tasks_service
 from core.models import UserSettings
+
+
+def argparse_suppress():
+    return argparse.SUPPRESS
 
 
 class Command(BaseCommand):
@@ -19,8 +25,28 @@ class Command(BaseCommand):
         group.add_argument("--all", action="store_true", help="every user with a connected vault (default)")
         parser.add_argument("--if-stale", action="store_true",
                             help="skip users synced less than TASKS_SYNC_INTERVAL seconds ago")
+        parser.add_argument("--loop", type=int, default=0, metavar="SECONDS",
+                            help="keep running and sync every SECONDS (one long-lived process, B-38)")
+        parser.add_argument("--max-iterations", type=int, default=0, help=argparse_suppress())
 
     def handle(self, *args, **options):
+        if not options["loop"]:
+            return self._once(options)
+        import time
+        from django.db import close_old_connections
+        iteration = 0
+        while True:
+            close_old_connections()
+            try:
+                self._once(options)
+            except Exception as error:  # keep the scheduler alive; the next round retries
+                self.stderr.write(f"sync round failed: {type(error).__name__}: {error}")
+            iteration += 1
+            if options["max_iterations"] and iteration >= options["max_iterations"]:
+                return
+            time.sleep(options["loop"])
+
+    def _once(self, options):
         if options["user"]:
             try:
                 users = [User.objects.get(username=options["user"])]

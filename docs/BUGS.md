@@ -37,6 +37,17 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 | B-29 | functional (Round 2) | Chat searched only the first 10 notes by default (Q12) | `test_pages::test_chat_page_preselects_nothing_and_searches_whole_vault`, e2e `test_chat_sends_selected_context_files_to_api` | FIXED 4a751f6 + e3dcb36 |
 | B-30 | functional (Round 2) | First chat after a failed sync answered "Empty Response" (Q14) | `test_rag_engine::test_ask_sync_failure_explains_instead_of_empty_response`, `..._empty_vault_after_successful_sync` | FIXED 4a751f6 |
 | B-32 | functional (Round 3) | Re-cloning after an interrupted clone failed on Windows: `shutil.rmtree` cannot delete read-only git object files | `test_git_sync::test_incomplete_clone_with_read_only_files_is_removed`, `test_vault_writer::test_pull_resets_local_junk_and_recovers_broken_clone` | FIXED (Round 3, part C commit) |
+| B-33 | data (R3 verify) | `restore.sh` of an older dump (old PC, fewer tables) failed half-way and left a half-dropped DB | `test_round3_regressions::test_b33_restore_recreates_schema_in_one_transaction` (static; no Postgres here) | FIXED (R3 fix commit) |
+| B-34 | data (R3 verify) | Duplicate 🆔 (line copied in Obsidian) hid one task and edits hit the wrong line | `test_b34_duplicate_id_does_not_hide_a_task_or_edit_the_wrong_line`, `test_b34_duplicates_are_kept_apart_even_when_the_fix_cannot_be_pushed` | FIXED |
+| B-35 | functional (R3 verify) | Task with a tag outside the allowed list (from Obsidian) could not be edited; `[[#Heading]]` parsed as a tag | `test_b35_*` (3) | FIXED |
+| B-36 | security (R3 verify) | `safe_path` bypass on Windows: `.GIT/`, `.git./`, `.Obsidian/`, `CON`, `x.md::$DATA`, trailing dots | `test_b36_windows_tricks_rejected[*]`, `test_b36_tasks_note_path_cannot_point_into_git`, `test_m1_dotdot_layer_rejects_on_its_own` | FIXED |
+| B-37 | security (R3 verify) | `.dockerignore` root-only patterns → `ai_manager/db.sqlite3`, `.coverage` would ship in the image | `test_b37_*` (19, Docker matching rules) | FIXED |
+| B-38 | performance (R3 verify) | Scheduler imported torch/llama_index every minute (`vault_writer` → `rag_engine`) | `test_b38_task_sync_does_not_import_torch`, `test_b38_sync_loop_keeps_one_process`, `test_b38_loop_survives_a_failing_round` | FIXED |
+| B-39 | deploy (R3 verify) | `update.sh` said "already up to date" after a failed build | `test_b39_update_remembers_deployed_commit_and_resets_on_error` (static) | FIXED |
+| B-40 | security (R3 verify) | AI answers loaded external images (exfiltration via prompt injection) | e2e `test_e2e_round3::test_b40_external_images_in_ai_answers_are_not_loaded` | FIXED |
+| B-41 | data (R3 verify) | Parser edge cases: deleting a parent orphaned sub-tasks; nested fences; frontmatter `# comment` as section; protected branch retried as conflict | `test_b41_*` (4) | FIXED |
+| B-42 | hardening (R3 verify) | Image: code writable by the app user, tests shipped, cloudflared unpinned | `test_b42_code_is_not_writable_by_the_app_user` | FIXED (cloudflared: configurable `CLOUDFLARED_IMAGE`, pin documented) |
+| B-43 | docs (R3 verify) | `.env.example` WEB_BIND claimed LAN access works over http; Docker bypasses ufw | — (doc) | FIXED |
 | B-31 | config (Round 2) | DEBUG hard-coded True, LAN-IP default for OLLAMA_HOST, settings label "Gemini 2.5 Flash" vs code `gemini-3.6-flash` (Q1, Q8, Q9) | `test_debug_static::*`, `test_rag_engine::test_ollama_url_from_settings_with_localhost_default`, `..._no_hardcoded_lan_ip_in_code`, `test_pages::test_settings_dropdown_shows_real_model_names_and_limits` | FIXED c52427f + e3dcb36 |
 
 ## Details
@@ -133,3 +144,15 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 - Symptom: after an interrupted clone, the next sync tried `shutil.rmtree(local_dir)` and failed with `PermissionError: [WinError 5]` on read-only files in `.git/objects` → the vault never re-synced until the folder was deleted by hand.
 - Cause: git marks object files read-only; `rmtree` does not clear the flag on Windows.
 - Fix: `vault_writer.remove_tree` (rmtree with an `onexc` handler that makes files writable), used by `git_sync` and `VaultRepo.pull`. Regression tests above. Found by the new vault-writer unit tests.
+
+### B-33 … B-43 — found by the independent Round 3 verifier (`docs/audit/round3/VERIFY-1.md`)
+- B-33: `restore.sh` now runs `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` + the dump through one `psql --single-transaction -v ON_ERROR_STOP=1`; migrations to the current version run when web starts.
+- B-34: duplicates are detected on read → one "tasks: …" commit gives the copies new IDs; if that cannot be pushed (offline), the cache keeps repeated IDs apart by their line.
+- B-35: only newly added tags are validated (in `tasks_service.update_task` and `tasks_md.apply_op`); `#` right after `[` or `|` is not a tag.
+- B-36: parts compared case-insensitively, trailing dots/spaces, `:`, control chars and Windows device names rejected, the resolved path is checked again.
+- B-37: `**/` patterns, tests and backups excluded; a test evaluates Docker's matching (last rule wins) on real paths.
+- B-38: `core/paths.py` (light) replaces the `rag_engine` import in the writer/pages; the scheduler runs `sync_tasks --loop` (one process, survives failing rounds).
+- B-39: `.deployed_commit` + `trap … ERR` resetting the checkout.
+- B-40: DOMPurify hook removes non-local `src` while sanitising (inert document → no request); a plain link is shown instead.
+- B-41: sub-items are deleted with their parent; fences close only with the same char and ≥ length; frontmatter skipped; "protected branch"/GH006 → permission.
+- B-42/B-43: see table.

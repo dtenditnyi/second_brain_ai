@@ -94,3 +94,10 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 - Checks: `docker compose --env-file .env.test.example config --quiet` OK (4 services); `bash -n` + shellcheck `-S warning` clean for all scripts; B acceptance tests 21 passed.
 - Not checked live: Docker daemon deliberately not started (rule 0.3) → no image build, no `up`, no backup/restore run (D23; owner runs `deploy/install.sh` on the VM).
 - Commits: 6a47a34, 45fbe10
+
+### 2026-11-11 18:40 — Round 3 / verification 1 — findings fixed
+- Independent verifier (`docs/audit/round3/VERIFY-1.md`): 2 high (restore across schema versions, duplicate 🆔), 6 medium, 3 low; 3 mutations not caught (M1 `..` layer, M8 healthz query, M11 raw HTML as text).
+- Fixed B-33…B-43 + tests for M1/M8/M11 (mutation re-check: removing the raw-HTML escape now fails `test_m11_raw_html_from_the_model_is_shown_as_text`); spec gaps closed (C1 unknown-fields acceptance test, coverage + C8 rows in GOALS, DEPLOY §11).
+- Files: core/{tasks_md,tasks_service,vault_writer,paths,rag_engine}.py, core/management/commands/sync_tasks.py, core/views/{api,pages}.py, static/js/markdown.js, tests/{conftest,test_round3_regressions}.py, tests/e2e/test_e2e_round3.py, tests/acceptance/test_round3.py, deploy/{restore,update,install}.sh, docker/entrypoint.sh, Dockerfile, docker-compose.yml, .dockerignore, .env.example, docs/{BUGS,DEPLOY}.md, docs/audit/{DECISIONS,round3/GOALS}.md
+- Checks: regressions 51 passed + e2e 2 passed; fast suite 466 passed; shellcheck/bash -n clean; compose config OK.
+- Problem: during the M11 mutation check a `git checkout --` restored markdown.js to the last commit (losing the uncommitted B-40 hook); the file was restored from the pre-mutation backup and re-verified (hook present, tests green). Lesson: mutate committed files only.

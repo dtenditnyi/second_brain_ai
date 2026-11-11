@@ -132,16 +132,22 @@ def _cache_from_note(user, text):
         existing = list(Task.objects.filter(user=user))
         by_vid = {t.vault_id: t for t in existing if t.vault_id}
         by_line = {t.vault_line: t for t in existing if not t.vault_id and t.vault_line}
+        seen_ids = set()
         for position, line in enumerate(note.tasks):
-            task = by_vid.get(line.id) if line.id else by_line.get(line.raw)
-            if task is None:
+            # A repeated 🆔 (not fixed yet, e.g. offline) is identified by its line,
+            # so it never collapses into the first task with that ID (B-34).
+            line_id = line.id if line.id and line.id not in seen_ids else None
+            if line_id:
+                seen_ids.add(line_id)
+            task = by_vid.get(line_id) if line_id else by_line.get(line.raw)
+            if task is None or task.pk in keep:
                 task = Task(user=user)
             task.title = (line.text or "(без названия)")[:255]
             task.status = line.status
             task.priority = line.priority or "medium"
             task.due_date = _dt.date.fromisoformat(line.due) if line.due else None
             task.tags = ", ".join(line.tags)[:100]
-            task.vault_id = line.id or ""
+            task.vault_id = line_id or ""
             task.vault_line = line.raw[:2000]
             task.section = (line.section or "")[:120]
             task.position = position
@@ -163,6 +169,11 @@ def _read_note(user):
     return vault_read(user, reader)
 
 
+def _has_duplicate_ids(text):
+    ids = [t.id for t in tasks_md.parse(text).tasks if t.id]
+    return len(ids) != len(set(ids))
+
+
 def _sync_now(user):
     """Flush the outbox, pull, rebuild the cache. Returns a status dict (never raises VaultError)."""
     from .models import VaultOutbox
@@ -172,6 +183,11 @@ def _sync_now(user):
             if _write(user, []) is None:
                 return {"status": "offline", "error": s.tasks_sync_error}
         text = _read_note(user)
+        if text and _has_duplicate_ids(text):
+            # e.g. a line copied in Obsidian: give the copies new IDs right away,
+            # otherwise one task is hidden and edits hit the wrong line (B-34).
+            if _write(user, [{"op": "ensure_ids"}]) is not None:
+                text = _read_note(user)
     except TaskSyncError as error:
         return {"status": "error", "error": str(error)}
     except VaultError as error:
@@ -244,9 +260,11 @@ def update_task(user, task_pk, **fields):
         if key not in _FIELD_MAP:
             continue
         if key == "tags":
-            value = tasks_md.validate_tags(_tags_list(value))
-            if value == _tags_list(task.tags):
-                continue
+            current = _tags_list(task.tags)
+            value = list(dict.fromkeys(_tags_list(value)))
+            if value == current:
+                continue                   # unchanged (may contain tags written in Obsidian)
+            tasks_md.validate_tags([t for t in value if t not in current])   # only new tags (B-35)
         elif key == "priority" and value == task.priority:
             continue                       # keeps "no priority" lines unchanged
         elif key == "due_date":

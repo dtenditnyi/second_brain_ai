@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Container entrypoint (Round 3 / G-B1).
 #   web        wait for Postgres → migrate → collectstatic → gunicorn
-#   scheduler  wait for Postgres → run "manage.py <args>" every TASKS_SYNC_INTERVAL seconds
+#   scheduler  wait for Postgres → "manage.py <args> --loop TASKS_SYNC_INTERVAL" (one process)
 #   anything else is executed as is (e.g. "python manage.py createsuperuser")
 set -euo pipefail
 
@@ -46,11 +46,10 @@ case "$role" in
         shift
         wait_for_db
         interval="${TASKS_SYNC_INTERVAL:-60}"
-        echo "[entrypoint] scheduler: manage.py $* every ${interval}s"
-        while true; do
-            python manage.py "$@" || echo "[entrypoint] scheduled command failed (will retry)" >&2
-            sleep "$interval"
-        done
+        echo "[entrypoint] scheduler: manage.py $* every ${interval}s (one long-lived process)"
+        # --loop keeps a single Python process (no torch import every minute, B-38);
+        # if it ever exits, Docker's restart policy starts it again.
+        exec python manage.py "$@" --loop "$interval"
         ;;
     *)
         exec "$@"

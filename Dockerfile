@@ -45,12 +45,14 @@ RUN apt-get update \
  && useradd --system --uid 1000 --gid app --home-dir /app --shell /usr/sbin/nologin app
 COPY --from=builder /opt/venv /opt/venv
 WORKDIR /app
-COPY --chown=app:app ai_manager ./ai_manager
-COPY --chown=app:app --from=css /build/ai_manager/static/css/styles.css ./ai_manager/static/css/styles.css
-COPY --chown=app:app docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+# Code is owned by root and read-only for the app user (B-42); only the data
+# folders (volumes) belong to "app".
+COPY ai_manager ./ai_manager
+COPY --from=css /build/ai_manager/static/css/styles.css ./ai_manager/static/css/styles.css
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 0755 /usr/local/bin/entrypoint.sh \
  && mkdir -p /data/hf_cache ai_manager/logs ai_manager/staticfiles ai_manager/chroma_db ai_manager/obsidian_data \
- && chown -R app:app /data /app
+ && chown -R app:app /data ai_manager/logs ai_manager/staticfiles ai_manager/chroma_db ai_manager/obsidian_data
 USER app
 WORKDIR /app/ai_manager
 EXPOSE 8000

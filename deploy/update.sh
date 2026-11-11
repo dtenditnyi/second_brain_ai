@@ -11,14 +11,20 @@ source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 log_setup update
 cd "$REPO_DIR"
 
+# The commit that is really running is remembered in .deployed_commit, so a failed
+# build cannot make the next run think it is "already up to date" (B-39).
+state_file="$REPO_DIR/.deployed_commit"
+
 step "1/5 git pull"
-previous="$(git rev-parse HEAD)"
+previous="$(cat "$state_file" 2>/dev/null || git rev-parse HEAD)"
 git pull --ff-only
 current="$(git rev-parse HEAD)"
 if [ "$previous" = "$current" ] && [ "${1:-}" != "--force" ]; then
     ok "already up to date ($(git rev-parse --short HEAD)); use --force to rebuild anyway"
     exit 0
 fi
+# Any failure from here on (build error, …) puts the checkout back to what runs.
+trap 'warn "update failed — checkout reset to $(git rev-parse --short "$previous")"; git reset --hard "$previous" >/dev/null' ERR
 ok "$(git rev-parse --short "$previous") → $(git rev-parse --short "$current")"
 
 step "2/5 backup before the update"
@@ -37,9 +43,12 @@ ok "restarted"
 
 step "5/5 healthcheck"
 if wait_healthy 600 && healthz; then
+    trap - ERR
+    git rev-parse HEAD > "$state_file"
     ok "update finished: $(git log -1 --format='%h %s')"
     exit 0
 fi
+trap - ERR
 
 warn "new version is not healthy — starting rollback to $(git rev-parse --short "$previous")"
 compose logs --tail 80 web || true

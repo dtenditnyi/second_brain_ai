@@ -44,7 +44,8 @@ _FIELD_RES = {
     "id": re.compile(r"🆔️?\s*([A-Za-z0-9_-]+)"),
 }
 _PRIORITY_RE = re.compile("(" + "|".join(map(re.escape, PRIORITY_BY_EMOJI)) + ")️?")
-_TAG_RE = re.compile(r"(?<![\w&#/])#([\w/-]*[^\W\d_][\w/-]*)")
+# "#tag" — not inside words/URLs/entities and not "[[#Heading]]" / "[[Note|#x]]" links (B-35).
+_TAG_RE = re.compile(r"(?<![\w&#/\[|])#([\w/-]*[^\W\d_][\w/-]*)")
 _EOL_RE = re.compile(r"(\r\n|\n|\r)$")
 
 
@@ -131,16 +132,29 @@ def _parse_body(task: TaskLine, body: str):
 
 def parse(text: str) -> TaskNote:
     lines = _split_lines(text)
-    tasks, section, in_fence = [], None, False
+    tasks, section = [], None
+    fence = None                      # opening fence ("```", "````", "~~~"…) while inside a code block
+    in_frontmatter = bool(lines) and lines[0].rstrip("\r\n") == "---"
     for index, line in enumerate(lines):
         eol_match = _EOL_RE.search(line)
         eol = eol_match.group(1) if eol_match else ""
         content = line[: len(line) - len(eol)]
         stripped = content.lstrip()
-        if stripped.startswith("```") or stripped.startswith("~~~"):
-            in_fence = not in_fence
+        if in_frontmatter:
+            # YAML frontmatter: "# comment" lines are not headings, "- [ ]" not tasks (B-41)
+            if index > 0 and content.rstrip() in ("---", "..."):
+                in_frontmatter = False
             continue
-        if in_fence:
+        marker = re.match(r"(`{3,}|~{3,})", stripped)
+        if marker:
+            # A fence closes only with the same character and at least the same length (B-41).
+            if fence is None:
+                fence = marker.group(1)
+            elif marker.group(1)[0] == fence[0] and len(marker.group(1)) >= len(fence) \
+                    and not stripped[len(marker.group(1)):].strip():
+                fence = None
+            continue
+        if fence is not None:
             continue
         heading = _HEADING_RE.match(content)
         if heading:
@@ -342,7 +356,17 @@ def apply_op(text: str, op: dict, today: _dt.date | None = None):
 
     task = _find(note, op)
     if kind == "delete":
-        del note.lines[task.index]
+        # Sub-items indented under the task go with it; left alone they would turn
+        # into an indented (code) block under the heading (B-41).
+        end = task.index + 1
+        own = len(task.indent.expandtabs(4))
+        while end < len(note.lines):
+            content = note.lines[end].rstrip("\r\n")
+            indent = len(content) - len(content.lstrip(" \t"))
+            if not content.strip() or len(content[:indent].expandtabs(4)) <= own:
+                break
+            end += 1
+        del note.lines[task.index:end]
         return serialize(note), {"id": task.id}
     if kind != "update":
         raise ValueError(f"Неизвестная операция: {kind}")
@@ -356,7 +380,11 @@ def apply_op(text: str, op: dict, today: _dt.date | None = None):
             raise ValueError(f"Неизвестный приоритет: {priority}")
         task.priority = priority
     if "tags" in op and op["tags"] is not None:
-        task.tags = validate_tags(op["tags"])
+        # Tags already on the line may stay even if not in the allowed list (written
+        # in Obsidian); only newly added ones are validated (B-35).
+        kept = [str(t).strip().lstrip("#") for t in op["tags"] if str(t).strip().lstrip("#") in task.tags]
+        added = validate_tags([t for t in op["tags"] if str(t).strip().lstrip("#") not in task.tags])
+        task.tags = list(dict.fromkeys(kept + added))
         task.text = " ".join(w for w in task.text.split(" ") if not _TAG_RE.fullmatch(w) or w[1:] in task.tags)
     if op.get("status"):
         _set_status(task, op["status"], today_s)

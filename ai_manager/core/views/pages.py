@@ -17,7 +17,7 @@ from .utils import get_user_config
 def home_view(request):
     # Build the dashboard from the current user's tasks, note files, and preferences.
     # The context is consumed by home.html and its home.js/tasks.js interactions.
-    from ..rag_engine import get_user_paths
+    from ..paths import get_user_paths
     tasks_state = _sync_tasks_quietly(request.user)
     tasks = Task.objects.filter(user=request.user).exclude(status__in=('cancelled', 'forwarded'))
     
@@ -64,7 +64,7 @@ def home_view(request):
 def ai_chat_view(request):
     # Assemble all vault filenames for the context picker and the latest chat turns.
     # The template uses all_files for selection and context_files for initial state.
-    from ..rag_engine import get_user_paths
+    from ..paths import get_user_paths
     paths = get_user_paths(request.user)
     synced_notes = []
     if os.path.exists(paths["notes_dir"]):
@@ -92,7 +92,7 @@ def notes_view(request):
     # Synchronize a configured repository when no local clone exists, then expose
     # the user's note names to the file explorer template.
     import os
-    from ..rag_engine import get_user_paths
+    from ..paths import get_user_paths
     from ..git_sync import sync_obsidian_repo
     
     paths = get_user_paths(request.user)

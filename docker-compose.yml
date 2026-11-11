@@ -79,7 +79,8 @@ services:
         condition: service_healthy
 
   tunnel:
-    image: cloudflare/cloudflared:latest
+    # Pin a tested version in .env (CLOUDFLARED_IMAGE=cloudflare/cloudflared:<tag>), see DEPLOY.md.
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
     restart: unless-stopped
     command: ["tunnel", "--no-autoupdate", "run"]
     environment:
