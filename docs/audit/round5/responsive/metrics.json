@@ -1,0 +1,214 @@
+{
+ "home_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "input#global-search-input.input-field.rounded-full.pl-10 309x42",
+   "button#generate-report-btn.btn.btn-primary.w-full 590x40",
+   "select#status-1-x.task-status-select.status-select.input-field 130x36",
+   "select#status-2-x.task-status-select.status-select.input-field 130x36",
+   "select#status-3-x.task-status-select.status-select.input-field 130x36",
+   "select#status-4-x.task-status-select.status-select.input-field 130x36",
+   "select#status-5-x.task-status-select.status-select.input-field 130x36",
+   "select#status-6-x.task-status-select.status-select.input-field 130x36"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "home_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "input#global-search-input.input-field.rounded-full.pl-10 384x42",
+   "button#generate-report-btn.btn.btn-primary.w-full 286x40",
+   "select#status-1-x.task-status-select.status-select.input-field 130x36",
+   "select#status-2-x.task-status-select.status-select.input-field 130x36",
+   "select#status-3-x.task-status-select.status-select.input-field 130x36",
+   "select#status-4-x.task-status-select.status-select.input-field 130x36",
+   "select#status-5-x.task-status-select.status-select.input-field 130x36",
+   "select#status-6-x.task-status-select.status-select.input-field 130x36"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "notes_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 2,
+  "scrollers": [
+   "table",
+   "pre"
+  ]
+ },
+ "notes_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 2,
+  "scrollers": [
+   "pre"
+  ]
+ },
+ "notes_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 2,
+  "scrollers": [
+   "table",
+   "pre"
+  ]
+ },
+ "settings_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [
+   "input#display-name.input-field.rounded-lg.px-4 283x42",
+   "input#email-address.input-field.rounded-lg.px-4 283x42",
+   "select#theme-select.input-field.rounded-lg.px-4 295x41",
+   "input#github-repo.input-field.rounded-lg.px-4 283x42",
+   "input#github-token.input-field.rounded-lg.px-4 283x42",
+   "input#tasks-note-path.input-field.rounded-lg.px-4 590x42",
+   "select#ai-strategy.input-field.rounded-lg.px-4 443x41",
+   "select#cloud-provider.input-field.rounded-lg.px-4 287x41",
+   "select#claude-model.input-field.rounded-lg.px-4 287x41",
+   "input#token-name.input-field.rounded-lg.px-4 287x42",
+   "input#token-expires.input-field.rounded-lg.px-4 287x42"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "settings_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [
+   "input#display-name.input-field.rounded-lg.px-4 427x42",
+   "input#email-address.input-field.rounded-lg.px-4 427x42",
+   "select#theme-select.input-field.rounded-lg.px-4 439x41",
+   "input#github-repo.input-field.rounded-lg.px-4 427x42",
+   "input#github-token.input-field.rounded-lg.px-4 427x42",
+   "input#tasks-note-path.input-field.rounded-lg.px-4 878x42",
+   "select#ai-strategy.input-field.rounded-lg.px-4 659x41",
+   "select#cloud-provider.input-field.rounded-lg.px-4 431x41",
+   "select#claude-model.input-field.rounded-lg.px-4 431x41",
+   "input#token-name.input-field.rounded-lg.px-4 431x42",
+   "input#token-expires.input-field.rounded-lg.px-4 431x42"
+  ],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tags_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tags_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "tags_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "graph_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "graph_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 14,
+  "scrollers": []
+ },
+ "graph_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 14,
+  "scrollers": []
+ },
+ "weekly_375": {
+  "vw": 375,
+  "docScroll": 375,
+  "bodyScroll": 375,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "weekly_1024": {
+  "vw": 1024,
+  "docScroll": 1024,
+  "bodyScroll": 1024,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ },
+ "weekly_1440": {
+  "vw": 1440,
+  "docScroll": 1440,
+  "bodyScroll": 1440,
+  "overflowing": [],
+  "smallTargets": [],
+  "tinyText": 0,
+  "scrollers": []
+ }
+}

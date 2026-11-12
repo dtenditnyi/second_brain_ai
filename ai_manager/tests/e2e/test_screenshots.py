@@ -28,8 +28,15 @@ def test_capture_all(browser, live_server, e2e_user, e2e_admin, isolated_vault):
         login(pg, live_server, name)
         contexts[role] = ctx
     contexts[None] = browser.new_context()
+    # Optional filters (comma-separated): SHOT_PAGES=home,tags  SHOT_SIZES=375,1024,1440
+    only_pages = set(filter(None, os.environ.get("SHOT_PAGES", "").split(",")))
+    only_sizes = set(filter(None, os.environ.get("SHOT_SIZES", "").split(",")))
     for page_name, (path, role, action) in PAGES.items():
+        if only_pages and page_name not in only_pages:
+            continue
         for label, w, h in SHOT_SIZES:
+            if only_sizes and label not in only_sizes:
+                continue
             pg = contexts[role].new_page()
             pg.set_viewport_size({"width": w, "height": h})
             pg.goto(f"{live_server.url}{path}")

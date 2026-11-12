@@ -247,3 +247,27 @@ Chained offline saves of one note (2nd becomes a conflict copy); duplicate confl
 
 ## R4.6 Commits (feature/round4)
 d82f0d0 acceptance tests · dce7748 editor (D) · 329d18e providers/agent/UI (E) · c024485 REST API + contract (API) · ac13fd4 settings fix + run log · (review fixes, docs)
+
+# Round 5 — web vault, weekly notes, PWA, 2FA, Obsidian in the browser
+
+Branch `feature/round5` (from `feature/round4`). Goals: `round5/GOALS.md`; decisions D28–D32.
+
+## R5.1 What was done
+- Web vault (G-F1/F2): folder tree, Ctrl+K switcher (names + aliases), full-text search with highlight and folder/tag/date filters, tags page, backlinks + unlinked mentions, local/global graph (own SVG layout, simplified on phones), recent/favourites; server render with callouts, clickable task statuses (one commit per click via the writer), embeds/attachments (path-safe), properties panel, KaTeX + Mermaid local; Dataview-lite (own parser, read-only, 2 s / 500 rows, never outside the vault).
+- Weekly notes (G-F3): «Эта неделя» opens/creates by the naming rule derived from existing notes, carry-over with diff preview (old tasks → `[>]`, one commit), week calendar. Home dashboard (G-F5). PWA + offline capture queue (G-F4). TOTP 2FA (G-F7). `obsidian` compose profile + DEPLOY §13–14 (G-F6/F7). Owner end-to-end test (G-E2E).
+- Continuation session: symlink leak out of the vault closed (B-58: index, RAG loader, get-note by name); R4.5 data LOWs fixed (B-59…B-63); flaky settings e2e (B-64); live check with the Link2Note bot 18/18 (`round5/LINK2NOTE_CHECK.md`); screenshots of changed pages at 375/1024/1440 in `round5/responsive/` (no horizontal overflow).
+
+## R5.2 Tests and verification
+- Full run before fixes: 1056 passed / 1 failed (B-64). Fast suite after fixes: 685 passed. Final full run: `round5/test-run.txt`.
+- Reviewer: `round5/VERIFY.md` (findings and what was fixed — R5.5).
+
+## R5.3 Not verified live
+- Docker: prod image `/healthz/`, bot container `api-health`, the `obsidian` container (daemon not running on this PC).
+- Real GitHub vault, real Gemini/Claude answers, Cloudflare Access policies, installing the PWA on a real phone.
+
+## R5.4 What the owner needs to do
+- See `docs/audit/SUMMARY_ROUNDS_3-5_RU.md` (merge order, deploy, bot token, `VAULT_BACKEND=api`).
+
+## R5.5 Review findings and leftovers
+- (filled after VERIFY.md)
+- R4.5 leftovers not done (not data loss): NFD file names via API; `DELETE /tasks` uses the `write` scope (contract wording says delete).

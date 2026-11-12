@@ -27,6 +27,10 @@ PAGES = {
     "settings": ("/settings/", "user", None),
     "system-matrix": ("/system-matrix/", "admin", None),
     "system-matrix-tasks": ("/system-matrix/", "admin", "admin_tasks_tab"),
+    # Round 5 pages
+    "tags": ("/notes/tags/", "user", None),
+    "graph": ("/notes/graph/", "user", None),
+    "weekly": ("/weekly/", "user", None),
 }
 
 
