@@ -153,3 +153,24 @@ Each entry: context · options · chosen · why · how to roll back.
 - No push queue for API writes: offline/locked → `503 vault_unavailable` + `Retry-After`; the bot retries with the same Idempotency-Key (5xx is not cached), so `pushed` is always true. `sha` = SHA-256 of the text (same as the editor).
 - Capture: «Входящие» = one note `CAPTURE_INBOX_NOTE` (entries before the `🔗` line); weekly = latest `type: weekly` note in `06 - Daily` not in the future. Docker: stack creates network `secondbrain`, web alias `secondbrain-web`; `/api/v1/` exempt from the https redirect (internal http).
 - Allowed tags: one setting `ALLOWED_TAGS` (+ `fun`), applied to the pure parser in `CoreConfig.ready`.
+
+## D28. Web vault: server render, one read-only index (R5 / G-F1, G-F2)
+- Render on the server (`core/render.py`), not in the browser: one implementation for callouts / checkboxes / embeds / Dataview, testable in pytest. Raw HTML in notes is **escaped** (python-markdown `html` processors removed) — Obsidian would render it, but the site is reachable from the internet; DOMPurify on the client as a second layer. Templater/DataviewJS are shown as code.
+- `core/vault_index.py`: one cached scan of the user's own clone (keyed by mtime/size) serves search, tags, mentions, graph, Dataview — no DB index, no extra dependency (a few hundred notes). Unlinked mentions: name/aliases ≥ 3 chars, whole word, outside code and links.
+- Dataview-lite: own tokenizer + recursive-descent parser (nothing is `eval`ed), 2 s limit, 500 rows max; `FROM` paths with `..`, `\`, `:`, leading `/`, `.git`/`.obsidian` → error; everything else unknown → «Откройте в Obsidian».
+- Graph: own ~150-line SVG force layout (no d3/cytoscape: "light library, local"); phones get the simplified view (≤ 60 best-connected nodes, few labels).
+- Checkbox click = `set_task_status` through `vault_apply`: the line must still equal what the page showed (else 409 + reload), one commit per click.
+
+## D29. Weekly notes naming (R5 / G-F3)
+- Derived from the latest existing `type: weekly` note: same folder (semester), same pattern («Fifth week of 2nd year» → ordinal word; «5th …», «Week 5», «Неделя 5» also understood), number + calendar weeks (Mondays) since that note; `date:` = Monday of the week. A new semester = the owner creates the first note in the new folder by hand (the site cannot know the university calendar); `week_type: A|B` alternates if present. No weekly note at all → `06 - Daily/<year> by weeks/Week <ISO>.md`.
+- Never overwrites: an existing file with that name is opened instead. Carry-over: open `[ ]`/`[/]` top-level tasks (+ indented sub-lines) of the previous note → section «↪️ Перенесено с прошлой недели» before the `🔗` line; old lines become `[>]`; both files in ONE commit; repeated carry-over adds nothing twice.
+
+## D30. PWA and offline (R5 / G-F4)
+- Service worker at `/sw.js` (root scope): static = stale-while-revalidate; `/api/get-note/` and the main pages = network-first with the last good copy for offline reading; only GET, never redirects/errors. Logout → `Clear-Site-Data: "cache"` + the login page deletes `sb-*` caches (browsers without the header).
+- Offline quick capture: queue in localStorage keyed by user id (another user on the same device never sends it), `client_id` dedup on the server for 24 h (resend after a lost response is not written twice). Offline note *editing* stays the Round 4 outbox (server side).
+
+## D31. 2FA (R5 / G-F7)
+- TOTP (pyotp) + QR as inline SVG (segno, pure Python). Secret in the session until confirmed, then encrypted like the GitHub token; 10 backup codes hashed, single use; replay of an accepted step refused. Login: password → session marker (5 min, 5 tries) → code; ≥ 10 wrong codes per account per 15 min → refused. API tokens untouched (separate scoped credential).
+
+## D32. Obsidian in the browser (R5 / G-F6)
+- `lscr.io/linuxserver/obsidian` under compose profile `obsidian` (off by default), no `ports`, reached only by the tunnel (`obsidian:3000`) behind Cloudflare Access + KasmVNC password; its vault is its own git clone synced by obsidian-git (the site's clone/lock stay separate). Image not run on this machine (Docker daemon intentionally not started).

@@ -3,7 +3,7 @@
 Rule for the current note (DECISIONS D26): the note under ``WEEKLY_ROOT`` whose frontmatter has
 ``type: weekly`` and the latest ``date:`` that is not in the future.
 
-Creating this week's note (Round 5, DECISIONS D30): the naming rule is derived from the latest
+Creating this week's note (Round 5, DECISIONS D29): the naming rule is derived from the latest
 existing weekly note — same folder (semester), same name pattern («Fifth week of 2nd year» →
 «Seventh week of 2nd year», «Week 5» → «Week 7»), the number advanced by the number of
 calendar weeks (Mondays) between that note's date and today. A ``week_type: A|B`` field (study

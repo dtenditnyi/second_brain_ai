@@ -31,6 +31,14 @@ AI: `core/rag_engine.py` (LlamaIndex + Chroma + HuggingFace embeddings; Ollama l
   `docs/link2note/API_CONTRACT.md` + `contract/*.json` is checked by `tests/test_api_contract.py`. Allowed tags: ONE setting `ALLOWED_TAGS`.
 - Tests: `settings_test` adds `tests/serial_middleware.py` (live_server + in-memory SQLite → one request at a time).
 
+## Round 5 (web vault, PWA, 2FA)
+- Read-only index of the user's clone: `core/vault_index.py` (search, tags, mentions, graph, tasks; cached scan);
+  server render `core/render.py` (callouts, checkboxes → `notes_service.set_task_status`, embeds, raw HTML escaped);
+  Dataview-lite `core/dataview.py` (own parser, sandboxed); weekly notes `core/weekly.py`; views `core/views/vault_views.py`.
+- PWA: `/manifest.webmanifest`, `/sw.js` (`static/js/sw.js`, `pwa.js` = offline banner + capture queue); 2FA: `core/twofa.py`,
+  `views/security.py`, second login step in `views/auth.py`. Ctrl+K switcher `static/js/vault_nav.js`; graph `static/js/graph.js`.
+- Obsidian in the browser: compose service `obsidian` (profile, off by default); Access/2FA/Obsidian docs: `docs/DEPLOY.md` §13–14.
+
 ## Commands (run from `ai_manager/`, Windows venv at `../venv`)
 - Local server on a SQLite **copy** of the DB (never the prod DB). On a fresh checkout create the copy first
   (only if missing): `cp db.sqlite3 audit_copy_db.sqlite3` (path override: env `AUDIT_SQLITE_PATH`). Default port 8000.
