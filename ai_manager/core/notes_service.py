@@ -203,6 +203,11 @@ def save_note(user, rel, content, base_sha, queue_offline=True):
             flush_outbox(user)
         except Exception as error:             # noqa: BLE001 — keep the order: queue behind the pending saves
             logger.info("Outbox flush before save failed: %s", type(error).__name__)
+        stuck = _stuck_save(user, rel)
+        if stuck is not None:                  # not silently «queued» behind a save that cannot go (review R5)
+            raise NoteError("Предыдущее офлайн-сохранение этой заметки не отправлено: "
+                            f"{stuck.last_error[len(STUCK_PREFIX):]} Скопируйте текст и обратитесь к администратору.",
+                            status=409)
         if _pending_saves(user, rel):
             return queue("waiting for earlier offline saves")
     try:
@@ -220,21 +225,54 @@ def _pending_saves(user, rel):
     return any(row.op.get("path") == rel for row in VaultOutbox.objects.filter(user=user, kind="note"))
 
 
-def flush_outbox(user):
-    """Send queued offline note saves; a save whose base changed becomes a conflict copy."""
+STUCK_PREFIX = "stuck: "
+
+
+def _stuck_save(user, rel):
     from .models import VaultOutbox
+    return next((row for row in VaultOutbox.objects.filter(user=user, kind="note", last_error__startswith=STUCK_PREFIX)
+                 if row.op.get("path") == rel), None)
+
+
+def flush_outbox(user):
+    """Send queued offline note saves in order; a save whose base changed becomes a conflict copy.
+
+    Offline / locked → stop and keep everything (retried later). Any other failure marks the row
+    «stuck» and blocks only later saves of the SAME note (they must stay in order); other notes go on
+    (review R5). Returns False only when stopped by offline / locked. A chain of saves built on a conflicting one
+    updates that one conflict copy instead of making a copy per save."""
+    from .models import VaultOutbox
+    blocked, copies = set(), {}
     for row in VaultOutbox.objects.filter(user=user, kind="note").order_by("id"):
         op = row.op
+        path = op.get("path")
+        if path in blocked:
+            continue
         try:
-            save_note(user, op["path"], op["content"], op.get("base_sha"), queue_offline=False)
-        except NoteConflict:
-            _create_conflict_copy(user, op["path"], op["content"])
+            chained = copies.get(path)
+            if chained and op.get("base_sha") == chained[1]:
+                save_note(user, chained[0], op["content"], chained[1], queue_offline=False)
+                copies[path] = (chained[0], sha(op["content"]))
+            else:
+                try:
+                    save_note(user, path, op["content"], op.get("base_sha"), queue_offline=False)
+                    copies.pop(path, None)
+                except NoteConflict:
+                    copies[path] = (_create_conflict_copy(user, path, op["content"]), sha(op["content"]))
         except VaultError as error:
-            if error.kind == "offline":
+            if error.kind in ("offline", "locked"):
                 VaultOutbox.objects.filter(pk=row.pk).update(attempts=row.attempts + 1, last_error=error.message[:500])
                 return False
-            raise
-        row.delete()
+            failure = error.message
+        except (NoteError, NoteConflict, ValueError, TypeError) as error:
+            failure = str(error)
+        else:
+            row.delete()
+            continue
+        logger.warning("Outbox save stuck: path_len=%s error=%s", len(path or ""), failure[:120])
+        VaultOutbox.objects.filter(pk=row.pk).update(attempts=row.attempts + 1,
+                                                     last_error=(STUCK_PREFIX + failure)[:500])
+        blocked.add(path)
     return True
 
 

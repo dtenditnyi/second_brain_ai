@@ -64,20 +64,24 @@ def check_totp(secret, code, last_step=0, now=None):
 
 def verify(user_settings, code, allow_backup=True):
     """Check a TOTP or a backup code for an enabled account; consumes what it uses."""
+    from django.db import transaction
     if not user_settings.totp_enabled:
         return False
-    step = check_totp(user_settings.totp_secret, code, user_settings.totp_last_step)
-    if step is not None:
-        user_settings.totp_last_step = step
-        user_settings.save(update_fields=["totp_last_step"])
-        return True
-    if allow_backup:
-        hashed = _hash(_clean(code))
-        codes = list(user_settings.totp_backup_codes or [])
-        for stored in codes:
-            if hmac.compare_digest(stored, hashed):
-                codes.remove(stored)
-                user_settings.totp_backup_codes = codes
-                user_settings.save(update_fields=["totp_backup_codes"])
-                return True
+    # Row lock: two parallel requests with the same code / backup code cannot both pass (review R5).
+    with transaction.atomic():
+        locked = type(user_settings).objects.select_for_update().get(pk=user_settings.pk)
+        step = check_totp(locked.totp_secret, code, locked.totp_last_step)
+        if step is not None:
+            locked.totp_last_step = user_settings.totp_last_step = step
+            locked.save(update_fields=["totp_last_step"])
+            return True
+        if allow_backup:
+            hashed = _hash(_clean(code))
+            codes = list(locked.totp_backup_codes or [])
+            for stored in codes:
+                if hmac.compare_digest(stored, hashed):
+                    codes.remove(stored)
+                    locked.totp_backup_codes = user_settings.totp_backup_codes = codes
+                    locked.save(update_fields=["totp_backup_codes"])
+                    return True
     return False

@@ -1,47 +1,170 @@
 ........................................................................ [  6%]
-........................................................................ [ 13%]
-........................................................................ [ 20%]
-........................................................................ [ 27%]
-........................................................................ [ 34%]
-........................................................................ [ 40%]
-........................................................................ [ 47%]
-.............F.......................................................... [ 54%]
-........................................................................ [ 61%]
-........................................................................ [ 68%]
-........................................................................ [ 74%]
-.....................s.................................................. [ 81%]
+........................................................................ [ 12%]
+........................................................................ [ 18%]
+........................................................................ [ 25%]
+........................................................................ [ 31%]
+........................................................................ [ 37%]
+..................................................................F..... [ 44%]
+......................F................................................. [ 50%]
+........................................................................ [ 56%]
+........................................................................ [ 63%]
+........................................................................ [ 69%]
+........................................................................ [ 75%]
+.................s...................................................... [ 82%]
 ........................................................................ [ 88%]
-........................................................................ [ 95%]
-..................................................                       [100%]
+........................................................................ [ 94%]
+.........................................................                [100%]
 ================================== FAILURES ===================================
-________ test_token_field_is_empty_and_keeps_or_clears_token[chromium] ________
+_______________ test_chat_api_error_message_is_shown[chromium] ________________
 
-logged_page = <Page url='http://localhost:64915/settings/'>
-live_server = <LiveServer listening at http://localhost:64915>
+logged_page = <Page url='http://localhost:65444/chat/'>
+live_server = <LiveServer listening at http://localhost:65444>
+
+    def test_chat_api_error_message_is_shown(logged_page, live_server):
+        p = logged_page
+        p.goto(f"{live_server.url}/chat/")
+        p.route("**/api/send-message/", lambda route: route.fulfill(
+            status=400, content_type="application/json", body=json.dumps({"status": "error", "msg": "Server said no"})))
+        p.fill("#chat-input", "hello")
+        p.keyboard.press("Enter")
+>       expect(p.locator("#chat-feed")).to_contain_text("Server said no")
+E       AssertionError: Locator expected to contain text 'Server said no'
+E       Actual value: 
+E       
+E               
+E                   
+E                     \u2728
+E                     
+E                       
+E                         Hello! I'm your AI assistant using the AUTO strategy. I search your whole vault unless you choose notes. What would you like to know?
+E                       
+E                     
+E                   
+E               
+E       
+E               
+E               
+E       
+E             \U0001f464hello\u2728System Notification: Please configure your GitHub link. 
+E       Call log:
+E         - Expect "to_contain_text" locator("#chat-feed") with timeout 5000ms
+E         - waiting for locator("#chat-feed")
+E           14 × locator resolved to <div id="chat-feed" aria-live="polite" class="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 chat-feed">…</div>
+E              - unexpected value "
+E       
+E               
+E                   
+E                     \u2728
+E                     
+E                       
+E                         Hello! I'm your AI assistant using the AUTO strategy. I search your whole vault unless you choose notes. What would you like to know?
+E                       
+E                     
+E                   
+E               
+E       
+E               
+E               
+E       
+E             \U0001f464hello\u2728System Notification: Please configure your GitHub link."
+E       
+E       Aria snapshot:
+E       - article:
+E         - paragraph:
+E           - text: Hello! I'm your AI assistant using the
+E           - strong: AUTO
+E           - text: strategy. I search your whole vault unless you choose notes. What would you like to know?
+E       - article:
+E         - paragraph: hello
+E       - article:
+E         - paragraph: "System Notification: Please configure your GitHub link."
+
+tests\e2e\test_e2e_errors.py:46: AssertionError
+_______ test_rejected_status_change_is_reverted_and_reported[chromium] ________
+
+logged_page = <Page url='http://localhost:65444/tasks/'>
+live_server = <LiveServer listening at http://localhost:65444>
 e2e_user = <User: e2e>
 
-    def test_token_field_is_empty_and_keeps_or_clears_token(logged_page, live_server, e2e_user):
-        s = UserSettings.objects.get(user=e2e_user)
-        s.github_token = "ghp_very_secret"
-        s.save()
+    def test_rejected_status_change_is_reverted_and_reported(logged_page, live_server, e2e_user):
+        t = Task.objects.create(user=e2e_user, title="stubborn")
         p = logged_page
-        p.goto(f"{live_server.url}/settings/")
-        assert "ghp_very_secret" not in p.content()
-        expect(p.locator("#github-token")).to_have_value("")
-        expect(p.locator("#github-token")).to_have_attribute("placeholder", re.compile("Token saved"))
-        p.get_by_role("button", name="Save System Configuration").click()
-        expect(p.get_by_role("button", name="Configuration Saved Successfully")).to_be_visible()
-        assert UserSettings.objects.get(user=e2e_user).github_token == "ghp_very_secret"
-        p.check("#clear-github-token")
-        expect(p.locator("#github-token")).to_be_disabled()
-        p.get_by_role("button", name="Save System Configuration").click()
-        expect(p.locator("#settings-status")).to_have_text("Settings saved.")
->       assert UserSettings.objects.get(user=e2e_user).github_token == ""
-E       AssertionError: assert 'ghp_very_secret' == ''
-E         
-E         + ghp_very_secret
+        p.goto(f"{live_server.url}/tasks/")
+        p.route("**/api/update-task/", lambda route: route.fulfill(
+            status=400, content_type="application/json", body='{"status": "error", "msg": "Unknown task status."}'))
+        select = p.locator(f'.task-status-select[data-id="{t.id}"]').first
+        select.select_option("in_progress")
+>       expect(p.locator("#task-error-toast")).to_contain_text("Unknown task status")
+E       AssertionError: Locator expected to contain text 'Unknown task status'
+E       Actual value: None
+E       Error: element(s) not found 
+E       Call log:
+E         - Expect "to_contain_text" locator("#task-error-toast") with timeout 5000ms
+E         - waiting for locator("#task-error-toast")
+E       
+E       Aria snapshot:
+E       - link "Skip to content":
+E         - /url: "#main-content"
+E       - complementary "Main navigation":
+E         - link "Second Brain Knowledge Manager":
+E           - /url: /
+E         - navigation "Pages":
+E           - list:
+E             - listitem:
+E               - link "Home":
+E                 - /url: /
+E             - listitem:
+E               - link "Notes":
+E                 - /url: /notes/
+E             - listitem:
+E               - link "\u042d\u0442\u0430 \u043d\u0435\u0434\u0435\u043b\u044f":
+E                 - /url: /weekly/
+E             - listitem:
+E               - button "\u041f\u043e\u0438\u0441\u043a Ctrl K"
+E             - listitem:
+E               - link "AI Chat":
+E                 - /url: /chat/
+E             - listitem:
+E               - link "Tasks":
+E                 - /url: /tasks/
+E             - listitem:
+E               - link "Settings":
+E                 - /url: /settings/
+E             - listitem:
+E               - link "Log Out":
+E                 - /url: /logout/
+E         - text: Neural Sync 0%
+E         - progressbar "Tasks completed"
+E         - paragraph: Tasks Completed
+E         - paragraph: 0/1
+E         - paragraph: "Operator: e2e"
+E       - main:
+E         - heading "Tasks" [level=1]
+E         - paragraph: Manage your tasks and stay productive.
+E         - button "Add New Task"
+E         - region "Sync status":
+E           - paragraph:
+E             - text: Tasks are stored on this site. Connect your Obsidian vault in
+E             - link "Settings":
+E               - /url: /settings/
+E             - text: to keep them in a note.
+E         - region "Active Tasks (1)":
+E           - heading "Active Tasks (1)" [level=2]
+E           - article:
+E             - 'checkbox "Done: stubborn"'
+E             - paragraph: stubborn
+E             - text: Medium
+E             - combobox "Status":
+E               - option "To Do"
+E               - option "In Progress" [selected]
+E               - option "Done"
+E             - 'button "Edit: stubborn"': \u270f\ufe0f Edit
+E             - 'button "Delete: stubborn"': \U0001f5d1 Delete
+E         - region "Completed":
+E           - heading "Completed" [level=2]
+E           - text: No completed tasks yet.
 
-tests\e2e\test_e2e_round2.py:92: AssertionError
+tests\e2e\test_e2e_round2.py:53: AssertionError
 ============================== warnings summary ===============================
 tests/acceptance/test_round3.py: 9 warnings
 tests/acceptance/test_round4.py: 28 warnings
@@ -49,18 +172,19 @@ tests/acceptance/test_round5.py: 15 warnings
 tests/test_admin_matrix.py: 42 warnings
 tests/test_agent_providers.py: 2 warnings
 tests/test_api.py: 67 warnings
-tests/test_api_contract.py: 27 warnings
+tests/test_api_contract.py: 28 warnings
 tests/test_auth.py: 17 warnings
 tests/test_debug_static.py: 2 warnings
 tests/test_pages.py: 53 warnings
 tests/test_round3_regressions.py: 2 warnings
 tests/test_round4_regressions.py: 2 warnings
-tests/test_round5_units.py: 9 warnings
+tests/test_round5_units.py: 14 warnings
 tests/test_tasks_service.py: 11 warnings
   C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py:63: UserWarning: No directory at: C:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\staticfiles\
     mw_instance = middleware(adapted_handler)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 =========================== short test summary info ===========================
-FAILED tests/e2e/test_e2e_round2.py::test_token_field_is_empty_and_keeps_or_clears_token[chromium]
-1 failed, 1056 passed, 1 skipped, 286 warnings in 546.96s (0:09:06)
+FAILED tests/e2e/test_e2e_errors.py::test_chat_api_error_message_is_shown[chromium]
+FAILED tests/e2e/test_e2e_round2.py::test_rejected_status_change_is_reverted_and_reported[chromium]
+2 failed, 1134 passed, 1 skipped, 292 warnings in 624.00s (0:10:24)

@@ -331,3 +331,90 @@ def test_web_delete_and_rename_refuse_a_changed_note(vclient, remote, tmp_path):
     r = post(vclient, "/api/notes/rename/", {"path": NOTE, "new_path": "01 - Projects/Новое.md", "base_sha": raw["sha"]})
     assert r.status_code == 409
     assert "с телефона" in vh.remote_file(remote, NOTE, tmp_path)
+
+
+# --------------------------------------------------------------------------- Round 5 review (VERIFY.md) regressions
+
+def test_admin_login_cannot_skip_the_2fa_step(vuser):
+    vuser.is_staff = vuser.is_superuser = True
+    vuser.save()
+    s = vuser.settings
+    s.totp_enabled, s.totp_secret = True, twofa.new_secret()
+    s.save()
+    c = Client()
+    r = c.post("/admin/login/", {"username": vuser.username, "password": "Str0ng-Pass-123!", "next": "/admin/"})
+    assert r.status_code == 302 and "/login/" in r["Location"] and "/admin/login/" not in r["Location"]
+    assert c.get("/settings/").status_code == 302 and c.get("/admin/").status_code == 302
+
+
+@pytest.mark.parametrize("src", [
+    "[x](javascript:alert(1))", "[x][r]\n\n[r]: javascript:alert(1)", "![i](javascript:alert(1))",
+    "[x](JaVaScRiPt:alert(1))", "[x](&#106;avascript:alert(1))", "[x](java\tscript:alert(1))",
+    "[x](data:text/html;base64,PHNjcmlwdD4=)", "[x](vbscript:msgbox(1))",
+    "<javascript:alert(1)>",
+])
+def test_render_neutralises_dangerous_link_schemes(src):
+    import re as _re
+    out = render.render_note(None, "n.md", src + "\n", notes=[])
+    html_ = out["html"] if isinstance(out, dict) else out
+    for attr in _re.findall(r'(?:href|src)="([^"]*)"', html_):
+        import html as _h
+        value = _re.sub(r"[\x00-\x20]", "", _h.unescape(attr)).lower()
+        assert not value.startswith(("javascript:", "vbscript:", "data:")), attr
+
+
+def test_render_keeps_normal_links():
+    out = render.render_note(None, "n.md", "[a](https://ex.com/x) [b](mailto:a@b.c) [c](#h) [d](/notes/?p=1)\n", notes=[])
+    html_ = out["html"] if isinstance(out, dict) else out
+    for url in ("https://ex.com/x", "mailto:a@b.c", 'href="#h"', "/notes/?p=1"):
+        assert url in html_
+
+
+def test_failed_outbox_row_does_not_block_other_notes_and_save_reports_it(vuser, remote, tmp_path):
+    from core import notes_service
+    from core.models import VaultOutbox
+    bad = VaultOutbox.objects.create(user=vuser, kind="note", op={"op": "save", "path": NOTE, "content": None,
+                                                                  "base_sha": None})
+    VaultOutbox.objects.create(user=vuser, kind="note", op={"op": "save", "path": "05 - Fleeting/другая.md",
+                                                            "content": "дошла\n", "base_sha": None})
+    assert notes_service.flush_outbox(vuser) is True              # not «offline»: tasks sync goes on
+    assert vh.remote_file(remote, "05 - Fleeting/другая.md", tmp_path) == "дошла\n"
+    assert list(VaultOutbox.objects.filter(user=vuser).values_list("pk", flat=True)) == [bad.pk]
+    raw = notes_service.read_note(vuser, NOTE)
+    with pytest.raises(notes_service.NoteError):            # not a silent «queued»
+        notes_service.save_note(vuser, NOTE, raw["content"] + "\nещё\n", raw["sha"])
+
+
+def test_2fa_per_account_limit_blocks_even_the_right_code(vuser):
+    s = vuser.settings
+    s.totp_enabled, s.totp_secret = True, twofa.new_secret()
+    s.save()
+    for _ in range(2):                                       # two sessions × 5 wrong codes = 10 per account
+        c = Client()
+        c.post("/login/", {"username": vuser.username, "password": "Str0ng-Pass-123!"})
+        for _ in range(5):
+            c.post("/login/2fa/", {"code": "000000"})
+    c = Client()
+    c.post("/login/", {"username": vuser.username, "password": "Str0ng-Pass-123!"})
+    c.post("/login/2fa/", {"code": pyotp.TOTP(s.totp_secret).now()})
+    try:
+        assert c.get("/").status_code == 302
+    finally:
+        from django.core.cache import cache
+        cache.delete(f"sb-2fa-fail:{vuser.pk}")         # the counter outlives the test DB (same pk next test)
+
+
+def test_chain_on_a_conflicting_save_updates_one_conflict_copy(vuser, remote, tmp_path, monkeypatch):
+    from core import notes_service
+    raw = notes_service.read_note(vuser, NOTE)
+    online = _offline(monkeypatch)
+    first = notes_service.save_note(vuser, NOTE, raw["content"] + "\n1\n", raw["sha"])
+    notes_service.save_note(vuser, NOTE, raw["content"] + "\n1\n2\n", first["sha"])
+    online()
+    phone = vh.clone(remote, tmp_path / "phone")
+    vh.commit_and_push(phone, NOTE, raw["content"] + "\nс телефона\n")
+    assert notes_service.flush_outbox(vuser) is True
+    files = vh.git(remote, "ls-tree", "-r", "--name-only", "main").stdout.splitlines()
+    copies = [p for p in files if "конфликт" in p]
+    assert len(copies) == 1 and vh.remote_file(remote, copies[0], tmp_path).endswith("\n1\n2\n")
+    assert "с телефона" in vh.remote_file(remote, NOTE, tmp_path)

@@ -326,11 +326,28 @@ def _render_body(root, notes, body, depth, seen, rel, line_offset=0):
     return _restore(ctx, rendered)
 
 
+# Links / images from notes (clipped web pages, bot captures, pulled commits) must not run script:
+# any href/src whose scheme is not in the allow-list becomes "#" (review R5, MEDIUM).
+_URL_ATTR = re.compile(r'(\s(?:href|src)=")([^"]*)(")', re.I)
+_SCHEME = re.compile(r"^([a-z][a-z0-9+.-]*):")
+SAFE_SCHEMES = {"http", "https", "mailto", "tel", "obsidian"}
+
+
+def _safe_url(value):
+    probe = "".join(ch for ch in html.unescape(value) if ord(ch) > 0x20 and ord(ch) != 0x7F).lower()
+    match = _SCHEME.match(probe)
+    return "#" if match and match.group(1) not in SAFE_SCHEMES else value
+
+
+def safe_urls(rendered):
+    return _URL_ATTR.sub(lambda m: m.group(1) + _safe_url(m.group(2)) + m.group(3), rendered)
+
+
 def render_note(root, rel, text, notes=None):
     """{"html": properties panel + body}; ``notes`` = vault_index notes of this vault."""
     notes = notes if notes is not None else vault_index.scan_root(root)
     meta = fm_mod.parse(text) or {}
     body = _strip_frontmatter(text)
     offset = text[: len(text) - len(body)].count("\n") if body != text else 0
-    return {"html": _properties(meta) + _render_body(root, notes, body, 0, {rel}, rel, line_offset=offset),
-            "meta": meta}
+    html_out = _properties(meta) + _render_body(root, notes, body, 0, {rel}, rel, line_offset=offset)
+    return {"html": safe_urls(html_out), "meta": meta}

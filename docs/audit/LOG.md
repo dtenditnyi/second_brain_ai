@@ -133,3 +133,7 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 ### 2026-11-12 — Round 5 / continuation — goals check, R4.5 LOWs, live bot check
 - Full run 1056 passed / 1 failed (settings e2e race, B-64). Goals check: symlink leak out of the vault (B-58, HIGH-ish, fixed with tests). R4.5 data LOWs B-59…B-63 fixed (tests first).
 - Live Link2Note check: 18/18 ✅ on copy DB + local temp repo (`round5/LINK2NOTE_CHECK.md`); Docker step skipped (daemon off). Fast suite 685 passed.
+
+### 2026-11-12 — Round 5 / end — review + fixes
+- Reviewer `round5/VERIFY.md`: 1 HIGH (admin login skipped 2FA, B-65), 2 MEDIUM (B-66 unsafe link schemes, B-67 stuck outbox), 7 LOW; 4/5 mutations caught.
+- Fixed B-65…B-69 with regression tests; re-check of the HIGH by the same brief; final full run → `round5/test-run.txt`. Screenshots `round5/responsive/`.

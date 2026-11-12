@@ -177,3 +177,9 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 | B-62 | data (R4.5 LOW) | Web delete/rename ignored edits made elsewhere since the page was opened | `test_web_delete_and_rename_refuse_a_changed_note` | FIXED |
 | B-63 | data (R4.5 LOW) | API create: push landed but timed out → retry with same Idempotency-Key created « (2)» | `test_retry_after_push_that_landed_but_timed_out_does_not_duplicate` | FIXED |
 | B-64 | test (R5 full run) | Settings e2e race: status text from the 1st save satisfied the 2nd wait | `test_token_field_is_empty_and_keeps_or_clears_token` | FIXED |
+| B-65 | security (R5 VERIFY, HIGH) | `/admin/login/` (Django admin form) skipped the 2FA step → full session with password only | `test_admin_login_cannot_skip_the_2fa_step` | FIXED |
+| B-66 | security (R5 VERIFY, MEDIUM) | Note render kept `javascript:`/`data:`/`vbscript:` in href/src (stored XSS from clipped pages) | `test_render_neutralises_dangerous_link_schemes[*]` | FIXED |
+| B-67 | data (R5 VERIFY, MEDIUM) | A non-offline outbox failure blocked the whole queue; later editor saves silently «queued» | `test_failed_outbox_row_does_not_block_other_notes_and_save_reports_it` | FIXED |
+| B-68 | data (R5 VERIFY, LOW) | Chain of offline saves on a conflicting base made one conflict copy per save | `test_chain_on_a_conflicting_save_updates_one_conflict_copy` | FIXED |
+| B-69 | security (R5 VERIFY, LOW) | 2FA verify without row lock (parallel reuse of one code); per-account limit untested | `test_2fa_per_account_limit_blocks_even_the_right_code` | FIXED |
+| B-70 | test (R5 final run) | Chat-error and task-status e2e interacted before page JS was bound (intermittent) | `test_chat_api_error_message_is_shown`, `test_rejected_status_change_is_reverted_and_reported` | FIXED |

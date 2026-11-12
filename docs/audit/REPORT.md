@@ -269,5 +269,12 @@ Branch `feature/round5` (from `feature/round4`). Goals: `round5/GOALS.md`; decis
 - See `docs/audit/SUMMARY_ROUNDS_3-5_RU.md` (merge order, deploy, bot token, `VAULT_BACKEND=api`).
 
 ## R5.5 Review findings and leftovers
-- (filled after VERIFY.md)
+- `round5/VERIFY.md`: 1 HIGH, 2 MEDIUM, 7 LOW; mutations 4/5 caught (the missed one — per-account 2FA limit — now has a test).
+- Fixed with regression tests: HIGH B-65 (admin login → site login with 2FA), MEDIUM B-66 (unsafe URL schemes in rendered notes → `#`),
+  MEDIUM B-67 (a stuck outbox row blocks only its own note; the editor gets a clear 409), LOW B-68 (one conflict copy per chain),
+  LOW B-69 (2FA row lock + limit test). Re-check of the HIGH by the same short brief: see `round5/VERIFY.md` (re-check section).
+- LOW left: capture/append retried after a push that landed but timed out can add the text twice (only note *create* checks its own
+  commit); the offline capture queue in localStorage is not cleared on logout (clearing would lose unsent captures; it is keyed by user
+  id and never sent for another user); after a session simply expires, cached pages stay until `/login/` is opened online; the Dataview
+  2 s limit is per block (a note with hundreds of blocks is slow).
 - R4.5 leftovers not done (not data loss): NFD file names via API; `DELETE /tasks` uses the `write` scope (contract wording says delete).

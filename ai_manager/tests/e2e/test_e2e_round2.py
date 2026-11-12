@@ -45,9 +45,10 @@ def test_task_status_select_on_home_board(logged_page, live_server, e2e_user):
 def test_rejected_status_change_is_reverted_and_reported(logged_page, live_server, e2e_user):
     t = Task.objects.create(user=e2e_user, title="stubborn")
     p = logged_page
-    p.goto(f"{live_server.url}/tasks/")
     p.route("**/api/update-task/", lambda route: route.fulfill(
         status=400, content_type="application/json", body='{"status": "error", "msg": "Unknown task status."}'))
+    p.goto(f"{live_server.url}/tasks/")
+    p.wait_for_load_state("networkidle")          # tasks.js bound before the change (flaky in R5 full run)
     select = p.locator(f'.task-status-select[data-id="{t.id}"]').first
     select.select_option("in_progress")
     expect(p.locator("#task-error-toast")).to_contain_text("Unknown task status")
