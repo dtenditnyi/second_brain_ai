@@ -824,10 +824,17 @@ SCRIPTS = ["install.sh", "update.sh", "backup.sh", "restore.sh", "status.sh", "m
 
 
 def _bash():
-    for candidate in (shutil.which("bash"), r"C:\Program Files\Git\bin\bash.exe"):
-        if candidate and Path(candidate).exists():
-            return candidate
-    pytest.skip("bash not available")
+    # Prefer Git Bash: on Windows `bash` on PATH is often the WSL launcher
+    # (C:\Windows\System32 or ...\WindowsApps\bash.exe), which cannot open Windows paths.
+    candidates = [r"C:\Program Files\Git\bin\bash.exe", shutil.which("bash")]
+    for candidate in candidates:
+        if not candidate or not Path(candidate).exists():
+            continue
+        low = candidate.lower()
+        if "windowsapps" in low or low.endswith(r"system32\bash.exe"):
+            continue
+        return candidate
+    pytest.skip("bash (Git Bash or Linux) not available")
 
 
 @pytest.mark.parametrize("script", SCRIPTS)
@@ -836,7 +843,9 @@ def test_b2_scripts_strict_mode_and_bash_syntax(script):
     text = path.read_text(encoding="utf-8")
     assert text.startswith("#!/usr/bin/env bash") and re.search(r"(?m)^set -E?euo pipefail$", text)
     assert "\r\n" not in text
-    out = subprocess.run([_bash(), "-n", str(path)], capture_output=True, text=True)
+    out = subprocess.run(
+        [_bash(), "-n", path.name], cwd=path.parent, capture_output=True, text=True
+    )
     assert out.returncode == 0, out.stderr
 
 
