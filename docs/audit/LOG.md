@@ -129,3 +129,7 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 ### 2026-11-11 — Round 4 / end — full run, review, fixes
 - Full run 974 passed / 1 failed (settings e2e, fixed ac13fd4) → `round4/test-run.txt`. Reviewer `round4/VERIFY.md`: 1 HIGH, 5 MEDIUM, 7 LOW, 5/5 mutations caught.
 - Fixed B-52…B-57 (+ /health no global counters); `tests/test_round4_regressions.py` 12 passed; fast suite 622 passed. Round 5 GOALS + 36 xfail tests ready.
+
+### 2026-11-12 — Round 5 / continuation — goals check, R4.5 LOWs, live bot check
+- Full run 1056 passed / 1 failed (settings e2e race, B-64). Goals check: symlink leak out of the vault (B-58, HIGH-ish, fixed with tests). R4.5 data LOWs B-59…B-63 fixed (tests first).
+- Live Link2Note check: 18/18 ✅ on copy DB + local temp repo (`round5/LINK2NOTE_CHECK.md`); Docker step skipped (daemon off). Fast suite 685 passed.

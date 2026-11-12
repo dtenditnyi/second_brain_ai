@@ -76,7 +76,8 @@ def notes_delete(request):
     data, error = _post(request)
     if error:
         return error
-    return _handle(lambda: JsonResponse({"status": "ok", "path": notes_service.delete_note(request.user, data.get("path", ""))}))
+    return _handle(lambda: JsonResponse({"status": "ok", "path": notes_service.delete_note(
+        request.user, data.get("path", ""), base_sha=data.get("base_sha") or None)}))
 
 
 @login_required(login_url='login')
@@ -85,4 +86,5 @@ def notes_rename(request):
     if error:
         return error
     return _handle(lambda: JsonResponse({"status": "ok", **notes_service.rename_note(
-        request.user, data.get("path", ""), data.get("new_path", ""), preview=bool(data.get("preview")))}))
+        request.user, data.get("path", ""), data.get("new_path", ""), preview=bool(data.get("preview")),
+        base_sha=data.get("base_sha") or None)}))

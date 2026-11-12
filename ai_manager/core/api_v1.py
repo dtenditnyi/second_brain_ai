@@ -18,7 +18,9 @@ import hashlib
 import json
 import logging
 import math
+import contextvars
 import re
+import subprocess
 import time
 import unicodedata
 from pathlib import Path, PurePosixPath
@@ -166,6 +168,30 @@ def _is_final(response):
     return True
 
 
+# Hash of (token, Idempotency-Key) of the request being run: written as a commit trailer, so a retry
+# after a push that reached GitHub but timed out finds its own commit instead of writing again (R4.5).
+_IDEM_TAG = contextvars.ContextVar("sb_idem_tag", default=None)
+
+
+def _idem_trailer(message):
+    tag = _IDEM_TAG.get()
+    return f"{message}\n\nSB-Request: {tag}" if tag else message
+
+
+def _landed_file(root, prefix):
+    """Path (starting with ``prefix``) added by an earlier commit of this same request, if any."""
+    tag = _IDEM_TAG.get()
+    if not tag:
+        return None
+    try:
+        out = subprocess.run(["git", "-C", str(root), "log", "-n", "1", "--fixed-strings", f"--grep=SB-Request: {tag}",
+                              "--diff-filter=A", "--name-only", "--format=", "-z"],
+                             capture_output=True, timeout=20, check=True).stdout.decode("utf-8", "replace")
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return next((p for p in out.split("\0") if p.startswith(prefix)), None)
+
+
 def _idempotent(request, token, data, run):
     from .models import IdempotencyRecord
     key = request.META.get("HTTP_IDEMPOTENCY_KEY", "").strip()
@@ -193,11 +219,14 @@ def _idempotent(request, token, data, run):
             raise ApiError(409, "in_progress", "Запрос с этим Idempotency-Key ещё выполняется.",
                            retryable=True, retry_after=5)
         IdempotencyRecord.objects.filter(pk=record.pk).update(created_at=now)      # abandoned → take over
+    ctx = _IDEM_TAG.set(hashlib.sha256(f"{token.pk}:{key}".encode("utf-8")).hexdigest()[:24])
     try:
         response = run()
     except BaseException:
         IdempotencyRecord.objects.filter(pk=record.pk).delete()
         raise
+    finally:
+        _IDEM_TAG.reset(ctx)
     if _is_final(response):
         IdempotencyRecord.objects.filter(pk=record.pk).update(
             in_progress=False, status=response.status_code, body=response.content.decode("utf-8"))
@@ -487,6 +516,9 @@ def _create_from_markdown(token, data):
     need_path(token, "write", f"{base}.md")
 
     def operation(root):
+        landed = _landed_file(root, base)
+        if landed and notes_service._read(notes_service.md_path(root, landed)) == content:
+            return [], landed                  # the first try was pushed after all (timeout) — same note
         rel, i = f"{base}.md", 2
         while notes_service.md_path(root, rel).exists():
             rel, i = f"{base} ({i}).md", i + 1
@@ -495,7 +527,7 @@ def _create_from_markdown(token, data):
         full.write_bytes(content.encode("utf-8"))
         return [rel], rel
 
-    rel, commit = _apply(token.user, operation, f"api: create {base}.md")
+    rel, commit = _apply(token.user, operation, _idem_trailer(f"api: create {base}.md"))
     notes_service._reindex(token.user, changed=[rel])
     return ok({"path": rel, "name": PurePosixPath(rel).stem, "sha": notes_service.sha(content),
                "commit": commit, "pushed": True}, status=201)

@@ -1,0 +1,66 @@
+........................................................................ [  6%]
+........................................................................ [ 13%]
+........................................................................ [ 20%]
+........................................................................ [ 27%]
+........................................................................ [ 34%]
+........................................................................ [ 40%]
+........................................................................ [ 47%]
+.............F.......................................................... [ 54%]
+........................................................................ [ 61%]
+........................................................................ [ 68%]
+........................................................................ [ 74%]
+.....................s.................................................. [ 81%]
+........................................................................ [ 88%]
+........................................................................ [ 95%]
+..................................................                       [100%]
+================================== FAILURES ===================================
+________ test_token_field_is_empty_and_keeps_or_clears_token[chromium] ________
+
+logged_page = <Page url='http://localhost:64915/settings/'>
+live_server = <LiveServer listening at http://localhost:64915>
+e2e_user = <User: e2e>
+
+    def test_token_field_is_empty_and_keeps_or_clears_token(logged_page, live_server, e2e_user):
+        s = UserSettings.objects.get(user=e2e_user)
+        s.github_token = "ghp_very_secret"
+        s.save()
+        p = logged_page
+        p.goto(f"{live_server.url}/settings/")
+        assert "ghp_very_secret" not in p.content()
+        expect(p.locator("#github-token")).to_have_value("")
+        expect(p.locator("#github-token")).to_have_attribute("placeholder", re.compile("Token saved"))
+        p.get_by_role("button", name="Save System Configuration").click()
+        expect(p.get_by_role("button", name="Configuration Saved Successfully")).to_be_visible()
+        assert UserSettings.objects.get(user=e2e_user).github_token == "ghp_very_secret"
+        p.check("#clear-github-token")
+        expect(p.locator("#github-token")).to_be_disabled()
+        p.get_by_role("button", name="Save System Configuration").click()
+        expect(p.locator("#settings-status")).to_have_text("Settings saved.")
+>       assert UserSettings.objects.get(user=e2e_user).github_token == ""
+E       AssertionError: assert 'ghp_very_secret' == ''
+E         
+E         + ghp_very_secret
+
+tests\e2e\test_e2e_round2.py:92: AssertionError
+============================== warnings summary ===============================
+tests/acceptance/test_round3.py: 9 warnings
+tests/acceptance/test_round4.py: 28 warnings
+tests/acceptance/test_round5.py: 15 warnings
+tests/test_admin_matrix.py: 42 warnings
+tests/test_agent_providers.py: 2 warnings
+tests/test_api.py: 67 warnings
+tests/test_api_contract.py: 27 warnings
+tests/test_auth.py: 17 warnings
+tests/test_debug_static.py: 2 warnings
+tests/test_pages.py: 53 warnings
+tests/test_round3_regressions.py: 2 warnings
+tests/test_round4_regressions.py: 2 warnings
+tests/test_round5_units.py: 9 warnings
+tests/test_tasks_service.py: 11 warnings
+  C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py:63: UserWarning: No directory at: C:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\staticfiles\
+    mw_instance = middleware(adapted_handler)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_e2e_round2.py::test_token_field_is_empty_and_keeps_or_clears_token[chromium]
+1 failed, 1056 passed, 1 skipped, 286 warnings in 546.96s (0:09:06)

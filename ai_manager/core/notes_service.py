@@ -99,11 +99,15 @@ def _local_root(user):
 
 
 def _walk_md(root):
+    # Symlinks are never followed: a link committed to the repo could point outside the vault
+    # (another user's clone, server files) and leak it into search / Dataview / graph.
     for current, dirs, files in os.walk(root):
-        dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS)
+        dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS and not os.path.islink(os.path.join(current, d)))
         for name in sorted(files):
             if name.lower().endswith(".md"):
                 full = Path(current) / name
+                if full.is_symlink():
+                    continue
                 yield full.relative_to(root).as_posix(), full
 
 
@@ -169,10 +173,10 @@ def _save_operation(rel, content, base_sha):
         path = md_path(root, rel)
         current = _read(path)
         current_sha = sha(current) if current is not None else None
+        if current == content:                 # already saved (resend after a lost response): not a conflict
+            return [], {"sha": current_sha}
         if (base_sha or None) != current_sha:
             raise NoteConflict(current or "", current_sha, diff_text(current or "", content, rel))
-        if current == content:
-            return [], {"sha": current_sha}
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(content.encode("utf-8"))
         return [rel], {"sha": sha(content)}
@@ -185,17 +189,35 @@ def save_note(user, rel, content, base_sha, queue_offline=True):
     if not isinstance(content, str):
         raise NoteError("Текст заметки должен быть строкой.")
     md_path(Path("/tmp/vault-check"), rel)          # validate before touching git
+    from .models import VaultOutbox
+
+    def queue(message):
+        VaultOutbox.objects.create(user=user, kind="note", last_error=message[:500],
+                                   op={"op": "save", "path": rel, "content": content, "base_sha": base_sha})
+        # The next save of the editor builds on this text: its base is this sha, and the queue
+        # applies the saves in order, so a chain of offline saves is not a conflict (R4.5).
+        return {"sha": sha(content), "queued": True}
+
+    if queue_offline and _pending_saves(user, rel):
+        try:
+            flush_outbox(user)
+        except Exception as error:             # noqa: BLE001 — keep the order: queue behind the pending saves
+            logger.info("Outbox flush before save failed: %s", type(error).__name__)
+        if _pending_saves(user, rel):
+            return queue("waiting for earlier offline saves")
     try:
         result = vault_apply(user, _save_operation(rel, content, base_sha), f"notes: edit {rel} via site")
     except VaultError as error:
         if error.kind == "offline" and queue_offline:
-            from .models import VaultOutbox
-            VaultOutbox.objects.create(user=user, kind="note", last_error=error.message[:500],
-                                       op={"op": "save", "path": rel, "content": content, "base_sha": base_sha})
-            return {"sha": base_sha, "queued": True}
+            return queue(error.message)
         raise
     _reindex(user, changed=[rel])
     return {**result, "queued": False}
+
+
+def _pending_saves(user, rel):
+    from .models import VaultOutbox
+    return any(row.op.get("path") == rel for row in VaultOutbox.objects.filter(user=user, kind="note"))
 
 
 def flush_outbox(user):
@@ -206,8 +228,7 @@ def flush_outbox(user):
         try:
             save_note(user, op["path"], op["content"], op.get("base_sha"), queue_offline=False)
         except NoteConflict:
-            copy = _conflict_copy_path(op["path"])
-            create_raw(user, copy, op["content"], f"notes: conflict copy of {op['path']} (offline edit)")
+            _create_conflict_copy(user, op["path"], op["content"])
         except VaultError as error:
             if error.kind == "offline":
                 VaultOutbox.objects.filter(pk=row.pk).update(attempts=row.attempts + 1, last_error=error.message[:500])
@@ -221,6 +242,37 @@ def _conflict_copy_path(rel):
     p = PurePosixPath(rel)
     stamp = timezone.localtime().strftime("%Y-%m-%d %H%M")
     return str(p.with_name(f"{p.stem} (конфликт {stamp}){p.suffix}"))
+
+
+def _create_conflict_copy(user, rel, content):
+    """Save ``content`` as a new conflict copy next to ``rel``; a free name is picked inside the
+    lock (two copies in one minute get « 2», « 3»…), and an identical copy is reused, so the outbox
+    never stalls on «already exists» and a retried flush does not write the copy twice (R4.5)."""
+    base = PurePosixPath(_conflict_copy_path(rel))
+
+    def operation(root):
+        for n in range(1, 100):
+            candidate = str(base) if n == 1 else str(base.with_name(f"{base.stem} {n}{base.suffix}"))
+            path = md_path(root, candidate)
+            if path.exists():
+                if _read(path) == content:
+                    return [], candidate
+                continue
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(content.encode("utf-8"))
+            return [candidate], candidate
+        raise NoteError("Слишком много конфликтных копий.")
+    copy = vault_apply(user, operation, f"notes: conflict copy of {rel} (offline edit)")
+    _reindex(user, changed=[copy])
+    return copy
+
+
+def _check_base(path, rel, base_sha):
+    """Delete / rename from the editor send the sha the page showed: refuse if the note changed since."""
+    if base_sha:
+        current = _read(path) or ""
+        if sha(current) != base_sha:
+            raise NoteConflict(current, sha(current), diff_text(current, current, rel))
 
 
 def create_raw(user, rel, content, message):
@@ -342,7 +394,7 @@ def append_to_note(user, rel, text, message=None):
 
 # --------------------------------------------------------------------------- delete / rename
 
-def delete_note(user, rel):
+def delete_note(user, rel, base_sha=None):
     rel = _norm(rel)
     md_path(Path("/tmp/vault-check"), rel)
 
@@ -350,6 +402,7 @@ def delete_note(user, rel):
         path = md_path(root, rel)
         if not path.exists():
             raise NoteError("Заметка не найдена.", status=404)
+        _check_base(path, rel, base_sha)
         path.unlink()
         return [rel], rel
 
@@ -394,7 +447,7 @@ def _rename_plan(root, rel, new_rel):
     return src, dst, updates
 
 
-def rename_note(user, rel, new_rel, preview=False):
+def rename_note(user, rel, new_rel, preview=False, base_sha=None):
     rel, new_rel = _norm(rel), _norm(new_rel)
     for r in (rel, new_rel):
         md_path(Path("/tmp/vault-check"), r)
@@ -406,6 +459,7 @@ def rename_note(user, rel, new_rel, preview=False):
 
     def operation(root):
         src, dst, updates = _rename_plan(root, rel, new_rel)
+        _check_base(src, rel, base_sha)
         dst.parent.mkdir(parents=True, exist_ok=True)
         src.rename(dst)
         changed = [rel, new_rel]

@@ -335,7 +335,7 @@
         const newPath = newPathFor(renamePath, renameInput.value);
         renameConfirm.disabled = true;
         renameResult.textContent = 'Переименовываю…';
-        const { ok, data } = await api('/api/notes/rename/', { path: renamePath, new_path: newPath });
+        const { ok, data } = await api('/api/notes/rename/', { path: renamePath, new_path: newPath, base_sha: openSha(renamePath) });
         if (!ok) { renameResult.textContent = data.msg || 'Ошибка'; renameConfirm.disabled = false; return; }
         clearDraft(renamePath);
         window.location.href = `/notes/?path=${encodeURIComponent(data.path)}`;
@@ -349,11 +349,14 @@
         if (e.target === renameDialog || e.target.closest('[data-rename-close]')) closeRename();
     });
 
+    // The sha the open editor shows: the server refuses delete/rename if the note changed since (R4.5).
+    function openSha(path) { return state && state.path === path ? state.baseSha : null; }
+
     async function deleteNote(path) {
         const name = path.split('/').pop();
         if (!window.confirm(`Удалить заметку «${name}»?\n\nЭто отдельный коммит в хранилище — вернуть можно через историю git.`)) return;
-        const { ok, data } = await api('/api/notes/delete/', { path });
-        if (!ok) { window.alert(data.msg || 'Не удалось удалить.'); return; }
+        const { ok, data } = await api('/api/notes/delete/', { path, base_sha: openSha(path) });
+        if (!ok) { window.alert(data.status === 'conflict' ? 'Заметка изменилась после открытия — обновите страницу и проверьте её перед удалением.' : (data.msg || 'Не удалось удалить.')); return; }
         clearDraft(path);
         window.location.href = '/notes/';
     }

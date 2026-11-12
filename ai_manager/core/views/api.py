@@ -339,7 +339,7 @@ def api_get_note_content(request):
         if os.path.exists(paths["notes_dir"]):
             for root, dirs, files in os.walk(paths["notes_dir"]):
                 dirs[:] = sorted(d for d in dirs if d not in (".git", ".obsidian", ".trash"))
-                if target_file_name in files:
+                if target_file_name in files and not os.path.islink(os.path.join(root, target_file_name)):
                     current_file_path = os.path.join(root, target_file_name)
                     break
     target_file_name = f"{note_name}.md"

@@ -87,7 +87,10 @@ def test_token_field_is_empty_and_keeps_or_clears_token(logged_page, live_server
     assert UserSettings.objects.get(user=e2e_user).github_token == "ghp_very_secret"
     p.check("#clear-github-token")
     expect(p.locator("#github-token")).to_be_disabled()
-    p.get_by_role("button", name="Save System Configuration").click()
+    # The status already says "Settings saved." from the first save: wait for THIS request (race, R5 full run).
+    with p.expect_response(lambda r: "/api/save-settings/" in r.url) as saved:
+        p.get_by_role("button", name="Save System Configuration").click()
+    assert saved.value.ok
     expect(p.locator("#settings-status")).to_have_text("Settings saved.")
     assert UserSettings.objects.get(user=e2e_user).github_token == ""
 

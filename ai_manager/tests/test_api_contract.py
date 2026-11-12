@@ -280,3 +280,26 @@ def test_agent_apply_respects_write_paths(bot, vuser):
         batch = api("post", "/api/v1/agent", {"request": "x"}).json()["batch_id"]
     r = api("post", f"/api/v1/agent/{batch}/apply", {})
     assert r.status_code == 403 and err(r) == "forbidden"     # NOTE is outside the bot's write_paths
+
+
+def test_retry_after_push_that_landed_but_timed_out_does_not_duplicate(bot, remote, tmp_path, monkeypatch):
+    """R4.5: the push reached the remote, but the site saw a timeout → 503 (not cached) → the bot
+    retries with the same Idempotency-Key → the same note is returned, no « (2)» copy."""
+    from core import vault_writer
+    real_push = vault_writer.VaultRepo.push
+
+    def push_then_timeout(self):
+        real_push(self)
+        raise vault_writer.VaultError("offline", "push timed out")
+
+    api = Api(bot)
+    payload = {"folder": BOT, "name": "2026-11-11 Таймаут", "content": md()}
+    monkeypatch.setattr(vault_writer.VaultRepo, "push", push_then_timeout)
+    assert api("post", "/api/v1/notes", payload, key="k-timeout").status_code == 503
+    monkeypatch.setattr(vault_writer.VaultRepo, "push", real_push)
+    r = api("post", "/api/v1/notes", payload, key="k-timeout")
+    assert r.status_code == 201 and r.json()["name"] == "2026-11-11 Таймаут"
+    files = vh.git(remote, "ls-tree", "-r", "--name-only", "main").stdout.splitlines()
+    assert [f for f in files if "Таймаут" in f] == [f"{BOT}/2026-11-11 Таймаут.md"]
+    # a different key with the same name is a new note, as the contract says
+    assert api("post", "/api/v1/notes", payload, key="k-other").json()["name"] == "2026-11-11 Таймаут (2)"

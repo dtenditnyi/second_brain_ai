@@ -213,3 +213,121 @@ def test_capture_session_endpoint_dedupes_client_id(vclient, remote, tmp_path, s
     assert one.status_code == two.status_code == 200 and two.json().get("duplicate")
     assert vh.remote_file(remote, settings.CAPTURE_INBOX_NOTE, tmp_path).count("один раз") == 1
     assert post(vclient, "/api/capture/", {"text": "  "}).status_code == 422
+
+
+# --------------------------------------------------------------------------- symlinks never leak outside the vault
+
+def test_index_skips_symlinks_leaving_the_vault(tmp_path):
+    import os
+    from core import notes_service
+    outside = tmp_path / "other_user_vault"
+    outside.mkdir()
+    (outside / "secret.md").write_text("чужой секрет", encoding="utf-8")
+    root = tmp_path / "vault"
+    (root / "notes").mkdir(parents=True)
+    (root / "notes" / "own.md").write_text("своё", encoding="utf-8")
+    try:
+        os.symlink(outside / "secret.md", root / "notes" / "leak.md")
+        os.symlink(outside, root / "linkdir", target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlinks not permitted on this machine")
+    rels = [rel for rel, _ in notes_service._walk_md(root)]
+    assert rels == ["notes/own.md"]
+    assert all("чужой" not in n.text for n in vault_index.scan_root(root))
+
+
+def test_rag_loader_and_get_note_skip_symlinks(tmp_path, vclient, settings):
+    import os
+    from core import rag_engine
+    from core.paths import get_user_paths
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "secret.md").write_text("чужой секрет", encoding="utf-8")
+    vault = tmp_path / "v"
+    vault.mkdir()
+    (vault / "own.md").write_text("своё", encoding="utf-8")
+    try:
+        os.symlink(outside / "secret.md", vault / "leak.md")
+    except (OSError, NotImplementedError):
+        pytest.skip("symlinks not permitted on this machine")
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(rag_engine, "SimpleDirectoryReader",
+                   lambda input_files: type("R", (), {"load_data": lambda self: list(input_files)})())
+        assert [os.path.basename(f) for f in rag_engine._vault_documents(vault)] == ["own.md"]
+    user = vclient.session.get("_auth_user_id")
+    from django.contrib.auth.models import User
+    root = get_user_paths(User.objects.get(pk=user))["notes_dir"]
+    vclient.get("/api/get-note/", {"path": NOTE})            # make sure the clone exists
+    os.symlink(outside / "secret.md", os.path.join(root, "leak.md"))
+    r = vclient.get("/api/get-note/", {"name": "leak"})
+    assert r.status_code == 404 and "чужой" not in r.content.decode()
+
+
+def test_logout_header_and_login_page_both_clear_offline_cache(auth_client):
+    r = auth_client.post("/logout/")
+    assert r["Clear-Site-Data"] == '"cache"'
+    assert 'id="sb-clear-cache"' in Client().get("/login/").content.decode()
+
+
+# --------------------------------------------------------------------------- R4.5 LOW leftovers (data loss / duplicates)
+
+def _offline(monkeypatch):
+    from core import vault_writer
+    real = vault_writer.VaultRepo.pull
+    monkeypatch.setattr(vault_writer.VaultRepo, "pull",
+                        lambda self: (_ for _ in ()).throw(vault_writer.VaultError("offline", "no network")))
+    return lambda: monkeypatch.setattr(vault_writer.VaultRepo, "pull", real)
+
+
+def test_chained_offline_saves_of_one_note_apply_in_order(vuser, remote, tmp_path, monkeypatch):
+    from core import notes_service
+    raw = notes_service.read_note(vuser, NOTE)
+    online = _offline(monkeypatch)
+    first = notes_service.save_note(vuser, NOTE, raw["content"] + "\nправка 1\n", raw["sha"])
+    second = notes_service.save_note(vuser, NOTE, raw["content"] + "\nправка 1\nправка 2\n", first["sha"])
+    assert first["queued"] and second["queued"]
+    online()
+    # back online, the editor saves again with the sha it got from the queued save
+    third = notes_service.save_note(vuser, NOTE, raw["content"] + "\nправка 1\nправка 2\nправка 3\n", second["sha"])
+    assert third["queued"] is False
+    assert vh.remote_file(remote, NOTE, tmp_path).endswith("правка 1\nправка 2\nправка 3\n")
+    files = vh.git(remote, "ls-tree", "-r", "--name-only", "main").stdout.splitlines()
+    assert not [p for p in files if "конфликт" in p]
+
+
+def test_two_conflict_copies_in_one_minute_do_not_block_outbox(vuser, remote, tmp_path, monkeypatch):
+    from core import notes_service
+    from core.models import VaultOutbox
+    raw = notes_service.read_note(vuser, NOTE)
+    online = _offline(monkeypatch)
+    notes_service.save_note(vuser, NOTE, raw["content"] + "\nА\n", raw["sha"])
+    VaultOutbox.objects.create(user=vuser, kind="note", op={"op": "save", "path": NOTE, "content": "Б\n",
+                                                            "base_sha": raw["sha"]})
+    online()
+    phone = vh.clone(remote, tmp_path / "phone")
+    vh.commit_and_push(phone, NOTE, raw["content"] + "\nс телефона\n")
+    assert notes_service.flush_outbox(vuser) is True
+    assert not VaultOutbox.objects.filter(user=vuser).exists()
+    vh.git(phone, "fetch")
+    copies = [p for p in vh.git(phone, "ls-tree", "-r", "--name-only", "origin/main").stdout.splitlines() if "конфликт" in p]
+    texts = {vh.remote_file(remote, c, tmp_path).strip() for c in copies}
+    assert len(copies) == 2 and any(t.endswith("А") for t in texts) and "Б" in texts
+
+
+def test_resent_save_after_lost_response_is_not_a_conflict(vuser, remote, tmp_path):
+    from core import notes_service
+    raw = notes_service.read_note(vuser, NOTE)
+    new = raw["content"] + "\nдошло\n"
+    notes_service.save_note(vuser, NOTE, new, raw["sha"])
+    again = notes_service.save_note(vuser, NOTE, new, raw["sha"])          # same request, old base
+    assert again["sha"] == notes_service.sha(new)
+
+
+def test_web_delete_and_rename_refuse_a_changed_note(vclient, remote, tmp_path):
+    raw = vclient.get("/api/notes/raw/", {"path": NOTE}).json()
+    phone = vh.clone(remote, tmp_path / "phone")
+    vh.commit_and_push(phone, NOTE, raw["content"] + "\nс телефона\n")
+    assert post(vclient, "/api/notes/delete/", {"path": NOTE, "base_sha": raw["sha"]}).status_code == 409
+    r = post(vclient, "/api/notes/rename/", {"path": NOTE, "new_path": "01 - Projects/Новое.md", "base_sha": raw["sha"]})
+    assert r.status_code == 409
+    assert "с телефона" in vh.remote_file(remote, NOTE, tmp_path)

@@ -170,3 +170,10 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 | B-55 | data (R4 verify) | PATCH frontmatter wrote unquoted YAML (`a: b`, `#x`, `[a`) → Obsidian dropped properties | `test_b55_frontmatter_values_are_yaml_safe[*]` | FIXED |
 | B-56 | data (R4 verify) | Rename rewrote linking CRLF notes as LF (whole-file diffs) | `test_b56_rename_keeps_crlf` | FIXED |
 | B-57 | data (R4 verify) | Rename rewrote `[[Name]]` pointing to another note with the same name; case-sensitive link match | `test_b57_rename_ambiguous_names_and_case` | FIXED |
+| B-58 | security (R5 goals check) | Symlinked `.md`/folders in a vault were read by search/Dataview/graph, RAG and get-note by name → files outside the vault (another user's clone) could leak | `test_index_skips_symlinks_leaving_the_vault`, `test_rag_loader_and_get_note_skip_symlinks` | FIXED |
+| B-59 | data (R4.5 LOW) | Chained offline saves of one note: the 2nd became a conflict copy | `test_chained_offline_saves_of_one_note_apply_in_order` | FIXED |
+| B-60 | data (R4.5 LOW) | Two conflict copies in one minute → «already exists» stalled the outbox forever | `test_two_conflict_copies_in_one_minute_do_not_block_outbox` | FIXED |
+| B-61 | data (R4.5 LOW) | Resent save with old base after a lost response → false conflict | `test_resent_save_after_lost_response_is_not_a_conflict` | FIXED |
+| B-62 | data (R4.5 LOW) | Web delete/rename ignored edits made elsewhere since the page was opened | `test_web_delete_and_rename_refuse_a_changed_note` | FIXED |
+| B-63 | data (R4.5 LOW) | API create: push landed but timed out → retry with same Idempotency-Key created « (2)» | `test_retry_after_push_that_landed_but_timed_out_does_not_duplicate` | FIXED |
+| B-64 | test (R5 full run) | Settings e2e race: status text from the 1st save satisfied the 2nd wait | `test_token_field_is_empty_and_keeps_or_clears_token` | FIXED |

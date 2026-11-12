@@ -67,6 +67,15 @@ MSG_MODELS_UNAVAILABLE = ("System Error: none of the configured Gemini models an
 NON_ANSWER_PREFIXES = ("System ", "⚠️", "❌")
 
 
+def _vault_documents(notes_dir):
+    """Load the vault's notes for embedding: same walker as search (no .git/.obsidian/.trash, hidden
+    folders or symlinks), so a committed symlink can never pull a file from outside the vault into AI answers."""
+    from pathlib import Path
+    from .notes_service import _walk_md
+    files = [str(full) for rel, full in _walk_md(Path(notes_dir)) if not any(p.startswith(".") for p in rel.split("/"))]
+    return SimpleDirectoryReader(input_files=files).load_data() if files else []
+
+
 def ollama_url():
     """Local Ollama endpoint from settings/env (Q9); default http://localhost:11434."""
     return getattr(django_settings, 'OLLAMA_HOST', None) or "http://localhost:11434"
@@ -273,7 +282,7 @@ def _open_index(paths, sync_success):
         logger.info("Vector collection empty; building initial index.")
         documents = []
         if sync_success and os.path.exists(paths["notes_dir"]):
-            documents = SimpleDirectoryReader(paths["notes_dir"], required_exts=[".md"], recursive=True).load_data()
+            documents = _vault_documents(paths["notes_dir"])
         if documents:
             index = VectorStoreIndex.from_documents(documents, storage_context=storage_context)
             logger.info("Vector index created: documents=%s.", len(documents))
@@ -284,7 +293,7 @@ def _open_index(paths, sync_success):
         index = VectorStoreIndex.from_vector_store(vector_store)
         # Smart sync: refresh_ref_docs re-embeds only new or changed documents.
         if sync_success and os.path.exists(paths["notes_dir"]):
-            documents = SimpleDirectoryReader(paths["notes_dir"], required_exts=[".md"], recursive=True).load_data()
+            documents = _vault_documents(paths["notes_dir"])
             refreshed = index.refresh_ref_docs(documents)
             logger.info("Vector index refreshed: updated=%s.", sum(refreshed))
     return index, chroma_collection.count()
@@ -480,7 +489,7 @@ def reindex_notes(user, changed=(), removed=()):
         full = (root / rel)
         for candidate in {str(full), str(full.resolve()), os.path.abspath(str(full))}:
             collection.delete(where={"file_path": candidate})
-    existing = [str(root / rel) for rel in changed if (root / rel).is_file()]
+    existing = [str(root / rel) for rel in changed if (root / rel).is_file() and not (root / rel).is_symlink()]
     if existing:
         vector_store = ChromaVectorStore(chroma_collection=collection)
         index = VectorStoreIndex.from_vector_store(vector_store)
