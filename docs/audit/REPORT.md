@@ -258,7 +258,7 @@ Branch `feature/round5` (from `feature/round4`). Goals: `round5/GOALS.md`; decis
 - Continuation session: symlink leak out of the vault closed (B-58: index, RAG loader, get-note by name); R4.5 data LOWs fixed (B-59…B-63); flaky settings e2e (B-64); live check with the Link2Note bot 18/18 (`round5/LINK2NOTE_CHECK.md`); screenshots of changed pages at 375/1024/1440 in `round5/responsive/` (no horizontal overflow).
 
 ## R5.2 Tests and verification
-- Full run before fixes: 1056 passed / 1 failed (B-64). Fast suite after fixes: 685 passed. Final full run: `round5/test-run.txt`.
+- Full run before fixes: 1056 passed / 1 failed (B-64). Fast suite after fixes: 685 passed. **Final full run: 1136 passed, 1 skipped, 0 failed** (`round5/test-run.txt`).
 - Reviewer: `round5/VERIFY.md` (findings and what was fixed — R5.5).
 
 ## R5.3 Not verified live
