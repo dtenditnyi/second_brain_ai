@@ -738,7 +738,7 @@ def capture_text(user, text, target="inbox", token=None):
         _root(user)
         rel = weekly.current_week_note(user, today=now.date())
         if not rel:
-            raise ApiError(404, "not_found", "Текущая недельная заметка не найдена (06 - Daily, type: weekly).")
+            raise ApiError(404, "not_found", "Текущая недельная заметка не найдена (06 - Daily, type: weekly / weekly_plan).")
         stamp = ""
     if token is not None:
         need_path(token, "write", rel)

@@ -59,6 +59,33 @@ def frontmatter(text):
     return data
 
 
+# The owner's template uses ``type: weekly_plan`` + ``week_number`` (ISO week) and ``date:`` = the
+# moment the note was created (often days earlier, e.g. next weeks planned ahead) — B-72.
+WEEKLY_TYPES = ("weekly", "weekly_plan")
+
+
+def week_start(meta):
+    """Monday of the note's week: from ``week_number`` (ISO week, year from ``date``) when present,
+    otherwise from ``date``. None when neither can be parsed."""
+    try:
+        day = _dt.date.fromisoformat(meta.get("date", "")[:10])
+    except ValueError:
+        day = None
+    raw = str(meta.get("week_number", "")).strip().strip("'\"")
+    if raw.isdigit() and 1 <= int(raw) <= 53:
+        number = int(raw)
+        year = day.year if day else timezone.localdate().year
+        if day and number >= 50 and day.month == 1:
+            year -= 1
+        elif day and number <= 3 and day.month == 12:
+            year += 1
+        try:
+            return _dt.date.fromisocalendar(year, number, 1)
+        except ValueError:
+            pass
+    return monday(day) if day else None
+
+
 def _prefix():
     return getattr(dj_settings, "WEEKLY_ROOT", "06 - Daily").rstrip("/") + "/"
 
@@ -70,11 +97,10 @@ def weekly_notes_in(root):
         if not rel.startswith(prefix):
             continue
         meta = frontmatter(full.read_text(encoding="utf-8", errors="replace"))
-        if meta.get("type") != "weekly":
+        if meta.get("type") not in WEEKLY_TYPES:
             continue
-        try:
-            start = _dt.date.fromisoformat(meta.get("date", "")[:10])
-        except ValueError:
+        start = week_start(meta)
+        if start is None:
             continue
         notes.append((start, rel))
     return sorted(notes)
@@ -150,7 +176,11 @@ def _week_text(root, rel, title, today, previous_meta):
         source = (f"---\ntags: [planning]\ntype: weekly\ndate: {start.isoformat()}\n---\n# {title}\n\n"
                   f"## 🎯 Цели недели\n- [ ] \n\n🔗 [[{notes_service.DEFAULT_MOC}]]\n")
     text = notes_service.render_template(source, title, start)
-    fields = {"type": "weekly", "date": start.isoformat()}
+    meta = frontmatter(text)
+    kind = meta.get("type") or (previous_meta or {}).get("type") or "weekly"
+    fields = {"type": kind if kind in WEEKLY_TYPES else "weekly", "week_number": str(start.isocalendar()[1])}
+    if "date" not in meta:
+        fields["date"] = start.isoformat()
     wt = (previous_meta or {}).get("week_type", "").strip().upper()
     if wt in ("A", "B") and previous_meta.get("_ahead") is not None:
         fields["week_type"] = wt if previous_meta["_ahead"] % 2 == 0 else ("B" if wt == "A" else "A")
@@ -176,8 +206,8 @@ def this_week(user, today=None):
         prev_meta = {}
         if prev:
             prev_meta = frontmatter(notes_service._read(notes_service.md_path(root, prev)) or "")
-            prev_day = _dt.date.fromisoformat(prev_meta.get("date", "")[:10])
-            prev_meta["_ahead"] = (monday(today) - monday(prev_day)).days // 7
+            prev_day = week_start(prev_meta) or monday(today)
+            prev_meta["_ahead"] = (monday(today) - prev_day).days // 7
         text = _week_text(root, rel, PurePosixPath(rel).stem, today, prev_meta)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(text.encode("utf-8"))
@@ -196,7 +226,7 @@ def _previous_of(root, target_rel):
     notes = weekly_notes_in(root)
     target = next((d for d, r in notes if r == target_rel), None)
     if target is None:
-        raise WeeklyError("Это не недельная заметка (type: weekly, date).", 404)
+        raise WeeklyError("Это не недельная заметка (type: weekly / weekly_plan).", 404)
     earlier = [r for d, r in notes if d < target and r != target_rel]
     if not earlier:
         raise WeeklyError("Нет прошлой недельной заметки.", 404)

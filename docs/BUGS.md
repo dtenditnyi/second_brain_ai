@@ -183,3 +183,5 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 | B-68 | data (R5 VERIFY, LOW) | Chain of offline saves on a conflicting base made one conflict copy per save | `test_chain_on_a_conflicting_save_updates_one_conflict_copy` | FIXED |
 | B-69 | security (R5 VERIFY, LOW) | 2FA verify without row lock (parallel reuse of one code); per-account limit untested | `test_2fa_per_account_limit_blocks_even_the_right_code` | FIXED |
 | B-70 | test (R5 final run) | Chat-error and task-status e2e interacted before page JS was bound (intermittent) | `test_chat_api_error_message_is_shown`, `test_rejected_status_change_is_reverted_and_reported` | FIXED |
+| B-71 | data (owner run, Windows) | Vault cache with CRLF copies from an old autocrlf=true checkout + remote ahead → every pull failed «would be overwritten by checkout» (tasks, weekly, sync) | `test_pull_with_dirty_clone_and_remote_ahead` | FIXED |
+| B-72 | logic (owner vault) | Weekly notes of the owner (`type: weekly_plan`, `week_number`, `date` = time of writing) were not recognised; template `ww`/`HH`/`mm` not filled | `test_b72_owner_weekly_plan_notes_use_week_number` | FIXED |

@@ -87,6 +87,22 @@ def test_pull_resets_local_junk_and_recovers_broken_clone(tmp_path, real_git):
     assert (clone / ".git").exists()
 
 
+def test_pull_with_dirty_clone_and_remote_ahead(tmp_path, real_git):
+    """B-71: local edits (e.g. CRLF copies from an old autocrlf=true checkout) to files that
+    changed on the remote must not abort the pull with "would be overwritten by checkout"."""
+    remote = vh.make_remote(tmp_path, files={"a.md": "one\n", "b.md": "b\n"})
+    clone = tmp_path / "clone"
+    repo = vw.VaultRepo(clone, str(remote))
+    repo.pull()
+    phone = vh.clone(remote, tmp_path / "phone")
+    vh.commit_and_push(phone, "a.md", "two\n")
+    (clone / "a.md").write_bytes(b"one\r\n")          # CRLF copy of the old version
+    (clone / "b.md").write_bytes(b"b\r\n")
+    repo.pull()
+    assert (clone / "a.md").read_bytes() == b"two\n" and (clone / "b.md").read_bytes() == b"b\n"
+    assert vh.git(clone, "status", "--porcelain").stdout.strip() == ""
+
+
 def test_push_to_empty_remote(tmp_path, real_git):
     remote = tmp_path / "empty.git"
     vh.git(tmp_path, "init", "--bare", "-b", "main", str(remote))

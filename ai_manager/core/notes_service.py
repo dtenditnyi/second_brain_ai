@@ -350,12 +350,15 @@ _TP_TITLE = re.compile(r"<%[-_]?\s*tp\.file\.title\s*[-_]?%>")
 
 
 def _format_moment(fmt, day):
-    """Tiny subset of moment.js formats used in templates (YYYY, YY, MM, M, DD, D)."""
+    """Tiny subset of moment.js formats used in templates (YYYY, YY, MM, M, DD, D, ww, w, HH, mm)."""
     if not fmt:
         return day.isoformat()
+    week = day.isocalendar()[1]
+    hour, minute = (day.hour, day.minute) if hasattr(day, "hour") else (0, 0)
     tokens = {"YYYY": f"{day.year:04d}", "YY": f"{day.year % 100:02d}", "MM": f"{day.month:02d}",
-              "DD": f"{day.day:02d}", "M": str(day.month), "D": str(day.day)}
-    return re.sub(r"YYYY|YY|MM|DD|M|D", lambda m: tokens[m.group(0)], fmt)
+              "DD": f"{day.day:02d}", "M": str(day.month), "D": str(day.day),
+              "ww": f"{week:02d}", "w": str(week), "HH": f"{hour:02d}", "mm": f"{minute:02d}"}
+    return re.sub(r"YYYY|YY|MM|DD|HH|mm|ww|M|D|w", lambda m: tokens[m.group(0)], fmt)
 
 
 def render_template(text, title, today):

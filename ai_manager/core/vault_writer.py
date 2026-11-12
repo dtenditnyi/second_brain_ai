@@ -239,7 +239,9 @@ class VaultRepo:
                 current = None
             self.branch = current if current in remote_branches else (
                 "main" if "main" in remote_branches else remote_branches[0])
-            self._git("checkout", "-B", self.branch, f"origin/{self.branch}")
+            # -f: the clone is only a cache of the remote; stray local edits (e.g. CRLF copies
+            # left by an earlier autocrlf=true checkout) must not block the switch (B-71).
+            self._git("checkout", "-f", "-B", self.branch, f"origin/{self.branch}")
             if renormalize:                  # drop CRLF copies checked out earlier
                 self._git("rm", "-r", "--cached", "--quiet", "--ignore-unmatch", ".")
             self._git("reset", "--hard", f"origin/{self.branch}")

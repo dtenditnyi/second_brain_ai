@@ -418,3 +418,26 @@ def test_chain_on_a_conflicting_save_updates_one_conflict_copy(vuser, remote, tm
     copies = [p for p in files if "конфликт" in p]
     assert len(copies) == 1 and vh.remote_file(remote, copies[0], tmp_path).endswith("\n1\n2\n")
     assert "с телефона" in vh.remote_file(remote, NOTE, tmp_path)
+
+
+def test_b72_owner_weekly_plan_notes_use_week_number(tmp_path):
+    """B-72: the owner's weekly notes are ``type: weekly_plan`` with ``week_number`` (ISO week);
+    ``date:`` is when the note was written (next weeks are planned ahead on the same day)."""
+    folder = tmp_path / "06 - Daily" / "2026 by weeks" / "Year 2 Semester 1"
+    folder.mkdir(parents=True)
+    notes = {"Sixth week of 2nd year": ("2026-11-02T22:00", 45),
+             "Seventh week of 2nd year": ("2026-11-12T20:00", 46),
+             "Eighth week of 2nd year": ("2026-11-12T20:30", 47)}
+    for name, (date, number) in notes.items():
+        (folder / f"{name}.md").write_text(
+            f"---\ndate: {date}\ntype: weekly_plan\nweek_number: {number}\nstatus: active\n---\n# {name}\n",
+            encoding="utf-8")
+    found = weekly.weekly_notes_in(tmp_path)
+    assert [start for start, _ in found] == [datetime.date(2026, 11, 2), datetime.date(2026, 11, 9),
+                                             datetime.date(2026, 11, 16)]
+    rel, needed, _ = weekly.plan_this_week(tmp_path, datetime.date(2026, 11, 12))
+    assert rel.endswith("Seventh week of 2nd year.md") and needed is False
+    rel, needed, prev = weekly.plan_this_week(tmp_path, datetime.date(2026, 11, 25))
+    assert needed and rel.endswith("Ninth week of 2nd year.md") and prev.endswith("Eighth week of 2nd year.md")
+    assert weekly.week_start({"date": "2027-01-02T10:00", "week_number": "53"}) == datetime.date(2026, 12, 28)
+    assert weekly.week_start({"date": "2026-11-12"}) == datetime.date(2026, 11, 9)
