@@ -1,7 +1,31 @@
-venv/
-ai_manager/node_modules/
-__pycache__/
-*.pyc
-.git/
+# Keep the build context small and never ship secrets or local data (Round 3 / G-B1).
+# Patterns use **/ so they also match inside ai_manager/ (B-37).
+.git
+.gitattributes
 .env
-chroma_data/
+.env.*
+!.env.example
+!.env.test.example
+venv/
+env/
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/*.sqlite3
+**/*.sqlite3-journal
+**/.coverage
+**/.pytest_cache
+logs/
+ai_manager/logs/
+**/chroma_db
+**/chroma_data
+**/obsidian_data
+ai_manager/staticfiles/
+ai_manager/tests/
+docs/audit/responsive/
+docs/audit/round*/responsive/
+**/cloudflared.exe
+test-results/
+backups/
+.claude/
+.deployed_commit

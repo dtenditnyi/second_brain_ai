@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Second Brain - Граф{% endblock %}
+{% block mobile_title %}Граф{% endblock %}
+
+{% block content %}
+<main data-r5-page="graph" class="px-4 py-6 sm:p-8 max-w-7xl mx-auto w-full flex flex-col gap-4 min-h-0 flex-1">
+    <header class="flex flex-wrap items-end justify-between gap-3">
+        <div class="min-w-0">
+            <h1 class="text-2xl sm:text-3xl font-bold text-fg mb-1">Граф заметок</h1>
+            <p class="text-soft text-sm" id="graph-caption">{% if focus %}Связи заметки и её соседей.{% else %}Все заметки и ссылки [[…]] между ними.{% endif %}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <button type="button" class="btn btn-ghost min-h-11 min-w-11" id="graph-zoom-in" aria-label="Приблизить">＋</button>
+            <button type="button" class="btn btn-ghost min-h-11 min-w-11" id="graph-zoom-out" aria-label="Отдалить">－</button>
+            <button type="button" class="btn btn-ghost min-h-11" id="graph-reset">Сброс</button>
+            {% if focus %}<a href="{% url 'notes_graph' %}" class="btn btn-ghost min-h-11">Весь граф</a>{% endif %}
+            <a href="{% url 'notes' %}" class="btn btn-ghost min-h-11">← Заметки</a>
+        </div>
+    </header>
+    <div id="graph-box" class="glass-card rounded-2xl h-[60vh] min-h-[320px] overflow-hidden text-soft" data-focus="{{ focus }}" aria-describedby="graph-caption">
+        <div class="empty-state">Загрузка графа…</div>
+    </div>
+    <!-- Keyboard / screen-reader alternative to the picture: the most connected notes. -->
+    <details class="glass-card rounded-2xl p-4">
+        <summary class="cursor-pointer min-h-11 flex items-center text-fg font-semibold">Список узлов</summary>
+        <ul id="graph-list" class="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4"></ul>
+    </details>
+</main>
+<script src="{% static 'js/graph.js' %}"></script>
+<script>
+(function () {
+    const box = document.getElementById('graph-box');
+    const focus = box.dataset.focus;
+    const open = n => { window.location.href = '/notes/?path=' + encodeURIComponent(n.id); };
+    fetch('/api/notes/graph/' + (focus ? '?path=' + encodeURIComponent(focus) : ''))
+        .then(r => r.json())
+        .then(data => {
+            const ctl = window.SBGraph.render(box, data, { onOpen: open });
+            if (ctl) {
+                document.getElementById('graph-zoom-in').onclick = ctl.zoomIn;
+                document.getElementById('graph-zoom-out').onclick = ctl.zoomOut;
+                document.getElementById('graph-reset').onclick = ctl.reset;
+            }
+            const deg = new Map();
+            (data.edges || []).forEach(e => { deg.set(e.source, (deg.get(e.source) || 0) + 1); deg.set(e.target, (deg.get(e.target) || 0) + 1); });
+            const nodes = (data.nodes || []).slice().sort((a, b) => (deg.get(b.id) || 0) - (deg.get(a.id) || 0)).slice(0, 150);
+            document.getElementById('graph-list').innerHTML = nodes.map(n =>
+                `<li><a class="flex items-center min-h-11 text-soft hover:text-accent break-words" href="/notes/?path=${encodeURIComponent(n.id)}">${window.escapeHtml(n.name)} <span class="text-muted ml-1">· ${deg.get(n.id) || 0}</span></a></li>`).join('');
+        })
+        .catch(() => { box.innerHTML = '<div class="alert alert-danger m-4">Граф недоступен.</div>'; });
+})();
+</script>
+{% endblock %}

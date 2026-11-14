@@ -169,3 +169,112 @@ Logs: `logs/runs/run_YYYY-MM-DD_HH-mm-ss.log` (last 30 kept) and `logs/runs/hist
 
 ## R2.7 Commits (Round 2)
 758145b Q13 PAT not in .git/config · 2cb8e41 Q5 remove app_config.json · 5a76f6a Q11 + B-26 Core Matrix self-protection · c52427f Q1/Q8/Q9 DEBUG, 404/500, AI config · 4a751f6 Q2/Q3/Q6/Q7/Q12/Q14 + B-14 + Gemini chain · e3dcb36 design system + Round 2 UI · 80bf980 launcher, .env.example, README/CLAUDE.md · 8bcb359 retry sync after empty index · 49ee379 verifier findings · d0c3234 docs + screenshots · 1afdf64 final-audit findings · (last commit: final docs)
+
+---
+
+# Round 3 — Markdown in chat, Core Matrix polish, tasks in an Obsidian note, home-server production
+
+Branch `feature/round3` (from `main` after merging `feature/audit`, 6ed60c4). Task: `docs/audit/PROMPT_ROUNDS_3-5.md` → Round 3. Goals and criteria: `docs/audit/round3/GOALS.md`.
+
+## R3.1 What was done
+- **A1 Markdown in AI answers** (chat + status report): marked + DOMPurify + highlight.js, served locally from `static/vendor/`. Supports headings, lists, tables, code with highlighting and a "Copy" button, quotes, checkboxes and callouts. `[[wiki-links]]` open the note, and external links use `noopener`. Raw HTML from the model is shown as text (D20). The history and new answers use the same renderer.
+- **A2/A3 Core Matrix**: cards up to 1279 px (two columns on tablets), a table from 1280 px. It follows the operator's theme and accent through the design system, and contrast passes AA in both themes.
+- **A4 Logs**: removed from git (`logs/.gitkeep`), size rotation (5 MB × 5), `LOG_DIR`.
+- **C Tasks**: all tasks now live in **one Obsidian note** (`01 - Projects/🎯 Цели и планы/Задачи.md` by default, configurable per user). Format: `docs/TASKS_FORMAT.md` (Tasks/Dataview emoji, stable `🆔`).
+  - Parser: lossless (byte-for-byte round trip, property tests).
+  - Writing: one path for every write — lock, then pull, then the operation, then commit as "Second Brain", then push. A rejected push re-applies the *operation*, so nothing is lost.
+  - Offline: changes go to an outbox and the task shows as "не синхронизировано".
+  - Commands: `sync_tasks` and `export_tasks_to_note` (dry run, idempotent).
+  - Tasks UI: edit, delete with confirmation, sync status, Refresh button.
+  - Users without a vault keep database tasks. Old database tasks are not lost when a vault is connected (D22).
+- **B Production**:
+  - Multi-stage Dockerfile: CSS built in node, CPU-only torch, non-root, git included.
+  - Entrypoint: wait for the DB, migrate, collectstatic, gunicorn (2 workers, 300 s timeout).
+  - Compose: `db`, `web`, `scheduler` (`sync_tasks`) and `tunnel`, with healthchecks (`/healthz/`, `pg_isready`), volumes, no public ports, log rotation, `Europe/Bucharest`.
+  - Production settings: refuses an empty or default `SECRET_KEY`, takes hosts and origins from env, sets secure cookies and HSTS; `check --deploy` is clean.
+  - Scripts: `deploy/install|update(rollback)|backup|restore|status|migrate-from-old-pc.sh`, systemd units, and `docs/DEPLOY.md` (Russian, step by step).
+
+## R3.2 Not verified live (limits of this environment)
+- **Docker:** the Docker daemon was **not started**. Docker Desktop would also start the old production stack (rule 0.3). So there was no image build, no `up`, no live backup/restore, and no `docker kill` restart test. Checked instead: `docker compose config` with a dummy env file, `bash -n` and shellcheck for every script, plus tests for `/healthz/`, `SECRET_KEY`, env settings and `check --deploy`.
+- **GitHub:** a push to a real GitHub repository was not tried. All git tests use local bare repositories, including concurrent pushes and two writers in parallel.
+
+## R3.3 What the owner needs to do
+1. On the new Ubuntu VM, follow `docs/DEPLOY.md`: fill `.env` (`SECRET_KEY`, `POSTGRES_PASSWORD`, `CLOUDFLARE_TUNNEL_TOKEN`, `GEMINI_API_KEY`, `OLLAMA_HOST`), then run `bash deploy/install.sh`.
+2. Create a fine-grained PAT with **Contents: Read and write** for `myObsidian` and enter it in Settings with the repository URL.
+3. Move the old data: `deploy/migrate-from-old-pc.sh --dump` (old PC) → `--restore` (server). Then run `export_tasks_to_note --user … --dry-run`, and finally the same command without `--dry-run`.
+4. Set the Cloudflare Tunnel public hostname → `http://web:8000`.
+
+## R3.4 Tests and verification
+- **Final run** (`start.bat -FullTests -NoServer` → `docs/audit/round3/test-run.txt`): **826 collected — 825 passed, 1 skipped** (the screenshot tool). Breakdown: 474 unit/integration, 52 e2e, 300 responsive.
+- **Acceptance:** `tests/acceptance/test_round3.py` has 84 tests and no `xfail`. Start state: `docs/audit/round3/acceptance-start.txt` (79 xfail + 4 guards).
+- **Coverage of the new modules:** `tasks_md` 99 %, `tasks_service` 99 %, `vault_writer` 96 %, `sync_tasks` 100 %, `export_tasks_to_note` 93 %, `health` 100 %.
+- **Independent verification**, two rounds by separate agents:
+  - `VERIFY-1.md`: 2 high defects (restore across schema versions; a duplicate 🆔 hid a task and edits hit the wrong line), 6 medium, 3 low, 3 uncaught mutations.
+  - `VERIFY-2.md`: every finding was fixed, but two of the fixes caused regressions (a read-only token combined with duplicate IDs; an unclosed `---`). Those were fixed too.
+  - After round 2 I re-ran the mutations that had survived (N2+N16, N3, N13); the tests now catch all three.
+  - Bugs B-32…B-48 are listed in `docs/BUGS.md`.
+- **Screenshots** at 11 sizes: `docs/audit/round3/responsive/`.
+
+## R3.5 Commits (feature/round3)
+08c0701 acceptance tests · b559385 Markdown (A1) · 6ddad30 Core Matrix (A2/A3) · a02f85d logs (A4) · 1c9083f tasks note, writer, cache, outbox (C1–C6) · f8b5900 tasks UI (C7) · 6a47a34 prod image/compose (B1) · 45fbe10 deploy scripts + DEPLOY.md (B2–B4) · 21cb9f4 VERIFY-1 fixes · f1b1c6f VERIFY-2 fixes · (final docs)
+
+# Round 4 — note editor, AI agent + Claude, REST API for the Telegram bot
+
+Branch `feature/round4` (from `feature/round3`). Goals: `docs/audit/round4/GOALS.md`. Method: `docs/audit/PROMPT_LEAN.md`.
+
+## R4.1 What was done
+- **D Editor** on the Notes page: CodeMirror 6 (local bundle), Markdown/frontmatter highlighting, preview beside it (tabs «Текст / Просмотр» on phones), `[[` autocomplete, Ctrl+S / Esc, browser drafts. Create from `99 - Templates` (only `tp.date.now` / `tp.file.title` filled in), save with conflict dialog («Моя версия / Версия из хранилища / Скопировать мой текст»), offline queue with a conflict copy, rename with link update in one commit (preview of affected files), delete with confirmation, per-note re-index.
+- **E AI**: one provider layer (Gemini chain, Ollama with tool-capable models, **Claude** `claude-haiku-5-5` / `claude-sonnet-5-5`); provider + Claude model in Settings (disabled without `ANTHROPIC_API_KEY`). Chat **"Агент" mode**: 8 tools (no delete), changes only proposed → diff card («Изменения / Итоговый текст», «Применить всё / выбранное / Отклонить», «Откатить» = revert commit), vault rules in the prompt (+ `VAULT_RULES_NOTE`), note text treated as data, 8-step / token limits, content-free logs.
+- **API** `/api/v1/` per the **Link2Note contract** (`docs/link2note/`): tokens in Settings (shown once, hash only), scopes read/write/delete/ai with folder rights, rate limit, call log, Idempotency-Key, contract errors, notes from ready Markdown, `lookup` by normalized URL (all contract pairs), list with `fm.*`, byte-exact `PATCH` frontmatter, `PUT`/`DELETE` with `if_sha`, capture (inbox / weekly), tasks, ask, agent. Docs: `docs/API.md`, `docs/DEPLOY.md` §12. Docker network `secondbrain` + alias `secondbrain-web` for the bot.
+
+## R4.2 Tests and verification
+- Full run (`docs/audit/round4/test-run.txt`): 974 passed, 1 skipped, 36 xfailed (Round 5 tests), 1 failed — the settings e2e test, fixed right after (ac13fd4) and re-run green. After the review fixes: fast suite re-run (see LOG).
+- Acceptance `tests/acceptance/test_round4.py`: 77 tests, **no xfail**. Contract tests `tests/test_api_contract.py` read `docs/link2note/contract/*.json`.
+- One independent reviewer (`docs/audit/round4/VERIFY.md`): 1 HIGH (API agent auto-apply bypassed token rights), 5 MEDIUM, 7 LOW; all 5 mutations caught. HIGH + MEDIUM fixed as B-52…B-57 with regression tests.
+
+## R4.3 Not verified live
+- No real Gemini / Claude / Ollama calls (all mocked) — Claude model IDs and tool calling should be tried once with a real key.
+- No real GitHub push, no Docker build/up (rule 0.3); `docker compose config` checked.
+- The bot's own live check (`scripts/check_second_brain_api.py`) was not run against a running site.
+
+## R4.4 What the owner needs to do
+1. Optional: `ANTHROPIC_API_KEY` in `.env` → choose Claude in Settings.
+2. After deploy: Settings → API tokens → create the bot token (rights and folders: `docs/DEPLOY.md` §12), put it into the bot's `.env`, then run the bot's `scripts/check_second_brain_api.py --all`.
+3. If you keep a tag-rules note in the vault, add `fun` there.
+
+## R4.5 Left (LOW, from VERIFY) — candidates for Round 5
+Chained offline saves of one note (2nd becomes a conflict copy); duplicate conflict-copy name in the same minute blocks the outbox; web delete/rename without `base_sha`; NFD file names via API; `DELETE /tasks` uses `write` (contract wording says delete); a push that reached GitHub but timed out → retry creates « (2)».
+
+## R4.6 Commits (feature/round4)
+d82f0d0 acceptance tests · dce7748 editor (D) · 329d18e providers/agent/UI (E) · c024485 REST API + contract (API) · ac13fd4 settings fix + run log · (review fixes, docs)
+
+# Round 5 — web vault, weekly notes, PWA, 2FA, Obsidian in the browser
+
+Branch `feature/round5` (from `feature/round4`). Goals: `round5/GOALS.md`; decisions D28–D32.
+
+## R5.1 What was done
+- Web vault (G-F1/F2): folder tree, Ctrl+K switcher (names + aliases), full-text search with highlight and folder/tag/date filters, tags page, backlinks + unlinked mentions, local/global graph (own SVG layout, simplified on phones), recent/favourites; server render with callouts, clickable task statuses (one commit per click via the writer), embeds/attachments (path-safe), properties panel, KaTeX + Mermaid local; Dataview-lite (own parser, read-only, 2 s / 500 rows, never outside the vault).
+- Weekly notes (G-F3): «Эта неделя» opens/creates by the naming rule derived from existing notes, carry-over with diff preview (old tasks → `[>]`, one commit), week calendar. Home dashboard (G-F5). PWA + offline capture queue (G-F4). TOTP 2FA (G-F7). `obsidian` compose profile + DEPLOY §13–14 (G-F6/F7). Owner end-to-end test (G-E2E).
+- Continuation session: symlink leak out of the vault closed (B-58: index, RAG loader, get-note by name); R4.5 data LOWs fixed (B-59…B-63); flaky settings e2e (B-64); live check with the Link2Note bot 18/18 (`round5/LINK2NOTE_CHECK.md`); screenshots of changed pages at 375/1024/1440 in `round5/responsive/` (no horizontal overflow).
+
+## R5.2 Tests and verification
+- Full run before fixes: 1056 passed / 1 failed (B-64). Fast suite after fixes: 685 passed. **Final full run: 1136 passed, 1 skipped, 0 failed** (`round5/test-run.txt`).
+- Reviewer: `round5/VERIFY.md` (findings and what was fixed — R5.5).
+
+## R5.3 Not verified live
+- Docker: prod image `/healthz/`, bot container `api-health`, the `obsidian` container (daemon not running on this PC).
+- Real GitHub vault, real Gemini/Claude answers, Cloudflare Access policies, installing the PWA on a real phone.
+
+## R5.4 What the owner needs to do
+- See `docs/audit/SUMMARY_ROUNDS_3-5_RU.md` (merge order, deploy, bot token, `VAULT_BACKEND=api`).
+
+## R5.5 Review findings and leftovers
+- `round5/VERIFY.md`: 1 HIGH, 2 MEDIUM, 7 LOW; mutations 4/5 caught (the missed one — per-account 2FA limit — now has a test).
+- Fixed with regression tests: HIGH B-65 (admin login → site login with 2FA), MEDIUM B-66 (unsafe URL schemes in rendered notes → `#`),
+  MEDIUM B-67 (a stuck outbox row blocks only its own note; the editor gets a clear 409), LOW B-68 (one conflict copy per chain),
+  LOW B-69 (2FA row lock + limit test). Re-check of the HIGH by the same short brief: see `round5/VERIFY.md` (re-check section).
+- LOW left: capture/append retried after a push that landed but timed out can add the text twice (only note *create* checks its own
+  commit); the offline capture queue in localStorage is not cleared on logout (clearing would lose unsent captures; it is keyed by user
+  id and never sent for another user); after a session simply expires, cached pages stay until `/login/` is opened online; the Dataview
+  2 s limit is per block (a note with hundreds of blocks is slow).
+- R4.5 leftovers not done (not data loss): NFD file names via API; `DELETE /tasks` uses the `write` scope (contract wording says delete).

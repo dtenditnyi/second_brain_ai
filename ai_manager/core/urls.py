@@ -1,10 +1,14 @@
 """Named URL routes for browser pages, authenticated APIs, and superuser tools."""
-from django.urls import path
-from . import views 
+from django.urls import path, re_path
+from . import views
+from . import api_v1
+from .views import agent_api, notes_api, pwa, security, tokens_api, vault_views
+from .views.auth import login_2fa_view
 
 urlpatterns = [
     # Public authentication pages manage registration, login, and session exit.
     path('login/', views.login_view, name='login'),
+    path('login/2fa/', login_2fa_view, name='login_2fa'),
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
 
@@ -24,6 +28,76 @@ urlpatterns = [
     # Task creation and status mutation endpoints used by the task UI.
     path('api/add-task/', views.api_add_task, name='api_add_task'),
     path('api/update-task/', views.api_update_task_status, name='api_update_task'),
+    path('api/delete-task/', views.api_delete_task, name='api_delete_task'),
+    path('api/tasks/sync/', views.api_tasks_sync, name='api_tasks_sync'),
+
+    # Note editor (Round 4): read raw text + hash, save with conflict check, create/delete/rename.
+    path('api/notes/names/', notes_api.notes_names, name='api_notes_names'),
+    path('api/notes/meta/', notes_api.notes_meta, name='api_notes_meta'),
+    path('api/notes/raw/', notes_api.notes_raw, name='api_notes_raw'),
+    path('api/notes/save/', notes_api.notes_save, name='api_notes_save'),
+    path('api/notes/create/', notes_api.notes_create, name='api_notes_create'),
+    path('api/notes/delete/', notes_api.notes_delete, name='api_notes_delete'),
+    path('api/notes/rename/', notes_api.notes_rename, name='api_notes_rename'),
+
+    # Round 5 (part F): web vault — navigation, search, links, graph, checkboxes, attachments.
+    path('notes/tags/', vault_views.tags_page, name='notes_tags'),
+    path('notes/graph/', vault_views.graph_page, name='notes_graph'),
+    path('weekly/', vault_views.weekly_page, name='weekly'),
+    path('attachments/', vault_views.attachment, name='attachments'),
+    path('api/notes/search/', vault_views.notes_search, name='api_notes_search'),
+    path('api/notes/mentions/', vault_views.notes_mentions, name='api_notes_mentions'),
+    path('api/notes/graph/', vault_views.notes_graph, name='api_notes_graph'),
+    path('api/notes/tree/', vault_views.notes_tree, name='api_notes_tree'),
+    path('api/notes/favorite/', vault_views.notes_favorite, name='api_notes_favorite'),
+    path('api/notes/toggle-task/', vault_views.notes_toggle_task, name='api_notes_toggle_task'),
+    path('api/weekly/this-week/', vault_views.weekly_this_week, name='api_weekly_this_week'),
+    path('api/weekly/carry-over/', vault_views.weekly_carry_over, name='api_weekly_carry_over'),
+    path('api/weekly/calendar/', vault_views.weekly_calendar, name='api_weekly_calendar'),
+    path('api/capture/', vault_views.capture, name='api_capture'),
+
+    # Round 5 (F7): two-factor login (TOTP) in Settings.
+    path('api/2fa/status/', security.totp_status, name='api_2fa_status'),
+    path('api/2fa/setup/', security.totp_setup, name='api_2fa_setup'),
+    path('api/2fa/enable/', security.totp_enable, name='api_2fa_enable'),
+    path('api/2fa/disable/', security.totp_disable, name='api_2fa_disable'),
+    path('api/2fa/backup-codes/', security.totp_backup_codes, name='api_2fa_backup_codes'),
+
+    # Round 5 (F4): PWA manifest + service worker (root scope).
+    path('manifest.webmanifest', pwa.manifest, name='pwa_manifest'),
+    path('sw.js', pwa.service_worker, name='pwa_sw'),
+
+    # AI agent (Round 4): run → batch of proposed changes → apply / reject / revert.
+    path('api/agent/run/', agent_api.agent_run, name='api_agent_run'),
+    path('api/agent/batch/<int:batch_id>/apply/', agent_api.agent_apply, name='api_agent_apply'),
+    path('api/agent/batch/<int:batch_id>/reject/', agent_api.agent_reject, name='api_agent_reject'),
+    path('api/agent/batch/<int:batch_id>/revert/', agent_api.agent_revert, name='api_agent_revert'),
+
+    # API tokens in Settings (Round 4): shown once, only the hash is stored.
+    path('api/tokens/create/', tokens_api.token_create, name='api_tokens_create'),
+    path('api/tokens/revoke/', tokens_api.token_revoke, name='api_tokens_revoke'),
+
+    # REST API v1 (Round 4, Link2Note contract docs/link2note/API_CONTRACT.md). Token-only,
+    # trailing slash optional (the bot calls /api/v1/notes, older clients /api/v1/notes/).
+    re_path(r'^api/v1/health/?$', api_v1.health, name='api_v1_health'),
+    re_path(r'^api/v1/sync/?$', api_v1.sync_status, name='api_v1_sync'),
+    re_path(r'^api/v1/schema/?$', api_v1.schema, name='api_v1_schema'),
+    re_path(r'^api/v1/notes/?$', api_v1.notes_collection, name='api_v1_notes'),
+    re_path(r'^api/v1/notes/search/?$', api_v1.notes_search, name='api_v1_notes_search'),
+    re_path(r'^api/v1/notes/lookup/?$', api_v1.notes_lookup, name='api_v1_notes_lookup'),
+    re_path(r'^api/v1/notes/append/?$', api_v1.notes_append, name='api_v1_notes_append'),
+    re_path(r'^api/v1/notes/(?P<rest>.+)$', api_v1.note_item, name='api_v1_note_item'),
+    re_path(r'^api/v1/folders/?$', api_v1.folders, name='api_v1_folders'),
+    re_path(r'^api/v1/capture/?$', api_v1.capture, name='api_v1_capture'),
+    re_path(r'^api/v1/tasks/?$', api_v1.tasks_collection, name='api_v1_tasks'),
+    re_path(r'^api/v1/tasks/(?P<task_id>[^/]+)/?$', api_v1.task_item, name='api_v1_task_item'),
+    re_path(r'^api/v1/ask/?$', api_v1.ask, name='api_v1_ask'),
+    re_path(r'^api/v1/agent/?$', api_v1.agent_run, name='api_v1_agent'),
+    re_path(r'^api/v1/agent/(?P<batch_id>\d+)/(?P<action>apply|reject|revert)/?$', api_v1.agent_action,
+            name='api_v1_agent_action'),
+
+    # Liveness/readiness probe for Docker (no login, no AI, checks the DB).
+    path('healthz/', views.healthz, name='healthz'),
 
     # Superuser-only administrative pages and row mutation endpoints.
     path('system-matrix/', views.admin_dashboard_view, name='admin_dashboard'),

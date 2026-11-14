@@ -1,0 +1,20 @@
+{% for folder in node.folders %}
+<li>
+    <details data-folder="{{ folder.path }}">
+        <summary class="flex items-center gap-1.5 px-2 py-2 min-h-11 rounded-md text-fg hover:bg-surface text-sm font-medium">
+            <span class="chev text-muted text-xs" aria-hidden="true">▸</span><span aria-hidden="true">📂</span>
+            <span class="break-words min-w-0">{{ folder.name }}</span>
+        </summary>
+        <ul class="ml-3 flex flex-col gap-0.5 border-l border-line pl-2">
+            {% include "vault/_tree.html" with node=folder %}
+        </ul>
+    </details>
+</li>
+{% endfor %}
+{% for note in node.notes %}
+<li>
+    <button type="button" class="file-item w-full text-left text-soft hover:text-fg px-2 py-2 min-h-11 rounded-md hover:bg-surface transition-colors flex items-start gap-2 border border-transparent" data-filename="{{ note.name }}" data-path="{{ note.path }}" title="{{ note.path }}">
+        <span aria-hidden="true">📄</span> <span class="line-clamp-2 break-words text-sm xl:text-[0.8125rem] leading-snug">{{ note.name }}</span>
+    </button>
+</li>
+{% endfor %}

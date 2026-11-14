@@ -1,0 +1,36 @@
+........................................................................ [  6%]
+........................................................................ [ 12%]
+........................................................................ [ 18%]
+........................................................................ [ 25%]
+........................................................................ [ 31%]
+........................................................................ [ 37%]
+........................................................................ [ 44%]
+........................................................................ [ 50%]
+........................................................................ [ 56%]
+........................................................................ [ 63%]
+........................................................................ [ 69%]
+........................................................................ [ 75%]
+.................s...................................................... [ 82%]
+........................................................................ [ 88%]
+........................................................................ [ 94%]
+.........................................................                [100%]
+============================== warnings summary ===============================
+tests/acceptance/test_round3.py: 9 warnings
+tests/acceptance/test_round4.py: 28 warnings
+tests/acceptance/test_round5.py: 15 warnings
+tests/test_admin_matrix.py: 42 warnings
+tests/test_agent_providers.py: 2 warnings
+tests/test_api.py: 67 warnings
+tests/test_api_contract.py: 28 warnings
+tests/test_auth.py: 17 warnings
+tests/test_debug_static.py: 2 warnings
+tests/test_pages.py: 53 warnings
+tests/test_round3_regressions.py: 2 warnings
+tests/test_round4_regressions.py: 2 warnings
+tests/test_round5_units.py: 14 warnings
+tests/test_tasks_service.py: 11 warnings
+  C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py:63: UserWarning: No directory at: C:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\staticfiles\
+    mw_instance = middleware(adapted_handler)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1136 passed, 1 skipped, 292 warnings in 580.33s (0:09:40)

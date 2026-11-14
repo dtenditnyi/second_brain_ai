@@ -26,6 +26,10 @@ KEY = {
     "settings": ["#display-name", "#theme-select", "#ai-temperature"],
     "system-matrix": [".tab-btn[data-tab='tasks-table']", "#users-table"],
     "system-matrix-tasks": ["#tasks-table"],
+    # Round 5 pages
+    "tags": ["main[data-r5-page='tags'] h1"],
+    "graph": ["#graph-box", "#graph-zoom-in", "#graph-reset"],
+    "weekly": ["#this-week-btn", "#carry-btn", "#cal-next"],
 }
 
 

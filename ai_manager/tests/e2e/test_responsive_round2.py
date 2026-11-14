@@ -103,16 +103,19 @@ def test_core_matrix_tables_become_cards_on_phones(browser, live_server, seeded,
 
 
 @pytest.mark.parametrize("width", [834, 1024])
-def test_core_matrix_scroll_hint_on_tablets(browser, live_server, seeded, width):
+def test_core_matrix_cards_on_tablets_without_scroll(browser, live_server, seeded, width):
+    """Round 3 / G-A2 supersedes the Round 2 scroll hint: tablets get two-column cards, no sideways scroll."""
     ctx, page = open_page(browser, live_server, "system-matrix-tasks", width, 1000)
     try:
         info = page.evaluate("""() => {
-            const wrap = document.querySelector('#tasks-table table').parentElement;
+            const table = document.querySelector('#tasks-table table');
+            const wrap = table.parentElement;
+            const row = table.querySelector('tbody tr');
             return {scrolls: wrap.scrollWidth > wrap.clientWidth + 1,
-                    hint: wrap.classList.contains('scroll-shadows'),
-                    bg: getComputedStyle(wrap).backgroundImage};
+                    columns: getComputedStyle(row).gridTemplateColumns.split(' ').length,
+                    hint: wrap.classList.contains('scroll-shadows')};
         }""")
-        assert info["scrolls"] and info["hint"] and "radial-gradient" in info["bg"], info
+        assert not info["scrolls"] and info["columns"] == 2 and info["hint"], info
     finally:
         ctx.close()
 

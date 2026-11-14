@@ -1,7 +1,8 @@
 # STATUS
 
-- Round 1: **DONE** (see REPORT §1–8). Round 2: **DONE** (REPORT → "Round 2").
-- Round 2: owner answers 1–14 + B-14 implemented. Launcher `start.bat`/`start.ps1` done. Gemini fallback chain + token budgets done. Responsive / design system checked at 11 sizes.
-- Independent checks: one responsive verifier round (all findings fixed, 49ee379) and one final audit (overall PASS; findings fixed, 1afdf64).
-- Final run: 591 passed, 1 skipped (`docs/audit/test-run-round2.txt`, via `start.bat -FullTests -NoServer`).
-- `db.sqlite3` is unchanged (sha256 5ea89448…). `.env` was not read. `main` is untouched. The leftover worktree and its branch are removed. Branch `feature/audit` is pushed. Merging into main is left to the owner.
+- **Rounds 3–5 DONE.** Branches chain `feature/round3` → `feature/round4` → `feature/round5` (pushed); `main` not merged (owner's step).
+- Round 5: part F + owner E2E; goals re-check (B-58 symlinks); R4.5 data LOWs (B-59…B-63); live Link2Note check 18/18
+  (`round5/LINK2NOTE_CHECK.md`, Docker step skipped — daemon off); review `round5/VERIFY.md` (HIGH B-65 + MEDIUM B-66/B-67 fixed,
+  HIGH re-check closed); screenshots `round5/responsive/`; final full run `round5/test-run.txt`.
+- Owner summary and next steps: `docs/audit/SUMMARY_ROUNDS_3-5_RU.md`. LOW leftovers: REPORT R5.5.
+- **Следующий шаг:** владелец — слить `feature/round5` в `main`, деплой по `docs/DEPLOY.md`, токен для бота (SUMMARY).

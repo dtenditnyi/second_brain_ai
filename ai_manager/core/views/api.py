@@ -3,8 +3,6 @@ import json
 import logging
 import os
 import re
-import markdown
-from html import escape
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
@@ -13,6 +11,8 @@ from django.contrib.auth.models import User
 
 from ..models import Task, ChatMessage, UserSettings, get_user_settings
 from .. import rag_engine
+from .. import tasks_service
+from ..vault_writer import UnsafePath, safe_path
 from .utils import parse_json_body
 
 logger = logging.getLogger(__name__)
@@ -93,6 +93,32 @@ def api_save_settings(request):
         if len(email) > User._meta.get_field('email').max_length:
             return JsonResponse({'status': 'error', 'msg': 'Email is too long.'}, status=400)
 
+        tasks_path = data.get('tasks_note_path')
+        if tasks_path is not None:
+            if not isinstance(tasks_path, str) or len(tasks_path) > 300:
+                return JsonResponse({'status': 'error', 'msg': 'Invalid tasks note path.'}, status=400)
+            tasks_path = tasks_path.strip()
+            if tasks_path:
+                try:
+                    import tempfile
+                    safe_path(tempfile.gettempdir(), tasks_path)
+                except UnsafePath as exc:
+                    return JsonResponse({'status': 'error', 'msg': f'Tasks note path: {exc}'}, status=400)
+                if not tasks_path.lower().endswith('.md'):
+                    return JsonResponse({'status': 'error', 'msg': 'Tasks note path must end with .md'}, status=400)
+        # Round 4 / G-E1: cloud provider (Gemini / Claude) and Claude model; Claude needs a key.
+        from .. import ai_providers
+        cloud_provider = data.get('cloud_provider')
+        if cloud_provider is not None and cloud_provider not in ('gemini', 'claude'):
+            return JsonResponse({'status': 'error', 'msg': 'Unknown AI provider.'}, status=400)
+        if cloud_provider == 'claude' and not ai_providers.claude_available():
+            return JsonResponse({'status': 'error', 'msg': 'Claude is unavailable: ANTHROPIC_API_KEY is not set on the server.'}, status=400)
+        claude_model = data.get('claude_model')
+        if claude_model is not None and claude_model != '' and claude_model not in ai_providers.CLAUDE_MODEL_IDS:
+            return JsonResponse({'status': 'error', 'msg': 'Unknown Claude model.'}, status=400)
+        auto_apply = data.get('agent_auto_apply_additions')
+        if auto_apply is not None and not isinstance(auto_apply, bool):
+            return JsonResponse({'status': 'error', 'msg': 'Invalid value for agent_auto_apply_additions.'}, status=400)
         new_token = data.get('github_token')
         # 255 plain characters still fit the 500-char encrypted column (B-14).
         if isinstance(new_token, str) and len(new_token.strip()) > 255:
@@ -111,6 +137,12 @@ def api_save_settings(request):
         ai_strategy = data.get('ai_strategy', settings.ai_strategy)
         if ai_strategy in {'auto', 'local_only', 'cloud_only'}:
             settings.ai_strategy = ai_strategy
+        if cloud_provider is not None:
+            settings.cloud_provider = cloud_provider
+        if claude_model is not None:
+            settings.claude_model = claude_model
+        if auto_apply is not None:
+            settings.agent_auto_apply_additions = auto_apply
         # Bound the sampling temperature to the UI's supported range and recover
         # from malformed client values without rejecting unrelated preferences.
         try:
@@ -119,6 +151,9 @@ def api_save_settings(request):
             temperature = 0.7
         settings.temperature = max(0.0, min(1.0, temperature))
         settings.github_repo_url = str(field('github_repo_url', settings.github_repo_url)).strip()
+        if tasks_path is not None and tasks_path != settings.tasks_note_path:
+            settings.tasks_note_path = tasks_path
+            settings.tasks_last_sync = None          # re-read the (other) note on next visit
         # Q7: the token is never sent back to the browser. An empty/missing value
         # keeps the stored token; only an explicit clear_github_token removes it.
         if data.get('clear_github_token') is True:
@@ -138,29 +173,33 @@ def api_save_settings(request):
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error'}, status=400)
 
-@login_required(login_url='login')
-def api_add_task(request):
-    # Create a task owned by the authenticated account from the submitted JSON fields.
-    # Returns: JSON containing the new database primary key, or HTTP 400 for other methods.
-    if request.method == "POST":
-        data = parse_json_body(request)
-        if data is None:
-            return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
-        # Validate before writing so bad input yields 400 instead of a 500 (B-04).
-        raw_title, raw_tags = data.get('title') or '', data.get('tags') or ''
-        priority = data.get('priority') or 'medium'
-        raw_due = data.get('due_date') or None
-        if not all(isinstance(v, str) for v in (raw_title, raw_tags, priority)):
-            return _task_error('Title, priority and tags must be strings.')
-        title, tags = raw_title.strip(), raw_tags
+def _clean_task_fields(data, require_title):
+    """Validate task fields from JSON. Returns (fields, error_response)."""
+    fields = {}
+    if 'title' in data or require_title:
+        raw_title = data.get('title') or ''
+        if not isinstance(raw_title, str):
+            return None, _task_error('Title, priority and tags must be strings.')
+        title = raw_title.strip()
         if not title:
-            return _task_error('Task title is required.')
+            return None, _task_error('Task title is required.')
         if len(title) > Task._meta.get_field('title').max_length:
-            return _task_error('Task title is too long.')
-        if priority not in dict(Task.PRIORITY_CHOICES):
-            return _task_error('Unknown priority.')
+            return None, _task_error('Task title is too long.')
+        fields['title'] = title
+    if 'priority' in data or require_title:
+        priority = data.get('priority') or 'medium'
+        if not isinstance(priority, str) or priority not in dict(Task.PRIORITY_CHOICES):
+            return None, _task_error('Unknown priority.' if isinstance(priority, str) else 'Title, priority and tags must be strings.')
+        fields['priority'] = priority
+    if 'tags' in data or require_title:
+        tags = data.get('tags') or ''
+        if not isinstance(tags, str):                       # B-24: lists/dicts rejected
+            return None, _task_error('Title, priority and tags must be strings.')
         if len(tags) > Task._meta.get_field('tags').max_length:
-            return _task_error('Tags are too long.')
+            return None, _task_error('Tags are too long.')
+        fields['tags'] = tags
+    if 'due_date' in data or require_title:
+        raw_due = data.get('due_date') or None
         due_date = None
         if raw_due:
             try:
@@ -168,97 +207,165 @@ def api_add_task(request):
             except ValueError:
                 due_date = None
             if due_date is None:
-                return _task_error('Invalid due date (expected YYYY-MM-DD).')
-        task = Task.objects.create(
-            user=request.user,
-            title=title,
-            priority=priority,
-            due_date=due_date,
-            tags=tags
-        )
-        return JsonResponse({'status': 'ok', 'task_id': task.id})
-    return JsonResponse({'status': 'error'}, status=400)
+                return None, _task_error('Invalid due date (expected YYYY-MM-DD).')
+        fields['due_date'] = due_date
+    if 'status' in data:
+        status = data.get('status')
+        if not isinstance(status, str) or status not in dict(Task.STATUS_CHOICES):
+            return None, _task_error('Unknown task status.')
+        fields['status'] = status
+    return fields, None
+
+
+def _sync_error_response(error):
+    # 409: the vault refused or changed under us; the message is meant for the user.
+    return JsonResponse({'status': 'error', 'msg': str(error)}, status=409)
+
 
 @login_required(login_url='login')
-def api_update_task_status(request):
-    # Update only a task belonging to the caller, preventing cross-account task edits.
-    # Returns: JSON success, or a not-found error when the task is not owned by the user.
+def api_add_task(request):
+    # Create a task. With a connected vault it is written to the tasks note (Round 3),
+    # otherwise it is stored in the database only. Returns the cache row id.
     if request.method == "POST":
         data = parse_json_body(request)
         if data is None:
             return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
-        new_status = data.get('status')
-        if not isinstance(new_status, str) or new_status not in dict(Task.STATUS_CHOICES):
-            return _task_error('Unknown task status.')
+        fields, error = _clean_task_fields(data, require_title=True)
+        if error:
+            return error
+        try:
+            task = tasks_service.add_task(
+                request.user, text=fields['title'], due=fields['due_date'].isoformat() if fields['due_date'] else None,
+                priority=fields['priority'], tags=fields['tags'], status=fields.get('status'))
+        except ValueError as exc:
+            return _task_error(str(exc))
+        except tasks_service.TaskSyncError as exc:
+            return _sync_error_response(exc)
+        return JsonResponse({'status': 'ok', 'task_id': task.id, 'synced': task.synced})
+    return JsonResponse({'status': 'error'}, status=400)
+
+
+@login_required(login_url='login')
+def api_update_task_status(request):
+    # Update status and/or title, due date, priority, tags of the caller's own task.
+    if request.method == "POST":
+        data = parse_json_body(request)
+        if data is None:
+            return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
         try:
             task_id = int(data.get('task_id'))
         except (TypeError, ValueError):
+            if 'status' in data and (not isinstance(data.get('status'), str) or data.get('status') not in dict(Task.STATUS_CHOICES)):
+                return _task_error('Unknown task status.')
             return _task_error('Invalid task id.')
-        try:
-            task = Task.objects.get(id=task_id, user=request.user)
-            task.status = new_status
-            task.save()
-            return JsonResponse({'status': 'ok'})
-        except Task.DoesNotExist:
+        fields, error = _clean_task_fields(data, require_title=False)
+        if error:
+            return error
+        if not fields:
+            return _task_error('Unknown task status.')
+        if not Task.objects.filter(id=task_id, user=request.user).exists():
             return JsonResponse({'status': 'error', 'msg': 'Task not found'}, status=404)
+        try:
+            task = tasks_service.update_task(request.user, task_id, **fields)
+        except ValueError as exc:
+            return _task_error(str(exc))
+        except tasks_service.TaskSyncError as exc:
+            return _sync_error_response(exc)
+        return JsonResponse({'status': 'ok'})
     # Non-POST requests previously fell through and returned None → HTTP 500 (B-04).
     return JsonResponse({'status': 'error'}, status=400)
+
+
+@login_required(login_url='login')
+def api_delete_task(request):
+    if request.method != "POST":
+        return JsonResponse({'status': 'error'}, status=400)
+    data = parse_json_body(request)
+    if data is None:
+        return JsonResponse({'status': 'error', 'msg': 'Malformed JSON body.'}, status=400)
+    try:
+        task_id = int(data.get('task_id'))
+    except (TypeError, ValueError):
+        return _task_error('Invalid task id.')
+    if not Task.objects.filter(id=task_id, user=request.user).exists():
+        return JsonResponse({'status': 'error', 'msg': 'Task not found'}, status=404)
+    try:
+        tasks_service.delete_task(request.user, task_id)
+    except tasks_service.TaskSyncError as exc:
+        return _sync_error_response(exc)
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required(login_url='login')
+def api_tasks_sync(request):
+    # "Refresh" button: sync the tasks note now (Round 3 / G-C4).
+    if request.method != "POST":
+        return JsonResponse({'status': 'error'}, status=400)
+    result = tasks_service.sync_tasks(request.user, force=True)
+    code = 200 if result.get('status') in ('ok', 'local', 'fresh') else 503
+    return JsonResponse(result, status=code)
+
 
 @login_required(login_url='login')
 def api_get_note_content(request):
     # Load a Markdown note, convert Obsidian wiki links, and find inbound mentions.
     # Parameters: the GET query parameter "name" identifies the requested note.
     # Returns: rendered HTML and backlink snippets, or a JSON error response.
-    from ..rag_engine import get_user_paths
+    from ..paths import get_user_paths
     note_name = request.GET.get('name')
-    if not note_name:
+    note_path = request.GET.get('path')
+    if not note_name and not note_path:
         return JsonResponse({'status': 'error', 'msg': 'No note name provided.'}, status=400)
 
     paths = get_user_paths(request.user)
-    target_file_name = f"{note_name}.md"
+    if get_user_settings(request.user).github_repo_url:
+        try:                                   # first visit: clone the vault (Round 5)
+            from ..notes_service import _local_root
+            _local_root(request.user)
+        except Exception as error:             # offline etc.: show what the local copy has
+            logger.info("Vault clone skipped: %s", type(error).__name__)
     current_file_path = None
-    
-    if os.path.exists(paths["notes_dir"]):
-        for root, dirs, files in os.walk(paths["notes_dir"]):
-            if target_file_name in files:
-                current_file_path = os.path.join(root, target_file_name)
-                break
-                
+    if note_path:
+        # Round 4: open by vault-relative path (validated: no escape, .md only).
+        try:
+            candidate = safe_path(paths["notes_dir"], note_path)
+        except UnsafePath:
+            candidate = None
+        if candidate is not None and candidate.suffix.lower() == ".md" and candidate.is_file():
+            current_file_path = str(candidate)
+            note_name = candidate.stem
+    else:
+        target_file_name = f"{note_name}.md"
+        if os.path.exists(paths["notes_dir"]):
+            for root, dirs, files in os.walk(paths["notes_dir"]):
+                dirs[:] = sorted(d for d in dirs if d not in (".git", ".obsidian", ".trash"))
+                if target_file_name in files and not os.path.islink(os.path.join(root, target_file_name)):
+                    current_file_path = os.path.join(root, target_file_name)
+                    break
+    target_file_name = f"{note_name}.md"
+
     if not current_file_path:
         return JsonResponse({'status': 'error', 'msg': 'Note not found in the secure vault.'}, status=404)
 
     try:
-        with open(current_file_path, 'r', encoding='utf-8') as f:
-            raw_markdown = f.read()
-
-        linked_mentions = []
-        wiki_link_pattern = f"[[{note_name}]]"
-        for root, dirs, files in os.walk(paths["notes_dir"]):
-            for file in files:
-                if file.endswith(".md") and file != target_file_name:
-                    try:
-                        with open(os.path.join(root, file), 'r', encoding='utf-8') as sf:
-                            scan_content = sf.read()
-                            if wiki_link_pattern in scan_content:
-                                idx = scan_content.find(wiki_link_pattern)
-                                snippet = scan_content[max(0, idx - 40):min(len(scan_content), idx + len(wiki_link_pattern) + 40)].replace('\n', ' ').strip()
-                                linked_mentions.append({'title': file.replace(".md", ""), 'snippet': f"...{snippet}..."})
-                    except Exception:
-                        continue 
-
-        # Convert each Obsidian link while preserving optional display-text aliases.
-        def replace_wiki_links(match):
-            link_text = match.group(1).strip()
-            if '|' in link_text:
-                note_target, note_display = link_text.split('|', 1)
-            else:
-                note_target, note_display = link_text, link_text
-            return f'<a href="#" class="wiki-link text-[var(--active-accent)] border-b border-dashed border-[var(--active-accent)] hover:text-white transition-colors" data-note="{escape(note_target.strip())}">{escape(note_display.strip())}</a>'
-
-        html_content = markdown.markdown(re.sub(r'\[\[(.*?)\]\]', replace_wiki_links, raw_markdown), extensions=['fenced_code', 'tables'])
-        return JsonResponse({'status': 'ok', 'html_content': html_content, 'backlinks': linked_mentions})
+        from .. import render as note_render, vault_index
+        with open(current_file_path, 'rb') as f:
+            raw_markdown = f.read().decode('utf-8', errors='replace')
+        rel_path = os.path.relpath(current_file_path, paths["notes_dir"]).replace(os.sep, "/")
+        # Round 5 (F2): Obsidian-like server render (callouts, checkboxes, embeds, Dataview-lite…);
+        # raw HTML from the note is escaped, never executed.
+        notes = vault_index.scan_root(paths["notes_dir"])
+        rendered = note_render.render_note(paths["notes_dir"], rel_path, raw_markdown, notes)
+        links = vault_index.mentions(request.user, rel_path, notes) or {"backlinks": [], "unlinked": []}
+        backlinks = [{'title': b['name'], 'path': b['path'], 'snippet': f"...{b['snippet']}..."} for b in links['backlinks']]
+        favorites = get_user_settings(request.user).favorite_notes or []
+        return JsonResponse({'status': 'ok', 'html_content': rendered['html'], 'backlinks': backlinks,
+                             'unlinked': links['unlinked'], 'name': note_name, 'path': rel_path,
+                             'favorite': rel_path in favorites,
+                             'editable': bool(get_user_settings(request.user).github_repo_url)})
     except Exception as e:
-        return JsonResponse({'status': 'error', 'msg': str(e)}, status=500)
+        logger.exception("Note render failed")
+        return JsonResponse({'status': 'error', 'msg': f'Не удалось показать заметку: {type(e).__name__}'}, status=500)
 
 @login_required(login_url='login')
 def api_sidebar_stats(request):

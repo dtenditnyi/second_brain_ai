@@ -1,0 +1,66 @@
+........................................................................ [  7%]
+........xxxxxxxxxxxxxxxx................................................ [ 14%]
+........................................................................ [ 21%]
+........................................................................ [ 28%]
+........................................................................ [ 35%]
+........................................................................ [ 42%]
+........................xxxxxxxxxxxxxxxF................................ [ 49%]
+........................................................................ [ 56%]
+........................................................................ [ 64%]
+........................................................................ [ 71%]
+........................................................................ [ 78%]
+.......s............................................xxxxx............... [ 85%]
+........................................................................ [ 92%]
+........................................................................ [ 99%]
+....                                                                     [100%]
+================================== FAILURES ===================================
+_________________ test_settings_save_error_is_shown[chromium] _________________
+
+logged_page = <Page url='http://localhost:61985/settings/'>
+live_server = <LiveServer listening at http://localhost:61985>
+e2e_user = <User: e2e>
+
+    def test_settings_save_error_is_shown(logged_page, live_server, e2e_user):
+        p = logged_page
+        p.goto(f"{live_server.url}/settings/")
+        p.fill("#display-name", "")
+        p.get_by_role("button", name="Save System Configuration").click()
+>       expect(p.locator(".settings-container button").last).to_have_text(re.compile("cannot be empty", re.I))
+E       AssertionError: Locator expected to have text 're.compile('cannot be empty', re.IGNORECASE)'
+E       Actual value: Create token 
+E       Call log:
+E         - Expect "to_have_text" locator(".settings-container button").last with timeout 5000ms
+E         - waiting for locator(".settings-container button").last
+E           14 × locator resolved to <button type="button" id="token-create-button" class="btn btn-primary min-h-11 mt-4">Create token</button>
+E              - unexpected value "Create token"
+E       
+E       Aria snapshot:
+E       - button "Create token"
+
+tests\e2e\test_e2e_errors.py:21: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  django.request:log.py:283 Bad Request: /api/save-settings/
+============================== warnings summary ===============================
+tests/acceptance/test_round3.py: 9 warnings
+tests/acceptance/test_round4.py: 28 warnings
+tests/acceptance/test_round5.py: 13 warnings
+tests/test_admin_matrix.py: 42 warnings
+tests/test_agent_providers.py: 2 warnings
+tests/test_api.py: 67 warnings
+tests/test_api_contract.py: 27 warnings
+tests/test_auth.py: 17 warnings
+tests/test_debug_static.py: 2 warnings
+tests/test_pages.py: 53 warnings
+tests/test_round3_regressions.py: 2 warnings
+tests/test_tasks_service.py: 11 warnings
+  C:\Users\dania\Desktop\Projects\second_brain_ai\venv\Lib\site-packages\django\core\handlers\base.py:63: UserWarning: No directory at: C:\Users\dania\Desktop\Projects\second_brain_ai\ai_manager\staticfiles\
+    mw_instance = middleware(adapted_handler)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_e2e_errors.py::test_settings_save_error_is_shown[chromium]
+1 failed, 974 passed, 1 skipped, 36 xfailed, 273 warnings in 564.65s (0:09:24)
+
+# Follow-up (same session): the one failure above (token section placed after the Save button inside
+# .settings-container) was fixed by moving the section into its own container; re-run of tests/e2e -k settings
+# + test_e2e_errors: 29 passed, 3 passed. Effective result: 975 passed, 1 skipped, 36 xfailed (Round 5 tests).

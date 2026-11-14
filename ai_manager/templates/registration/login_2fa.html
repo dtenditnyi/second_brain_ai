@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="cyberpunk" data-accent="cyan">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0D0D12">
+    <style>html{background:#0D0D12}</style>
+    <title>Second Brain - Код 2FA</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="bg-[#0D0D12] min-h-screen min-h-dvh w-full flex items-center justify-center font-sans overflow-x-hidden py-6">
+    <main data-r5-page="login-2fa" class="w-full max-w-md p-4" style="padding-left:max(1rem,var(--safe-left));padding-right:max(1rem,var(--safe-right))">
+        <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10">
+            <header class="text-center mb-6">
+                <h1 class="text-2xl font-extrabold text-white mb-2">Второй шаг входа</h1>
+                <p class="text-gray-300 text-sm">Введите 6-значный код из приложения-аутентификатора или один из резервных кодов.</p>
+            </header>
+            {% if error %}<div class="mb-5 alert alert-danger font-medium" role="alert">⚠️ {{ error }}</div>{% endif %}
+            <form method="POST" class="flex flex-col gap-5">
+                {% csrf_token %}
+                <div class="flex flex-col gap-2">
+                    <label for="id_code" class="text-xs uppercase tracking-wider font-semibold text-gray-300">Код</label>
+                    <input type="text" name="code" id="id_code" required autofocus inputmode="text" autocomplete="one-time-code" maxlength="12"
+                           class="input-field rounded-xl px-4 py-3 w-full bg-black/40 text-white border border-white/10 text-center text-xl tracking-widest">
+                </div>
+                <button type="submit" class="btn btn-solid w-full py-3.5 rounded-xl uppercase tracking-wider">Войти</button>
+            </form>
+            <p class="mt-6 text-center"><a href="{% url 'login' %}" class="text-[#00F0FF] underline inline-flex items-center min-h-11">← Другой аккаунт</a></p>
+        </div>
+    </main>
+</body>
+</html>

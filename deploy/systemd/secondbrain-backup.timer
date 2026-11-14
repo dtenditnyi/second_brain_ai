@@ -1,0 +1,12 @@
+# Runs deploy/backup.sh every day at 03:30 (missed runs are made up after boot).
+[Unit]
+Description=Daily Second Brain backup at 03:30
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+RandomizedDelaySec=120
+Unit=secondbrain-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -22,10 +22,14 @@ load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-LOGS_DIR = BASE_DIR / 'logs'
+# Logs live outside git (only logs/.gitkeep is tracked); the folder is created at
+# start-up and can be moved with LOG_DIR (Docker: a volume). Round 3 / G-A4.
+LOGS_DIR = Path(os.getenv('LOG_DIR') or BASE_DIR / 'logs')
 os.makedirs(LOGS_DIR, exist_ok=True)
+LOG_MAX_BYTES = int(os.getenv('LOG_MAX_BYTES') or 5 * 1024 * 1024)
+LOG_BACKUP_COUNT = int(os.getenv('LOG_BACKUP_COUNT') or 5)
 
-# Route AI/vector events and application/Git events to separate weekly log files.
+# Route AI/vector events and application/Git events to separate size-rotated log files.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -36,20 +40,18 @@ LOGGING = {
     },
     'handlers': {
         'rag_file': {
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': LOGS_DIR / 'rag_engine.log',
-            'when': 'W0',
-            'interval': 1,
-            'backupCount': 4,
+            'maxBytes': LOG_MAX_BYTES,
+            'backupCount': LOG_BACKUP_COUNT,
             'encoding': 'utf-8',
             'formatter': 'telemetry',
         },
         'system_file': {
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': LOGS_DIR / 'system.log',
-            'when': 'W0',
-            'interval': 1,
-            'backupCount': 4,
+            'maxBytes': LOG_MAX_BYTES,
+            'backupCount': LOG_BACKUP_COUNT,
             'encoding': 'utf-8',
             'formatter': 'telemetry',
         },
@@ -85,17 +87,43 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default-insecure-key-for-dev')
 # Local development turns it on in settings_local.py.
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'secondbrain-core.com',
-]
+INSECURE_SECRET_KEYS = {'', 'default-insecure-key-for-dev', 'change-me-to-a-long-random-string'}
+# Production refuses to start with a missing/default key (Round 3 / G-B1). settings_local
+# and settings_test set SECONDBRAIN_DEV_SETTINGS before importing this module.
+if not DEBUG and SECRET_KEY in INSECURE_SECRET_KEYS and not os.getenv('SECONDBRAIN_DEV_SETTINGS'):
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured(
+        'SECRET_KEY is empty or the insecure default while DEBUG=False. '
+        'Set a long random SECRET_KEY in .env (python -c "import secrets; print(secrets.token_urlsafe(50))").')
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://secondbrain-core.com',
-]
 
+def _env_list(name, default):
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return list(default)
+    return [item.strip() for item in raw.split(',') if item.strip()]
+
+
+# secondbrain-web: the Link2Note bot calls http://secondbrain-web:8000/api/v1 inside the docker network.
+ALLOWED_HOSTS = _env_list('ALLOWED_HOSTS', ['localhost', '127.0.0.1', 'secondbrain-core.com', 'secondbrain-web'])
+CSRF_TRUSTED_ORIGINS = _env_list('CSRF_TRUSTED_ORIGINS', ['https://secondbrain-core.com'])
+
+# Cloudflare Tunnel terminates TLS and forwards X-Forwarded-Proto: https.
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True') == 'True'
+    # Docker healthchecks call http://127.0.0.1:8000/healthz/ directly (no proxy); the bot calls
+    # the token-only REST API over the internal docker network (http://secondbrain-web:8000/api/v1).
+    SECURE_REDIRECT_EXEMPT = [r'^healthz/$', r'^api/v1/']
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS') or 31536000)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True') == 'True'
+    SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False') == 'True'
+    SECURE_REFERRER_POLICY = 'same-origin'
+# HSTS preload is a one-way commitment for the whole domain: opt-in via env only (D23).
+SILENCED_SYSTEM_CHECKS = ['security.W021']
 # Django application registry: built-in auth/admin infrastructure plus this project app.
 
 INSTALLED_APPS = [
@@ -153,8 +181,13 @@ DATABASES = {
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'mypassword'),
         'HOST': os.environ.get('DB_HOST', 'db'),
         'PORT': os.environ.get('DB_PORT', '5432'),
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE') or 60),
     }
 }
+# DB_ENGINE=sqlite: only for offline checks such as "manage.py check --deploy" in CI;
+# defaults to an in-memory database so no real file is ever opened.
+if os.environ.get('DB_ENGINE') == 'sqlite':
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': os.environ.get('SQLITE_PATH', ':memory:')}}
 
 
 # Built-in validators protect credentials created through Django's user forms.
@@ -229,7 +262,23 @@ def _env_int(name, default):
         return default
 
 # Local Ollama endpoint (Q9): env only, never a hard-coded LAN address.
-OLLAMA_HOST = os.getenv('OLLAMA_HOST') or 'http://localhost:11434'
+def normalize_ollama_url(raw):
+    """OLLAMA_HOST is shared with the Ollama server itself, which accepts a bind address such as
+    ``0.0.0.0`` or ``127.0.0.1:11434`` (no scheme). Turn any of those into a client URL (B-73)."""
+    from urllib.parse import urlsplit
+    raw = (raw or '').strip().rstrip('/') or 'http://localhost:11434'
+    if '://' not in raw:
+        raw = 'http://' + raw
+    parts = urlsplit(raw)
+    host = parts.hostname or 'localhost'
+    if host in ('0.0.0.0', '::'):
+        host = '127.0.0.1'
+    if ':' in host:
+        host = f'[{host}]'
+    return f"{parts.scheme}://{host}:{parts.port or 11434}"
+
+
+OLLAMA_HOST = normalize_ollama_url(os.getenv('OLLAMA_HOST'))
 OLLAMA_MODEL = os.getenv('OLLAMA_MODEL') or 'llama3:latest'
 
 # Gemini model chain. IDs follow the official Gemini API docs; run
@@ -250,3 +299,31 @@ CHAT_HISTORY_MESSAGES = _env_int('CHAT_HISTORY_MESSAGES', 6)
 PROMPT_TOKEN_BUDGET_GEMMA = _env_int('PROMPT_TOKEN_BUDGET_GEMMA', 8000)
 PROMPT_TOKEN_BUDGET_GEMINI = _env_int('PROMPT_TOKEN_BUDGET_GEMINI', 30000)
 PROMPT_TOKEN_BUDGET_LOCAL = _env_int('PROMPT_TOKEN_BUDGET_LOCAL', 6000)
+
+# --- Tasks in the Obsidian vault (Round 3, docs/TASKS_FORMAT.md) ---------------
+TASKS_NOTE_PATH = os.getenv('TASKS_NOTE_PATH') or '01 - Projects/🎯 Цели и планы/Задачи.md'
+TASKS_SYNC_INTERVAL = _env_int('TASKS_SYNC_INTERVAL', 60)
+VAULT_PUSH_RETRIES = _env_int('VAULT_PUSH_RETRIES', 4)
+
+# --- Round 4: notes editor, AI agent, Claude, REST API -----------------------
+# Claude (Anthropic API). Without a key the provider is unavailable in Settings.
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY') or ''
+ANTHROPIC_MODEL = os.getenv('ANTHROPIC_MODEL') or 'claude-haiku-5-5'
+# Agent: Gemini model with a large daily limit; tool-step and token limits per request.
+GEMINI_MODEL_AGENT = os.getenv('GEMINI_MODEL_AGENT') or GEMINI_MODEL_DEFAULT
+AGENT_MAX_STEPS = _env_int('AGENT_MAX_STEPS', 8)
+AGENT_TOKEN_BUDGET = _env_int('AGENT_TOKEN_BUDGET', 60000)
+# Ollama models that support tool calling (prefix match); others cannot run the agent.
+OLLAMA_TOOL_MODELS = [m.strip() for m in (os.getenv('OLLAMA_TOOL_MODELS') or
+                      'llama3.1,llama3.2,llama3.3,qwen2.5,qwen3,mistral-nemo,mistral-small,command-r').split(',') if m.strip()]
+# Optional vault note with the owner's rules for the agent (added to the built-in rules).
+VAULT_RULES_NOTE = os.getenv('VAULT_RULES_NOTE') or ''
+# Quick capture target ("inbox") and the weekly notes root.
+CAPTURE_INBOX_NOTE = os.getenv('CAPTURE_INBOX_NOTE') or '05 - Fleeting/📥 Входящие.md'
+WEEKLY_ROOT = os.getenv('WEEKLY_ROOT') or '06 - Daily'
+# The ONE list of allowed note/task tags (Link2Note's contract/allowed_tags.json ⊆ this list, incl. "fun").
+ALLOWED_TAGS = [t.strip() for t in (os.getenv('ALLOWED_TAGS') or
+                'university,dsa,physics,databases,economics,electronics,romanian,nuclear,dev,ai,homelab,'
+                'driving,cooking,sport,health,finance,planning,games,books,personal,obsidian,fun').split(',') if t.strip()]
+# REST API: requests per minute per token.
+API_RATE_LIMIT_PER_MINUTE = _env_int('API_RATE_LIMIT_PER_MINUTE', 60)

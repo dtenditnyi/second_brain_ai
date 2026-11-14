@@ -4,3 +4,6 @@
 pytest-django==4.14.0
 pytest-playwright==0.10.0
 playwright==1.65.0
+hypothesis==6.170.15
+pytest-cov==7.1.0
+shellcheck-py==0.11.0.1

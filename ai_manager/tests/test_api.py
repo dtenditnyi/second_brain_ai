@@ -337,11 +337,12 @@ def test_get_note_renders_markdown_wikilinks_backlinks(auth_client, user, note_w
     note_writer(user, "Ref", "intro text that links to [[Main]] here")
     d = auth_client.get("/api/get-note/", {"name": "Main"}).json()
     assert d["status"] == "ok"
-    assert "<h1>Title</h1>" in d["html_content"]
-    assert 'data-note="Other">Other</a>' in d["html_content"]
-    assert 'data-note="Other">alias</a>' in d["html_content"]
+    # Round 5: headings get ids (for [[Note#Heading]]), links carry the resolved path, backlinks the path.
+    assert '<h1 id="title">Title</h1>' in d["html_content"]
+    assert 'data-note="Other" data-path="sub/Other.md">Other</a>' in d["html_content"]
+    assert 'data-note="Other" data-path="sub/Other.md">alias</a>' in d["html_content"]
     assert "<table>" in d["html_content"]
-    assert d["backlinks"] == [{"title": "Ref", "snippet": "...intro text that links to [[Main]] here..."}]
+    assert d["backlinks"] == [{"title": "Ref", "path": "Ref.md", "snippet": "...intro text that links to [[Main]] here..."}]
 
 
 def test_get_note_in_subfolder(auth_client, user, note_writer):

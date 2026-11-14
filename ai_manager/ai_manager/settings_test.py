@@ -4,6 +4,11 @@
 * Log handlers write nowhere, so the tracked files in logs/ are not modified.
 * Fast password hashing.
 """
+import os as _os
+
+# Development/test settings may use the insecure default SECRET_KEY (checked in settings.py).
+_os.environ.setdefault('SECONDBRAIN_DEV_SETTINGS', '1')
+
 from .settings import *  # noqa: F401,F403
 
 DATABASES = {
@@ -26,3 +31,12 @@ LOGGING = {
 }
 
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+
+# Tests run over plain http with DEBUG=False: no HTTPS redirect / secure-only cookies.
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_HSTS_SECONDS = 0
+
+# live_server + in-memory SQLite: one request at a time (tests/serial_middleware.py).
+MIDDLEWARE = ['tests.serial_middleware.SerialRequestsMiddleware', *MIDDLEWARE]  # noqa: F405

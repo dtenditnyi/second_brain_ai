@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Second Brain - Теги{% endblock %}
+{% block mobile_title %}Теги{% endblock %}
+
+{% block content %}
+<main data-r5-page="tags" class="px-4 py-6 sm:p-8 lg:p-12 max-w-5xl mx-auto w-full">
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div class="min-w-0">
+            <h1 class="text-2xl sm:text-3xl font-bold text-fg mb-1">Теги</h1>
+            <p class="text-soft text-sm">Теги из frontmatter и #тегов в тексте заметок.</p>
+        </div>
+        <a href="{% url 'notes' %}" class="btn btn-ghost min-h-11">← Заметки</a>
+    </header>
+    {% if tags %}
+    <nav aria-label="Все теги" class="flex flex-wrap gap-2 mb-8">
+        {% for tag, notes in tags %}
+        <a href="#tag-{{ forloop.counter }}" class="badge min-h-11 px-3 text-sm">#{{ tag }} <span class="text-muted ml-1">{{ notes|length }}</span></a>
+        {% endfor %}
+    </nav>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for tag, notes in tags %}
+        <section id="tag-{{ forloop.counter }}" class="glass-card card p-4 sm:p-5 min-w-0 scroll-mt-20" aria-labelledby="tag-h-{{ forloop.counter }}">
+            <h2 id="tag-h-{{ forloop.counter }}" class="text-lg font-bold text-fg mb-2 break-words">#{{ tag }} <span class="text-sm text-muted font-normal">· {{ notes|length }}</span></h2>
+            <ul class="flex flex-col">
+                {% for n in notes %}
+                <li><a href="{% url 'notes' %}?path={{ n.path|urlencode }}" class="flex items-center min-h-11 text-soft hover:text-accent break-words" title="{{ n.path }}">{{ n.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><span class="empty-icon" aria-hidden="true">#</span>Тегов пока нет (или хранилище не подключено в <a class="text-accent underline" href="{% url 'settings' %}">Настройках</a>).</div>
+    {% endif %}
+</main>
+{% endblock %}

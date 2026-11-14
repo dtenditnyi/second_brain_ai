@@ -16,13 +16,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetTab = btn.getAttribute('data-tab');
 
             // Reset navigation layouts
-            tabButtons.forEach(b => b.classList.remove('bg-purple-500/10', 'text-white', 'text-purple-400', 'shadow-[0_0_15px_rgba(176,38,255,0.1)]', 'border', 'border-purple-500/20'));
-            tabButtons.forEach(b => b.classList.add('text-gray-400', 'hover:bg-[var(--bg-glass)]', 'hover:text-white'));
+            tabButtons.forEach(b => {
+                b.classList.remove('is-active', 'bg-accent/10', 'text-fg', 'border-accent/40');
+                b.classList.add('text-soft', 'border-transparent', 'hover:bg-surface', 'hover:text-fg');
+                b.removeAttribute('aria-current');
+            });
             sections.forEach(s => s.classList.replace('block', 'hidden'));
 
             // Toggle active tracking view
-            btn.classList.replace('text-gray-400', 'text-white');
-            btn.classList.add('bg-purple-500/10', 'shadow-[0_0_15px_rgba(176,38,255,0.1)]', 'border', 'border-purple-500/20');
+            btn.classList.remove('text-soft', 'border-transparent');
+            btn.classList.add('is-active', 'bg-accent/10', 'text-fg', 'border-accent/40');
+            btn.setAttribute('aria-current', 'true');
             document.getElementById(targetTab)?.classList.replace('hidden', 'block');
         });
     });
@@ -50,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             btn.textContent = 'Syncing...';
-            btn.style.backgroundColor = '#9333ea';
+            btn.disabled = true;
 
             try {
                 const response = await fetch('/api/admin/update-row/', {
@@ -65,21 +69,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const data = await response.json();
                 if (data.status === 'ok') {
+                    btn.disabled = false;
                     btn.textContent = 'Success';
-                    btn.style.backgroundColor = '#22c55e'; // Highlight green
+                    btn.classList.add('is-success');
                     setTimeout(() => {
                         btn.textContent = 'Commit';
-                        btn.style.backgroundColor = '#a855f7'; // Reset purple
+                        btn.classList.remove('is-success');
                     }, 2000);
                 } else {
+                    btn.disabled = false;
                     alert('Transaction failure: ' + data.msg);
                     btn.textContent = 'Error';
-                    btn.style.backgroundColor = '#ef4444';
+                    btn.classList.add('is-error');
                 }
             } catch (error) {
                 console.error('Data transmission lost:', error);
+                btn.disabled = false;
                 btn.textContent = 'Retry';
-                btn.style.backgroundColor = '#ef4444';
+                btn.classList.add('is-error');
             }
         });
     });

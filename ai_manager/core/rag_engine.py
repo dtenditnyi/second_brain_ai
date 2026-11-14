@@ -67,6 +67,15 @@ MSG_MODELS_UNAVAILABLE = ("System Error: none of the configured Gemini models an
 NON_ANSWER_PREFIXES = ("System ", "⚠️", "❌")
 
 
+def _vault_documents(notes_dir):
+    """Load the vault's notes for embedding: same walker as search (no .git/.obsidian/.trash, hidden
+    folders or symlinks), so a committed symlink can never pull a file from outside the vault into AI answers."""
+    from pathlib import Path
+    from .notes_service import _walk_md
+    files = [str(full) for rel, full in _walk_md(Path(notes_dir)) if not any(p.startswith(".") for p in rel.split("/"))]
+    return SimpleDirectoryReader(input_files=files).load_data() if files else []
+
+
 def ollama_url():
     """Local Ollama endpoint from settings/env (Q9); default http://localhost:11434."""
     return getattr(django_settings, 'OLLAMA_HOST', None) or "http://localhost:11434"
@@ -107,13 +116,8 @@ def reset_chat_engine(user_id=None):
         _user_llms.clear()
 
 
-def get_user_paths(user):
-    """Filesystem and Chroma collection locations derived from the user ID."""
-    user_folder = f"user_{user.id}"
-    return {
-        "notes_dir": os.path.join(BASE_DIR, 'obsidian_data', user_folder),
-        "collection_name": f"collection_user_{user.id}"
-    }
+# get_user_paths lives in core.paths (light module, B-38); re-exported here.
+from .paths import get_user_paths  # noqa: E402,F401
 
 
 # --- conversation memory & token budget --------------------------------------
@@ -278,7 +282,7 @@ def _open_index(paths, sync_success):
         logger.info("Vector collection empty; building initial index.")
         documents = []
         if sync_success and os.path.exists(paths["notes_dir"]):
-            documents = SimpleDirectoryReader(paths["notes_dir"], required_exts=[".md"], recursive=True).load_data()
+            documents = _vault_documents(paths["notes_dir"])
         if documents:
             index = VectorStoreIndex.from_documents(documents, storage_context=storage_context)
             logger.info("Vector index created: documents=%s.", len(documents))
@@ -289,13 +293,13 @@ def _open_index(paths, sync_success):
         index = VectorStoreIndex.from_vector_store(vector_store)
         # Smart sync: refresh_ref_docs re-embeds only new or changed documents.
         if sync_success and os.path.exists(paths["notes_dir"]):
-            documents = SimpleDirectoryReader(paths["notes_dir"], required_exts=[".md"], recursive=True).load_data()
+            documents = _vault_documents(paths["notes_dir"])
             refreshed = index.refresh_ref_docs(documents)
             logger.info("Vector index refreshed: updated=%s.", sum(refreshed))
     return index, chroma_collection.count()
 
 
-def _retrieve_chunks(index, query, selected_files, top_k):
+def _retrieve_chunks(index, query, selected_files, top_k, sources=None):
     """Top-k note chunks; selected files narrow the search, none = whole vault."""
     options = {}
     if selected_files:
@@ -308,6 +312,11 @@ def _retrieve_chunks(index, query, selected_files, top_k):
             condition=FilterCondition.OR,
         )
     nodes = index.as_retriever(similarity_top_k=top_k, **options).retrieve(query)
+    if sources is not None:            # REST API /ask lists the notes behind the answer
+        for node in nodes:
+            path = str((node.metadata or {}).get("file_path") or "")
+            if path and path not in sources:
+                sources.append(path)
     return [node.get_content() for node in nodes]
 
 
@@ -319,12 +328,14 @@ def _budget_for(provider, model):
     return getattr(django_settings, 'PROMPT_TOKEN_BUDGET_GEMINI', 30000)
 
 
-def ask_second_brain(user_query, user, selected_files=None, history=None, smart=False):
+def ask_second_brain(user_query, user, selected_files=None, history=None, smart=False, provider=None, sources=None):
     """Run the retrieval-augmented pipeline for one user and return the answer text.
 
     history: previous (role, text) turns of this user (see load_chat_history);
     smart: use GEMINI_MODEL_SMART as the first cloud model (status report,
     "Smart answer" toggle). Errors are returned as "System …" texts.
+    provider: 'gemini' | 'claude' | 'ollama' overrides the Settings choice (REST API /ask);
+    sources: optional list filled with the absolute paths of the retrieved notes.
     """
     selected_files = selected_files or []
     history = history or []
@@ -333,6 +344,11 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
     user_settings = get_user_settings(user)
     paths = get_user_paths(user)
     ai_strategy = user_settings.ai_strategy or 'auto'
+    cloud_choice = user_settings.cloud_provider or 'gemini'
+    if provider == 'ollama':
+        ai_strategy = 'local_only'
+    elif provider in ('gemini', 'claude'):
+        ai_strategy, cloud_choice = 'cloud_only', provider
     try:
         temp = float(user_settings.temperature)
     except (TypeError, ValueError):
@@ -380,7 +396,11 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
             candidates = [('ollama', django_settings.OLLAMA_MODEL)]
         else:
             candidates = [('gemini', model) for model in ai_models.gemini_chain(smart=smart)]
-        chunks = _retrieve_chunks(_user_indexes[user.id], user_query, selected_files, SIMILARITY_TOP_K)
+            # Claude (Round 4 / G-E1) first when chosen in Settings; Gemini stays the fallback.
+            from . import ai_providers
+            if cloud_choice == 'claude' and ai_providers.claude_available():
+                candidates.insert(0, ('claude', ai_providers.ClaudeProvider(user_settings.claude_model).model))
+        chunks = _retrieve_chunks(_user_indexes[user.id], user_query, selected_files, SIMILARITY_TOP_K, sources)
 
         display_name = user_settings.display_name or user.username
         system_prompt = (
@@ -395,8 +415,18 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
             usable = chunks[:SIMILARITY_TOP_K_GEMMA] if gemma else chunks
             messages, used_chunks, used_history = build_messages(
                 system_prompt, usable, history, user_query, _budget_for(provider, model), inline_system=gemma)
-            llm = _get_llm(user.id, provider, model, temp)
             started = time.monotonic()
+            if provider == 'claude':
+                from . import ai_providers
+                claude = ai_providers.ClaudeProvider(model)
+                answer = claude.chat(messages[0].content, [
+                    {"role": "user" if m.role == MessageRole.USER else "assistant", "content": m.content}
+                    for m in messages[1:]]).text
+                logger.info("LLM answered: provider=claude, model=%s, chunks=%s, history=%s, seconds=%.1f.",
+                            model, len(used_chunks), len(used_history), time.monotonic() - started)
+                _record_model(user_settings, claude.label)
+                return answer
+            llm = _get_llm(user.id, provider, model, temp)
             reply = llm.chat(messages)
             label = ai_models.ollama_label() if provider == 'ollama' else ai_models.model_info(model)['name']
             logger.info("LLM answered: provider=%s, model=%s, chunks=%s, history=%s, seconds=%.1f.",
@@ -409,11 +439,15 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
             try:
                 return attempt(provider, model)
             except Exception as error:
-                kind = classify_llm_error(error) if provider == 'gemini' else None
+                if provider == 'claude':
+                    kind = getattr(error, 'kind', None)
+                    kind = kind if kind in ('quota', 'unavailable') else None
+                else:
+                    kind = classify_llm_error(error) if provider == 'gemini' else None
                 if kind is None:
                     raise
                 failures.append(kind)
-                logger.warning("Gemini model %s failed (%s: %s); trying the next model.",
+                logger.warning("Cloud model %s failed (%s: %s); trying the next model.",
                                model, kind, type(error).__name__)
 
         # Every cloud model failed with quota/unavailable errors.
@@ -433,3 +467,34 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
     except Exception as e:
         logger.error("RAG request failed: %s.", type(e).__name__)
         return f"System Error: {str(e)}"
+
+
+def reindex_notes(user, changed=(), removed=()):
+    """Re-index only these vault notes in the user's Chroma collection (Round 4 / G-D5).
+
+    ``changed``/``removed`` are vault-relative paths. Vectors of every listed note are
+    deleted (matched by file name + path metadata), then changed notes that still exist
+    are read and inserted again. Used after edits made by the site, the agent or the API.
+    """
+    from pathlib import Path
+    paths = get_user_paths(user)
+    root = Path(paths["notes_dir"])
+    targets = [p for p in list(changed) + list(removed) if str(p).lower().endswith(".md")]
+    if not targets:
+        return 0
+    ensure_embed_model()
+    db = chromadb.PersistentClient(path=DB_DIR)
+    collection = db.get_or_create_collection(paths["collection_name"])
+    for rel in targets:
+        full = (root / rel)
+        for candidate in {str(full), str(full.resolve()), os.path.abspath(str(full))}:
+            collection.delete(where={"file_path": candidate})
+    existing = [str(root / rel) for rel in changed if (root / rel).is_file() and not (root / rel).is_symlink()]
+    if existing:
+        vector_store = ChromaVectorStore(chroma_collection=collection)
+        index = VectorStoreIndex.from_vector_store(vector_store)
+        for document in SimpleDirectoryReader(input_files=existing).load_data():
+            index.insert(document)
+    _user_chat_engines.pop(user.id, None)       # cached session sees the new vectors on next question
+    logger.info("Re-indexed notes: changed=%s removed=%s.", len(existing), len(list(removed)))
+    return len(existing)

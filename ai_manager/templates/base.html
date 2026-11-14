@@ -14,10 +14,15 @@
     <!-- Background painted before the stylesheet arrives: no light/dark flash. -->
     <style>html{background:{% if config.theme == 'light' %}#F8FAFC{% else %}#0D0D12{% endif %}}</style>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <!-- Round 5 (F4): installable PWA. -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="{% static 'icons/icon.svg' %}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <!-- CSRF + HTML-escaping helpers used by every page controller. -->
     <script src="{% static 'js/csrf.js' %}"></script>
 </head>
-<body class="bg-base text-soft font-sans h-screen h-dvh overflow-hidden">
+<body class="bg-base text-soft font-sans h-screen h-dvh overflow-hidden" data-uid="{{ request.user.pk|default:'' }}">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] btn btn-solid">Skip to content</a>
     <!-- Application shell: persistent sidebar plus the active page content region. -->
     <div id="app-wrapper" class="flex h-full w-full min-h-0 overflow-hidden">
@@ -38,7 +43,25 @@
             {% endblock %}
         </div>
     </div>
+    <!-- Round 5 (F4): "no network" banner (the page keeps working read-only from the offline cache). -->
+    <div id="offline-banner" class="hidden alert alert-warning shadow-lg text-sm font-semibold" role="status" aria-live="polite">
+        📡 Нет сети — показываю сохранённые заметки (только чтение). Быстрые записи отправятся позже.
+    </div>
+    {% if request.user.is_authenticated %}
+    <!-- Round 5 (F1): quick switcher (Ctrl+K / ⌘K): fuzzy search over note names and aliases. -->
+    <div id="quick-switcher" class="modal-overlay hidden items-start pt-[10vh]" role="dialog" aria-modal="true" aria-label="Быстрый переход к заметке">
+        <div class="modal-panel max-w-xl w-full p-3 sm:p-4">
+            <label for="qs-input" class="sr-only">Название заметки</label>
+            <input id="qs-input" type="search" autocomplete="off" spellcheck="false" placeholder="Перейти к заметке… (название или alias)"
+                   class="input-field rounded-lg px-4 py-3 w-full" role="combobox" aria-controls="qs-list" aria-expanded="true" aria-autocomplete="list">
+            <ul id="qs-list" role="listbox" aria-label="Заметки" class="mt-2 flex flex-col gap-0.5 max-h-[55vh] overflow-y-auto"></ul>
+            <p class="field-hint mt-2">↑↓ — выбор, Enter — открыть, Esc — закрыть</p>
+        </div>
+    </div>
+    {% endif %}
     <!-- Shared responsive navigation behaviour (menu, backdrop, Esc, scroll lock). -->
     <script src="{% static 'js/layout.js' %}"></script>
+    <script src="{% static 'js/pwa.js' %}"></script>
+    {% if request.user.is_authenticated %}<script src="{% static 'js/vault_nav.js' %}"></script>{% endif %}
 </body>
 </html>

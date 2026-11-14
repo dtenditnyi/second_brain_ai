@@ -38,9 +38,10 @@ def test_add_task_error_is_reported(logged_page, live_server):
 
 def test_chat_api_error_message_is_shown(logged_page, live_server):
     p = logged_page
-    p.goto(f"{live_server.url}/chat/")
     p.route("**/api/send-message/", lambda route: route.fulfill(
         status=400, content_type="application/json", body=json.dumps({"status": "error", "msg": "Server said no"})))
+    p.goto(f"{live_server.url}/chat/")
+    p.wait_for_load_state("networkidle")          # chat.js bound before typing (flaky in R5 full run)
     p.fill("#chat-input", "hello")
     p.keyboard.press("Enter")
     expect(p.locator("#chat-feed")).to_contain_text("Server said no")

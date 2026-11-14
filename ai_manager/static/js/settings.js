@@ -58,9 +58,13 @@ document.addEventListener('DOMContentLoaded', () => {
             accent_color: selectedAccent,
             ai_strategy: document.getElementById('ai-strategy')?.value || 'auto',
             temperature: tempSlider?.value || 0.7,
+            cloud_provider: document.getElementById('cloud-provider')?.value || 'gemini',
+            claude_model: document.getElementById('claude-model')?.disabled ? undefined : document.getElementById('claude-model')?.value,
+            agent_auto_apply_additions: !!document.getElementById('agent-auto-apply')?.checked,
             github_repo_url: document.getElementById('github-repo')?.value || '',
             github_token: tokenInput?.value || '',
-            clear_github_token: Boolean(clearToken && clearToken.checked)
+            clear_github_token: Boolean(clearToken && clearToken.checked),
+            tasks_note_path: document.getElementById('tasks-note-path')?.value ?? ''
         };
 
         try {

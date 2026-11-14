@@ -36,6 +36,23 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 | B-28 | functional (Round 2) | Display Name renamed the login (Q6) | `test_api::test_save_settings_display_name_does_not_rename_login`, e2e `test_display_name_change_keeps_login` | FIXED 4a751f6 |
 | B-29 | functional (Round 2) | Chat searched only the first 10 notes by default (Q12) | `test_pages::test_chat_page_preselects_nothing_and_searches_whole_vault`, e2e `test_chat_sends_selected_context_files_to_api` | FIXED 4a751f6 + e3dcb36 |
 | B-30 | functional (Round 2) | First chat after a failed sync answered "Empty Response" (Q14) | `test_rag_engine::test_ask_sync_failure_explains_instead_of_empty_response`, `..._empty_vault_after_successful_sync` | FIXED 4a751f6 |
+| B-32 | functional (Round 3) | Re-cloning after an interrupted clone failed on Windows: `shutil.rmtree` cannot delete read-only git object files | `test_git_sync::test_incomplete_clone_with_read_only_files_is_removed`, `test_vault_writer::test_pull_resets_local_junk_and_recovers_broken_clone` | FIXED (Round 3, part C commit) |
+| B-44 | functional (R3 verify 2, regression of B-34) | Read-only token + duplicate IDs → sync error, empty task list | `test_b44_read_only_token_with_duplicate_ids_still_shows_tasks` | FIXED |
+| B-45 | data (R3 verify 2, regression of B-41) | Note starting with an unclosed `---` lost every task | `test_b45_unclosed_leading_dashes_are_not_frontmatter[*]` | FIXED |
+| B-46 | deploy (R3 verify 2) | `update.sh` ERR trap never fired inside shell functions (no `set -E`) | `test_b46_update_script_fires_err_trap_inside_functions` | FIXED |
+| B-47 | tests (R3 verify 2) | Test gaps: duplicate cache fix (N2+N16), sync repair (N3), junction to `.git` (N13) | `test_b34_duplicates_are_kept_apart…` (2 syncs), `test_n3_…`, `test_n13_…` — mutations re-run and caught | FIXED |
+| B-48 | data (R3 verify 2) | Deleting a parent left sub-items that follow a blank line | `test_b48_delete_parent_with_blank_line_inside_subitems` | FIXED |
+| B-33 | data (R3 verify) | `restore.sh` of an older dump (old PC, fewer tables) failed half-way and left a half-dropped DB | `test_round3_regressions::test_b33_restore_recreates_schema_in_one_transaction` (static; no Postgres here) | FIXED (R3 fix commit) |
+| B-34 | data (R3 verify) | Duplicate 🆔 (line copied in Obsidian) hid one task and edits hit the wrong line | `test_b34_duplicate_id_does_not_hide_a_task_or_edit_the_wrong_line`, `test_b34_duplicates_are_kept_apart_even_when_the_fix_cannot_be_pushed` | FIXED |
+| B-35 | functional (R3 verify) | Task with a tag outside the allowed list (from Obsidian) could not be edited; `[[#Heading]]` parsed as a tag | `test_b35_*` (3) | FIXED |
+| B-36 | security (R3 verify) | `safe_path` bypass on Windows: `.GIT/`, `.git./`, `.Obsidian/`, `CON`, `x.md::$DATA`, trailing dots | `test_b36_windows_tricks_rejected[*]`, `test_b36_tasks_note_path_cannot_point_into_git`, `test_m1_dotdot_layer_rejects_on_its_own` | FIXED |
+| B-37 | security (R3 verify) | `.dockerignore` root-only patterns → `ai_manager/db.sqlite3`, `.coverage` would ship in the image | `test_b37_*` (19, Docker matching rules) | FIXED |
+| B-38 | performance (R3 verify) | Scheduler imported torch/llama_index every minute (`vault_writer` → `rag_engine`) | `test_b38_task_sync_does_not_import_torch`, `test_b38_sync_loop_keeps_one_process`, `test_b38_loop_survives_a_failing_round` | FIXED |
+| B-39 | deploy (R3 verify) | `update.sh` said "already up to date" after a failed build | `test_b39_update_remembers_deployed_commit_and_resets_on_error` (static) | FIXED |
+| B-40 | security (R3 verify) | AI answers loaded external images (exfiltration via prompt injection) | e2e `test_e2e_round3::test_b40_external_images_in_ai_answers_are_not_loaded` | FIXED |
+| B-41 | data (R3 verify) | Parser edge cases: deleting a parent orphaned sub-tasks; nested fences; frontmatter `# comment` as section; protected branch retried as conflict | `test_b41_*` (4) | FIXED |
+| B-42 | hardening (R3 verify) | Image: code writable by the app user, tests shipped, cloudflared unpinned | `test_b42_code_is_not_writable_by_the_app_user` | FIXED (cloudflared: configurable `CLOUDFLARED_IMAGE`, pin documented) |
+| B-43 | docs (R3 verify) | `.env.example` WEB_BIND claimed LAN access works over http; Docker bypasses ufw | — (doc) | FIXED |
 | B-31 | config (Round 2) | DEBUG hard-coded True, LAN-IP default for OLLAMA_HOST, settings label "Gemini 2.5 Flash" vs code `gemini-3.6-flash` (Q1, Q8, Q9) | `test_debug_static::*`, `test_rag_engine::test_ollama_url_from_settings_with_localhost_default`, `..._no_hardcoded_lan_ip_in_code`, `test_pages::test_settings_dropdown_shows_real_model_names_and_limits` | FIXED c52427f + e3dcb36 |
 
 ## Details
@@ -127,3 +144,46 @@ Status: **FIXED** (commit) · **OPEN** (not solved, with analysis) · **QUESTION
 - B-29 (Q12): no pre-checked notes; empty selection = whole vault; UI shows "Searching the whole vault" / "Selected: N notes" + Reset.
 - B-30 (Q14): see DECISIONS D16.
 - B-31: DEBUG from env (default off), OLLAMA_HOST env-only (default localhost), model labels from `core/ai_models.py`.
+
+### B-32 — Round 3: interrupted clone could not be removed on Windows
+- Symptom: after an interrupted clone, the next sync tried `shutil.rmtree(local_dir)` and failed with `PermissionError: [WinError 5]` on read-only files in `.git/objects` → the vault never re-synced until the folder was deleted by hand.
+- Cause: git marks object files read-only; `rmtree` does not clear the flag on Windows.
+- Fix: `vault_writer.remove_tree` (rmtree with an `onexc` handler that makes files writable), used by `git_sync` and `VaultRepo.pull`. Regression tests above. Found by the new vault-writer unit tests.
+
+### B-33 … B-43 — found by the independent Round 3 verifier (`docs/audit/round3/VERIFY-1.md`)
+- B-33: `restore.sh` now runs `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` + the dump through one `psql --single-transaction -v ON_ERROR_STOP=1`; migrations to the current version run when web starts.
+- B-34: duplicates are detected on read → one "tasks: …" commit gives the copies new IDs; if that cannot be pushed (offline), the cache keeps repeated IDs apart by their line.
+- B-35: only newly added tags are validated (in `tasks_service.update_task` and `tasks_md.apply_op`); `#` right after `[` or `|` is not a tag.
+- B-36: parts compared case-insensitively, trailing dots/spaces, `:`, control chars and Windows device names rejected, the resolved path is checked again.
+- B-37: `**/` patterns, tests and backups excluded; a test evaluates Docker's matching (last rule wins) on real paths.
+- B-38: `core/paths.py` (light) replaces the `rag_engine` import in the writer/pages; the scheduler runs `sync_tasks --loop` (one process, survives failing rounds).
+- B-39: `.deployed_commit` + `trap … ERR` resetting the checkout.
+- B-40: DOMPurify hook removes non-local `src` while sanitising (inert document → no request); a plain link is shown instead.
+- B-41: sub-items are deleted with their parent; fences close only with the same char and ≥ length; frontmatter skipped; "protected branch"/GH006 → permission.
+- B-42/B-43: see table.
+| B-49 | data (R4 / D) | Git for Windows `core.autocrlf=true` gave the editor CRLF text → hash/diff mismatch and CRLF commits from the site | `test_round4::test_d1_raw_note_has_content_and_hash`, `test_vault_writer::test_repo_clone_pull_commit_push_cycle` (byte-exact) | FIXED (R4 part D) |
+| B-50 | tests (R4 / D) | e2e: live_server shares one in-memory SQLite connection; parallel requests (note + editor names) failed with `InterfaceError` | test-only `tests/serial_middleware.py` in `settings_test`; D e2e stable | FIXED (R4 part D) |
+| B-51 | functional (R4 / API) | Git for Windows: notes with long names in deep folders failed to commit ("Filename too long") | `test_api_contract::test_create_writes_markdown_as_is_and_suffixes_names` (120-char name); `core.longpaths=true` pinned per clone | FIXED (R4 part API) |
+| B-52 | security (R4 verify, HIGH) | `POST /api/v1/agent` with an ai-only token auto-applied additions (Settings option), bypassing `write` + `write_paths` | `test_round4_regressions::test_b52_api_agent_never_auto_applies` | FIXED |
+| B-53 | security (R4 verify) | API revert checked only the `write` scope, not paths / `delete` for created notes | `test_b53_api_revert_checks_paths` | FIXED |
+| B-54 | data (R4 verify) | Revert failing half-way left reverted shas in the batch → second revert stuck | `test_b54_partial_revert_is_not_repeated` | FIXED |
+| B-55 | data (R4 verify) | PATCH frontmatter wrote unquoted YAML (`a: b`, `#x`, `[a`) → Obsidian dropped properties | `test_b55_frontmatter_values_are_yaml_safe[*]` | FIXED |
+| B-56 | data (R4 verify) | Rename rewrote linking CRLF notes as LF (whole-file diffs) | `test_b56_rename_keeps_crlf` | FIXED |
+| B-57 | data (R4 verify) | Rename rewrote `[[Name]]` pointing to another note with the same name; case-sensitive link match | `test_b57_rename_ambiguous_names_and_case` | FIXED |
+| B-58 | security (R5 goals check) | Symlinked `.md`/folders in a vault were read by search/Dataview/graph, RAG and get-note by name → files outside the vault (another user's clone) could leak | `test_index_skips_symlinks_leaving_the_vault`, `test_rag_loader_and_get_note_skip_symlinks` | FIXED |
+| B-59 | data (R4.5 LOW) | Chained offline saves of one note: the 2nd became a conflict copy | `test_chained_offline_saves_of_one_note_apply_in_order` | FIXED |
+| B-60 | data (R4.5 LOW) | Two conflict copies in one minute → «already exists» stalled the outbox forever | `test_two_conflict_copies_in_one_minute_do_not_block_outbox` | FIXED |
+| B-61 | data (R4.5 LOW) | Resent save with old base after a lost response → false conflict | `test_resent_save_after_lost_response_is_not_a_conflict` | FIXED |
+| B-62 | data (R4.5 LOW) | Web delete/rename ignored edits made elsewhere since the page was opened | `test_web_delete_and_rename_refuse_a_changed_note` | FIXED |
+| B-63 | data (R4.5 LOW) | API create: push landed but timed out → retry with same Idempotency-Key created « (2)» | `test_retry_after_push_that_landed_but_timed_out_does_not_duplicate` | FIXED |
+| B-64 | test (R5 full run) | Settings e2e race: status text from the 1st save satisfied the 2nd wait | `test_token_field_is_empty_and_keeps_or_clears_token` | FIXED |
+| B-65 | security (R5 VERIFY, HIGH) | `/admin/login/` (Django admin form) skipped the 2FA step → full session with password only | `test_admin_login_cannot_skip_the_2fa_step` | FIXED |
+| B-66 | security (R5 VERIFY, MEDIUM) | Note render kept `javascript:`/`data:`/`vbscript:` in href/src (stored XSS from clipped pages) | `test_render_neutralises_dangerous_link_schemes[*]` | FIXED |
+| B-67 | data (R5 VERIFY, MEDIUM) | A non-offline outbox failure blocked the whole queue; later editor saves silently «queued» | `test_failed_outbox_row_does_not_block_other_notes_and_save_reports_it` | FIXED |
+| B-68 | data (R5 VERIFY, LOW) | Chain of offline saves on a conflicting base made one conflict copy per save | `test_chain_on_a_conflicting_save_updates_one_conflict_copy` | FIXED |
+| B-69 | security (R5 VERIFY, LOW) | 2FA verify without row lock (parallel reuse of one code); per-account limit untested | `test_2fa_per_account_limit_blocks_even_the_right_code` | FIXED |
+| B-70 | test (R5 final run) | Chat-error and task-status e2e interacted before page JS was bound (intermittent) | `test_chat_api_error_message_is_shown`, `test_rejected_status_change_is_reverted_and_reported` | FIXED |
+| B-71 | data (owner run, Windows) | Vault cache with CRLF copies from an old autocrlf=true checkout + remote ahead → every pull failed «would be overwritten by checkout» (tasks, weekly, sync) | `test_pull_with_dirty_clone_and_remote_ahead` | FIXED |
+| B-72 | logic (owner vault) | Weekly notes of the owner (`type: weekly_plan`, `week_number`, `date` = time of writing) were not recognised; template `ww`/`HH`/`mm` not filled | `test_b72_owner_weekly_plan_notes_use_week_number` | FIXED |
+| B-73 | config (owner PC) | `OLLAMA_HOST` shared with the Ollama server held a bind address without scheme (`0.0.0.0`) → probe `MissingSchema`, Strictly Local always «PC offline» | `test_normalize_ollama_url` | FIXED |
+| B-74 | deploy (server) | In the container LlamaIndex cached the embedding model under ~/.cache (/app, read-only for the app user) → `PermissionError` on re-index and AI chat | compose/Dockerfile `LLAMA_INDEX_CACHE_DIR` (verified on the server) | FIXED |

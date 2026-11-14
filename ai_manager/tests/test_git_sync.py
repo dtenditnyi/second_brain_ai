@@ -180,3 +180,21 @@ def test_real_git_accepts_env_header_config(tmp_path):
     assert value.startswith("Authorization: Basic ")
     assert other == ""  # not sent to other hosts
     assert TOKEN not in _config_text(tmp_path / "r")
+
+
+def test_incomplete_clone_with_read_only_files_is_removed(tmp_path, monkeypatch):
+    """B-32: git object files are read-only; a plain rmtree failed on Windows."""
+    import stat
+    target = tmp_path / "user_1"
+    (target / "objects").mkdir(parents=True)
+    locked = target / "objects" / "pack.idx"
+    locked.write_text("x")
+    os.chmod(locked, stat.S_IREAD)
+    seen = {}
+
+    def clone_from(url, path, env=None):
+        seen["exists_before_clone"] = os.path.exists(path)
+
+    monkeypatch.setattr(git_sync, "Repo", mock.Mock(clone_from=clone_from))
+    assert git_sync.sync_obsidian_repo(URL, "t", str(target)) is True
+    assert seen["exists_before_clone"] is False

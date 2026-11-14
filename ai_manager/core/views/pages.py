@@ -2,21 +2,24 @@
 import os
 from datetime import datetime
 from collections import Counter
+from django.conf import settings as django_settings
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import make_aware
 
-from ..models import Task, ChatMessage, get_user_settings
+from ..models import ApiToken, Task, ChatMessage, get_user_settings
 from .. import rag_engine
-from .. import ai_models
+from .. import ai_models, ai_providers
+from .. import tasks_service
 from .utils import get_user_config
 
 @login_required(login_url='login')
 def home_view(request):
     # Build the dashboard from the current user's tasks, note files, and preferences.
     # The context is consumed by home.html and its home.js/tasks.js interactions.
-    from ..rag_engine import get_user_paths
-    tasks = Task.objects.filter(user=request.user)
+    from ..paths import get_user_paths
+    tasks_state = _sync_tasks_quietly(request.user)
+    tasks = Task.objects.filter(user=request.user).exclude(status__in=('cancelled', 'forwarded'))
     
     top_focus = "General Systems"
     active_tags = tasks.exclude(status='done').exclude(tags__exact='').values_list('tags', flat=True)
@@ -53,14 +56,41 @@ def home_view(request):
         'total_notes_count': len(recent_notes),
         'top_focus': top_focus,
         'models': ai_models.ui_model_config(),
+        'tasks_state': tasks_state,
     }
+    context.update(_dashboard(request.user, tasks))
     return render(request, 'home.html', context)
+
+
+def _dashboard(user, tasks):
+    """Round 5 (F5): today / this week tasks, current weekly note, recent notes (never fails)."""
+    import datetime as _dt
+    from django.utils import timezone
+    from .. import vault_index, weekly
+    today = timezone.localdate()
+    week_end = today + _dt.timedelta(days=6 - today.weekday())
+    open_tasks = tasks.filter(status__in=('todo', 'in_progress'))
+    today_tasks = list(open_tasks.filter(due_date__lte=today).order_by('due_date')[:8])
+    for t in today_tasks:
+        t.overdue = t.due_date < today
+    week_tasks = list(open_tasks.filter(due_date__gt=today, due_date__lte=week_end).order_by('due_date')[:6])
+    data = {'today_tasks': today_tasks, 'week_tasks': week_tasks, 'current_week_path': None,
+            'current_week_name': '', 'week_note_tasks': [], 'dashboard_recent': []}
+    if not get_user_settings(user).github_repo_url:
+        return data
+    try:
+        rel, week_open = weekly.open_tasks_this_week(user, today)
+        data.update({'current_week_path': rel, 'current_week_name': rel.rsplit('/', 1)[-1][:-3] if rel else '',
+                     'week_note_tasks': week_open[:6], 'dashboard_recent': vault_index.recent(user, limit=6)})
+    except Exception:  # pragma: no cover - offline / broken vault: the dashboard still opens
+        pass
+    return data
 
 @login_required(login_url='login')
 def ai_chat_view(request):
     # Assemble all vault filenames for the context picker and the latest chat turns.
     # The template uses all_files for selection and context_files for initial state.
-    from ..rag_engine import get_user_paths
+    from ..paths import get_user_paths
     paths = get_user_paths(request.user)
     synced_notes = []
     if os.path.exists(paths["notes_dir"]):
@@ -88,7 +118,7 @@ def notes_view(request):
     # Synchronize a configured repository when no local clone exists, then expose
     # the user's note names to the file explorer template.
     import os
-    from ..rag_engine import get_user_paths
+    from ..paths import get_user_paths
     from ..git_sync import sync_obsidian_repo
     
     paths = get_user_paths(request.user)
@@ -98,29 +128,68 @@ def notes_view(request):
     if settings.github_repo_url and not os.path.exists(git_folder):
         sync_obsidian_repo(settings.github_repo_url, settings.github_token, paths["notes_dir"])
 
-    synced_notes = []
+    # Round 4: each entry carries its vault-relative path (the editor works by path).
+    entries = []
     if os.path.exists(paths["notes_dir"]):
         for root, dirs, files in os.walk(paths["notes_dir"]):
-            for file in files:
+            dirs[:] = sorted(d for d in dirs if d not in (".git", ".obsidian", ".trash"))
+            for file in sorted(files):
                 if file.endswith(".md"):
-                    synced_notes.append(file.replace(".md", ""))
-                    
+                    rel = os.path.relpath(os.path.join(root, file), paths["notes_dir"]).replace(os.sep, "/")
+                    entries.append({"name": file[:-3], "path": rel})
+
+    from .. import vault_index
+    try:
+        tree = vault_index.folder_tree(request.user) if entries else {"folders": [], "notes": []}
+        all_tags = [t for t, _n in vault_index.tag_counts(request.user)] if entries else []
+        recent = vault_index.recent(request.user, limit=8) if entries else []
+    except Exception:  # pragma: no cover - the explorer must still open
+        tree, all_tags, recent = {"folders": [], "notes": [{"name": e["name"], "path": e["path"]} for e in entries]}, [], []
     return render(request, 'notes.html', {
-        'active_page': 'notes', 
+        'active_page': 'notes',
+        'tree': tree,
+        'top_folders': [f["path"] for f in tree["folders"]],
+        'all_tags': all_tags,
+        'recent_notes': recent,
         'config': get_user_config(request.user),
-        'user_notes': synced_notes
+        'user_notes': [e["name"] for e in entries],
+        'note_entries': entries,
+        'vault_editable': bool(settings.github_repo_url),
     })
 
 @login_required(login_url='login')
 def tasks_view(request):
     # Separate outstanding and recently completed work for the task board template.
+    tasks_state = _sync_tasks_quietly(request.user)
     tasks = Task.objects.filter(user=request.user)
     return render(request, 'tasks.html', {
-        'active_page': 'tasks', 
+        'active_page': 'tasks',
         'config': get_user_config(request.user),
-        'active_tasks': tasks.exclude(status='done').order_by('due_date'),
-        'completed_tasks': tasks.filter(status='done').order_by('-created_at')[:10]
+        'active_tasks': tasks.exclude(status__in=('done', 'cancelled', 'forwarded')).order_by('due_date', 'position'),
+        'completed_tasks': tasks.filter(status__in=('done', 'cancelled', 'forwarded')).order_by('-created_at')[:10],
+        'tasks_state': tasks_state,
+        'allowed_tags': tasks_service.tasks_md.ALLOWED_TAGS,
     })
+
+
+def _sync_tasks_quietly(user):
+    """Sync the tasks note when stale; returns what the page shows about it (Round 3 / G-C4)."""
+    try:
+        result = tasks_service.sync_tasks(user)
+    except Exception as error:  # a page must never fail because of the vault
+        import logging
+        logging.getLogger('core.tasks').error('Task sync failed: %s', type(error).__name__)
+        result = {'status': 'error'}
+    settings = get_user_settings(user)
+    return {
+        'vault': bool(settings.github_repo_url),
+        'note_path': tasks_service.tasks_note_path(user),
+        'last_sync': settings.tasks_last_sync,
+        'error': settings.tasks_sync_error,
+        'status': result.get('status'),
+        'pending': Task.objects.filter(user=user, synced=False).count(),
+    }
+
 
 @login_required(login_url='login')
 def settings_view(request):
@@ -131,5 +200,11 @@ def settings_view(request):
         'config': config,
         # Q7: only whether a token exists is sent to the template, never the token.
         'has_github_token': bool(config.github_token),
+        'default_tasks_note_path': django_settings.TASKS_NOTE_PATH,
         'models': ai_models.ui_model_config(),
+        'claude_models': ai_providers.CLAUDE_MODELS,
+        'claude_available': ai_providers.claude_available(),
+        'default_claude_model': django_settings.ANTHROPIC_MODEL,
+        'api_tokens': request.user.api_tokens.all(),
+        'token_scopes': ApiToken.SCOPES,
     })

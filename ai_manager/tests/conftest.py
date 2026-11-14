@@ -42,6 +42,8 @@ def isolated_vault(tmp_path, monkeypatch):
     base = tmp_path / "app"
     (base / "obsidian_data").mkdir(parents=True)
     monkeypatch.setattr(rag_engine, "BASE_DIR", str(base))
+    from core import paths
+    monkeypatch.setattr(paths, "BASE_DIR", str(base))
     monkeypatch.setattr(rag_engine, "DB_DIR", str(base / "chroma_db"))
     rag_engine.reset_chat_engine()
     yield base
@@ -63,6 +65,8 @@ def no_external_network(monkeypatch):
             raise RuntimeError("network: git repo access attempted in tests")
 
     monkeypatch.setattr(git_sync, "Repo", _ForbiddenRepo)
+    from core import vault_writer
+    monkeypatch.setattr(vault_writer, "Repo", _ForbiddenRepo)
 
     def _offline(*a, **k):
         raise requests.exceptions.ConnectionError("offline in tests")

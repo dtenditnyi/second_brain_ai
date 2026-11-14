@@ -94,3 +94,83 @@ Each entry: context · options · chosen · why · how to roll back.
 - Fallback also on 500/INTERNAL/504/DEADLINE_EXCEEDED and network errors; Auto-Hybrid re-probes Ollama (2 s) before using it as the last fallback (no 600 s hang on an unreachable OLLAMA_HOST).
 - The PAT header is scoped to the repository host (`http.https://<host>/.extraHeader`), so git never sends it to another server (e.g. submodules elsewhere).
 - Left: `ai_manager/logs/rag_engine.log` is a tracked log file from before the audit that contains the old LAN IP; not changed (pre-existing, owner's call whether to untrack it).
+
+---
+
+# Rounds 3–5 decisions
+
+## D20. Markdown in AI answers: client renderer, raw HTML stays text (R3 / G-A1)
+- Question: render where, and what to do with raw HTML the model writes?
+- Decision: one client renderer (`static/js/markdown.js`: marked GFM → DOMPurify HTML profile → DOM post-processing) for both new answers and the history (the history ships raw Markdown in `<div data-markdown>`, escaped by Django). Raw HTML in an answer is **escaped and shown as text** (marked `renderer.html`), DOMPurify is a second layer (no SVG/MathML, forbidden `style`/forms/iframes, only http(s)/mailto/relative URLs).
+- Why: Markdown needs no raw HTML; showing it as text is what the site did before (Round 1 B-09), keeps the old XSS tests valid, and removes a whole class of sanitizer bypasses. External links get `target=_blank rel="noopener noreferrer"`; `[[wiki-links]]` → `/notes/?file=…` (same tab). Libraries vendored in `static/vendor/` (no CDN).
+- Test change (allowed by 0.5.5, the goal was over-specified): `test_a1_markdown_is_sanitized` asserted that the substring `javascript:` never appears in the feed; with raw HTML shown as text the payload `<a href="javascript:…">` legitimately appears as visible text. The test now asserts that no element carries an `on*` attribute or a `javascript:` URL and that no `<svg>`/`<script>` element exists — the actual security criterion. Where: `tests/acceptance/test_round3.py`.
+
+## D21. Core Matrix: cards up to 1279 px, theme-aware console (R3 / G-A2, G-A3)
+- Question: cards or hidden columns on tablets? Keep the dark console look?
+- Decision: CSS-only cards below 1280 px (one column on phones, two columns 768–1279 px; actions and long text span both); a fluid table (no forced `min-width`) from 1280 px. The page uses the operator's `theme`/`accent` and the shared tokens/components (`btn-solid`, `btn-danger`, `text-muted`, `bg-surface`…); the "console" character stays through the monospace uppercase captions and the 🌌 header.
+- Why: hidden columns would hide editable fields (every column is an input); cards keep everything editable without sideways scroll.
+- Test change: the Round 2 test `test_core_matrix_scroll_hint_on_tablets` asserted that tables scroll at 834/1024 px — replaced by `test_core_matrix_cards_on_tablets_without_scroll` because G-A2 explicitly changes that requirement. Where: `templates/admin_dashboard.html`, `static/css/input.css` (`.responsive-table`, `.console`), `static/js/admin.js`, `core/views/admin.py` (passes `config`).
+
+## D22. Tasks in one Obsidian note (R3 / G-C1…C7)
+- Sections: new tasks go to `## 📥 Входящие` (created before the `🔗 [[…]]` line if missing); the site never moves tasks between sections (status = checkbox, minimal diffs). Default note body has `📥 Входящие`, `🔥 Срочно`, `✅ Выполнено`.
+- Priorities: `🔺` urgent, `⏫` high, `🔼` medium, `🔽` low (`⏬` read as low; the original emoji is kept when the line is re-rendered). No emoji = "normal": the cache shows it as medium, and an edit that does not change the priority does not add `🔼`.
+- Statuses: `[ ]` todo, `[/]` in progress, `[x]` done (+`✅ date`), `[-]` cancelled (+`❌ date`), `[>]` forwarded; other marks are read as todo and kept verbatim until edited.
+- IDs: 6 chars `a-z0-9`; the site pre-generates the ID of a new task so a replayed operation (outbox, retry) is idempotent. Missing/duplicate IDs are fixed on every write, AFTER the operations (an op may address an ID-less line by its exact text — giving it an ID first broke that; found by the unit tests before commit).
+- Users without a connected repository keep the database-only tasks (legacy mode, old tests unchanged). After connecting a vault, rows that were never in the note are kept (not deleted by the cache rebuild) until `export_tasks_to_note` moves them.
+- Write path: `vault_writer.vault_apply` = file lock `<vault>.lock` (msvcrt/fcntl; shared by all gunicorn workers on the host and by `git_sync`) → `fetch` + `reset --hard origin/<branch>` (the local clone is only a cache) → operation → commit as "Second Brain" → push; on a rejected push the same operation is re-applied to the new state (VAULT_PUSH_RETRIES=4). Postgres advisory locks were not needed: all workers share one host and one volume.
+- Errors: offline → outbox + "не синхронизировано"; permission → message naming "Contents: Read and write" (stored in `tasks_sync_error`, shown on Tasks and Settings); task deleted elsewhere → cache refreshed + clear message.
+- Test change: `test_c3_two_writers_in_parallel` originally ran `add_task` in two threads; the in-memory SQLite test DB raised "database table is locked" (SQLite limitation, Postgres in prod handles it). The threads now run only the git write path (`vault_apply`) and push at the same moment (barrier); the test additionally asserts a rejected-and-retried push — the actual criterion (parallel pushes, nothing lost).
+
+## D23. Production configuration (R3 / G-B1…B4)
+- `requirements.txt` converted from UTF-16 to UTF-8 and the CUDA/NVIDIA/triton wheels removed (a GPU stack is useless on the VM and multi-GB); the image installs CPU-only `torch==2.13.0` from the PyTorch CPU index first.
+- Scheduler: a compose service (`scheduler`) running `manage.py sync_tasks --all --if-stale` every `TASKS_SYNC_INTERVAL` s (no systemd timer needed; restarts with the stack).
+- No top-level `name:` in compose: the project name stays the folder name so existing volumes (`second_brain_ai_postgres_data`) are reused; no `container_name` (avoids clashes with the old stack). The tunnel token is passed as `TUNNEL_TOKEN` env instead of the command line (not visible in `ps`).
+- Security: SECRET_KEY empty/default → `ImproperlyConfigured` when DEBUG=False (dev/test settings set `SECONDBRAIN_DEV_SETTINGS`); secure cookies, HSTS 1 year incl. subdomains, SSL redirect with `/healthz/` exempt (Docker healthcheck is plain http). `security.W021` (HSTS preload) silenced: preloading is a one-way commitment for the domain → opt-in via `SECURE_HSTS_PRELOAD`.
+- Docker daemon not started on this PC (rule 0.3: the old prod stack has restart policies). Verified offline instead: `docker compose config` with `.env.test.example` (`--env-file` so the real `.env` is never read for interpolation), `bash -n`, shellcheck (`-S warning`), unit/acceptance tests for `/healthz/`, SECRET_KEY, env settings, `check --deploy`.
+- Test fixes before implementation (not weakening): `check --deploy` test used `"k"*64` as SECRET_KEY, which Django correctly flags (W009) → realistic random test key; the conftest's `DJANGO_ALLOW_ASYNC_UNSAFE` (Playwright) leaked into the subprocess → stripped there; `/healthz/` test lacked DB access → `db` fixture.
+
+## D24. Fixes after VERIFY-1 (Round 3)
+- External images in AI answers are not loaded at all (only same-site paths); a link is shown instead (B-40). A CSP was considered but would also need nonce work for the inline scripts in the templates — left for Round 5 (F7 security pass).
+- Duplicate IDs: fixed by a write at sync time (one commit) rather than only "on the next write" — correctness of the cache beats "no commit on read" (B-34).
+- Tags from Obsidian that are not in the allowed list are kept on edit; the allowed list applies to tags the site adds (B-35).
+- Scheduler: one long-lived `sync_tasks --loop` process instead of a new process per minute (B-38).
+- (after VERIFY-2) The duplicate-ID repair at sync time is best effort: a read-only token or git error keeps the error message but still rebuilds the cache (B-44). Frontmatter is recognised only when the opening `---` is closed (B-45). Test change: `test_b2_scripts_strict_mode_and_bash_syntax` now accepts `set -Eeuo pipefail` (strictly stronger than the required `set -euo pipefail`; `-E` was needed for B-46).
+
+## D25. Note editor (R4 / G-D1…D5)
+- Editor: CodeMirror 6 bundled once into `static/vendor/sb-editor.js` (no CDN); preview uses the same sanitising renderer as chat.
+- Templates: Templater is not executed; only `tp.date.now("…")` (YYYY/YY/MM/M/DD/D) and `tp.file.title` are substituted, the rest stays as text.
+- Attachments (non-`.md`) are read-only from the site; offline saves go to `VaultOutbox`, a conflicting flush writes a "(конфликт …)" copy (nothing lost).
+
+## D26. Providers and agent (R4 / G-E1…E6)
+- Claude IDs `claude-haiku-5-5` (default) / `claude-sonnet-5-5` (current Claude 5 family IDs); no `temperature` is sent to Claude. In the RAG chat Claude goes first, the Gemini chain is its fallback on limits.
+- Agent writes only to an in-memory overlay → `AgentBatch` with per-operation diffs; apply replays the selected ops in one commit only if each file's SHA is unchanged (else nothing is written). Auto-apply (option) = append / create / add_task only.
+- `search_notes` = titles/aliases + full text + the already-open vector index (does not load embeddings on its own). Progress lines are shown when the run returns (no streaming) — simpler and enough for ≤ 8 steps.
+- At the step limit the model gets one last turn to answer in text (tools still declared: Claude requires them while tool blocks are in the history). "Откатить" has no confirm dialog: a revert is itself reversible.
+
+## D27. REST API v1 and the Link2Note contract (R4 / G-API1…API7)
+- Contract (`docs/link2note/API_CONTRACT.md`) wins over GOALS; GOALS endpoints stay as aliases on the same routes (slash optional). `POST /notes` with `name` = ready Markdown (contract), with `title` = site template. Test change: `DELETE /tasks/{id}` → 204 (contract), was 200 in the GOALS test.
+- `write_paths`/`delete_paths` empty = whole vault (owner tokens); the bot token lists its folders. Task delete counts as a write to the tasks note. Agent apply via API checks every changed path against `write_paths`.
+- No push queue for API writes: offline/locked → `503 vault_unavailable` + `Retry-After`; the bot retries with the same Idempotency-Key (5xx is not cached), so `pushed` is always true. `sha` = SHA-256 of the text (same as the editor).
+- Capture: «Входящие» = one note `CAPTURE_INBOX_NOTE` (entries before the `🔗` line); weekly = latest `type: weekly` note in `06 - Daily` not in the future. Docker: stack creates network `secondbrain`, web alias `secondbrain-web`; `/api/v1/` exempt from the https redirect (internal http).
+- Allowed tags: one setting `ALLOWED_TAGS` (+ `fun`), applied to the pure parser in `CoreConfig.ready`.
+
+## D28. Web vault: server render, one read-only index (R5 / G-F1, G-F2)
+- Render on the server (`core/render.py`), not in the browser: one implementation for callouts / checkboxes / embeds / Dataview, testable in pytest. Raw HTML in notes is **escaped** (python-markdown `html` processors removed) — Obsidian would render it, but the site is reachable from the internet; DOMPurify on the client as a second layer. Templater/DataviewJS are shown as code.
+- `core/vault_index.py`: one cached scan of the user's own clone (keyed by mtime/size) serves search, tags, mentions, graph, Dataview — no DB index, no extra dependency (a few hundred notes). Unlinked mentions: name/aliases ≥ 3 chars, whole word, outside code and links.
+- Dataview-lite: own tokenizer + recursive-descent parser (nothing is `eval`ed), 2 s limit, 500 rows max; `FROM` paths with `..`, `\`, `:`, leading `/`, `.git`/`.obsidian` → error; everything else unknown → «Откройте в Obsidian».
+- Graph: own ~150-line SVG force layout (no d3/cytoscape: "light library, local"); phones get the simplified view (≤ 60 best-connected nodes, few labels).
+- Checkbox click = `set_task_status` through `vault_apply`: the line must still equal what the page showed (else 409 + reload), one commit per click.
+
+## D29. Weekly notes naming (R5 / G-F3)
+- Derived from the latest existing `type: weekly` note: same folder (semester), same pattern («Fifth week of 2nd year» → ordinal word; «5th …», «Week 5», «Неделя 5» also understood), number + calendar weeks (Mondays) since that note; `date:` = Monday of the week. A new semester = the owner creates the first note in the new folder by hand (the site cannot know the university calendar); `week_type: A|B` alternates if present. No weekly note at all → `06 - Daily/<year> by weeks/Week <ISO>.md`.
+- Never overwrites: an existing file with that name is opened instead. Carry-over: open `[ ]`/`[/]` top-level tasks (+ indented sub-lines) of the previous note → section «↪️ Перенесено с прошлой недели» before the `🔗` line; old lines become `[>]`; both files in ONE commit; repeated carry-over adds nothing twice.
+
+## D30. PWA and offline (R5 / G-F4)
+- Service worker at `/sw.js` (root scope): static = stale-while-revalidate; `/api/get-note/` and the main pages = network-first with the last good copy for offline reading; only GET, never redirects/errors. Logout → `Clear-Site-Data: "cache"` + the login page deletes `sb-*` caches (browsers without the header).
+- Offline quick capture: queue in localStorage keyed by user id (another user on the same device never sends it), `client_id` dedup on the server for 24 h (resend after a lost response is not written twice). Offline note *editing* stays the Round 4 outbox (server side).
+
+## D31. 2FA (R5 / G-F7)
+- TOTP (pyotp) + QR as inline SVG (segno, pure Python). Secret in the session until confirmed, then encrypted like the GitHub token; 10 backup codes hashed, single use; replay of an accepted step refused. Login: password → session marker (5 min, 5 tries) → code; ≥ 10 wrong codes per account per 15 min → refused. API tokens untouched (separate scoped credential).
+
+## D32. Obsidian in the browser (R5 / G-F6)
+- `lscr.io/linuxserver/obsidian` under compose profile `obsidian` (off by default), no `ports`, reached only by the tunnel (`obsidian:3000`) behind Cloudflare Access + KasmVNC password; its vault is its own git clone synced by obsidian-git (the site's clone/lock stay separate). Image not run on this machine (Docker daemon intentionally not started).

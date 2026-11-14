@@ -95,6 +95,14 @@
               <p class="field-hint" id="token-status">Needed only for private repositories.</p>
             {% endif %}
           </div>
+          <!-- Round 3: tasks live in one note of the vault (docs/TASKS_FORMAT.md). -->
+          <div class="field md:col-span-2">
+            <label for="tasks-note-path" class="field-label">Tasks note</label>
+            <input type="text" id="tasks-note-path" maxlength="300" autocapitalize="none" spellcheck="false" class="input-field rounded-lg px-4 py-2 w-full"
+                   value="{{ config.tasks_note_path }}" placeholder="{{ default_tasks_note_path }}" />
+            <p class="field-hint">Path inside the vault (empty = <code>{{ default_tasks_note_path }}</code>). The site writes tasks back to this note, so the token needs <strong class="text-soft">Contents: Read and write</strong> access to the vault repository.</p>
+            {% if config.tasks_sync_error %}<p class="alert alert-warning" id="tasks-sync-error" role="alert">{{ config.tasks_sync_error }}</p>{% endif %}
+          </div>
         </div>
 
         <div class="flex flex-col gap-6 border-t border-line pt-6">
@@ -114,6 +122,29 @@
             </ul>
           </div>
 
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="field">
+              <label for="cloud-provider" class="field-label">Cloud provider</label>
+              <select id="cloud-provider" name="cloud_provider" class="input-field rounded-lg px-4 py-2 w-full">
+                <option value="gemini" {% if config.cloud_provider != 'claude' %}selected{% endif %}>Gemini (fallback chain)</option>
+                <option value="claude" {% if config.cloud_provider == 'claude' and claude_available %}selected{% endif %}{% if not claude_available %} disabled{% endif %}>Claude (Anthropic){% if not claude_available %} — нет ANTHROPIC_API_KEY{% endif %}</option>
+              </select>
+              <p class="field-hint">Used for “Cloud Only” and when the PC is off. Claude falls back to Gemini on limits.</p>
+            </div>
+            <div class="field">
+              <label for="claude-model" class="field-label">Claude model</label>
+              <select id="claude-model" name="claude_model" class="input-field rounded-lg px-4 py-2 w-full"{% if not claude_available %} disabled{% endif %}>
+                {% for m in claude_models %}<option value="{{ m.id }}" {% if config.claude_model == m.id or not config.claude_model and m.id == default_claude_model %}selected{% endif %}>{{ m.name }}</option>{% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <label class="flex items-start gap-3 min-h-11 cursor-pointer">
+            <input type="checkbox" id="agent-auto-apply" class="mt-1 h-5 w-5 accent-[var(--active-accent)]" {% if config.agent_auto_apply_additions %}checked{% endif %} />
+            <span><span class="text-fg font-medium">Agent: apply additions without confirmation</span>
+              <span class="field-hint block">Only appends, new notes and new tasks; edits of existing text always wait for “Apply”. Off by default.</span></span>
+          </label>
+
           <div class="field w-full md:w-1/2">
             <label for="ai-temperature" class="field-label flex justify-between">
               <span>Creativity temperature</span>
@@ -126,9 +157,97 @@
 
       <p id="settings-status" class="alert hidden" role="status"></p>
       <button type="button" id="save-settings-button" class="btn btn-primary w-full py-3 uppercase tracking-wider">Save System Configuration</button>
+
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 lg:gap-8 mt-6 lg:mt-8">
+      <!-- Round 4: personal tokens for the REST API (Telegram bot). Shown once; only the hash is stored. -->
+      <section class="glass-card card p-5 sm:p-6" aria-labelledby="tokens-title">
+        <h2 id="tokens-title" class="text-xl font-semibold text-fg mb-2 flex items-center gap-2"><span aria-hidden="true">🔑</span> API tokens</h2>
+        <p class="field-hint mb-4">For the Telegram bot and scripts: <code>Authorization: Bearer sb_…</code>, see <code>docs/API.md</code>. Empty folder lists = the whole vault.</p>
+        <ul id="token-list" class="flex flex-col gap-2 mb-6">
+          {% for t in api_tokens %}
+          <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-3" data-token-id="{{ t.pk }}">
+            <div class="min-w-0 text-sm">
+              <p class="font-semibold text-fg break-words">{{ t.name }} <span class="text-muted font-mono">{{ t.prefix }}…</span>
+                {% if t.revoked_at %}<span class="badge badge-danger">revoked</span>{% elif not t.active %}<span class="badge badge-danger">expired</span>{% endif %}</p>
+              <p class="text-muted break-words">Scopes: {{ t.scopes|join:", " }}{% if t.write_paths %} · write: {{ t.write_paths|join:"; " }}{% endif %}{% if t.delete_paths %} · delete: {{ t.delete_paths|join:"; " }}{% endif %}</p>
+              <p class="text-muted">Created {{ t.created_at|date:"Y-m-d" }}{% if t.expires_at %} · expires {{ t.expires_at|date:"Y-m-d" }}{% endif %}{% if t.last_used_at %} · last used {{ t.last_used_at|timesince }} ago{% endif %}</p>
+            </div>
+            {% if not t.revoked_at %}<button type="button" class="btn btn-danger min-h-11" data-revoke-token="{{ t.pk }}">Revoke</button>{% endif %}
+          </li>
+          {% empty %}
+          <li class="empty-state">No tokens yet.</li>
+          {% endfor %}
+        </ul>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="field">
+            <label for="token-name" class="field-label">Name</label>
+            <input id="token-name" type="text" maxlength="60" class="input-field rounded-lg px-4 py-2 w-full" placeholder="telegram-bot" />
+          </div>
+          <div class="field">
+            <label for="token-expires" class="field-label">Expires after (days, empty = never)</label>
+            <input id="token-expires" type="number" min="1" max="3650" inputmode="numeric" class="input-field rounded-lg px-4 py-2 w-full" />
+          </div>
+          <fieldset class="field md:col-span-2">
+            <legend class="field-label">Scopes</legend>
+            <div class="flex flex-wrap gap-x-4">
+              {% for scope in token_scopes %}<label class="flex items-center gap-2 min-h-11 cursor-pointer"><span class="tap-zone"><input type="checkbox" name="token-scope" value="{{ scope }}" {% if scope == 'read' %}checked{% endif %}></span>{{ scope }}</label>{% endfor %}
+            </div>
+          </fieldset>
+          <div class="field">
+            <label for="token-write-paths" class="field-label">Write folders/notes (one per line)</label>
+            <textarea id="token-write-paths" rows="3" class="input-field rounded-lg px-4 py-2 w-full" placeholder="03 - Resources/📥 Из ссылок"></textarea>
+          </div>
+          <div class="field">
+            <label for="token-delete-paths" class="field-label">Delete folders (one per line)</label>
+            <textarea id="token-delete-paths" rows="3" class="input-field rounded-lg px-4 py-2 w-full" placeholder="03 - Resources/📥 Из ссылок"></textarea>
+          </div>
+        </div>
+        <p id="token-error" class="alert alert-danger hidden mt-3" role="alert"></p>
+        <div id="token-created" class="alert alert-success hidden mt-3" role="status">
+          <p class="font-semibold">Copy the token now — it is shown only once:</p>
+          <code id="token-value" class="block break-all font-mono mt-1 select-all"></code>
+        </div>
+        <button type="button" id="token-create-button" class="btn btn-primary min-h-11 mt-4">Create token</button>
+      </section>
+
+      <!-- Round 5 (F7): two-factor login (TOTP). API tokens are not affected. -->
+      <section class="glass-card card p-5 sm:p-6" aria-labelledby="twofa-title" id="twofa-section" data-enabled="{{ config.totp_enabled|yesno:'1,0' }}">
+        <h2 id="twofa-title" class="text-xl font-semibold text-fg mb-2 flex items-center gap-2"><span aria-hidden="true">🛡️</span> Двухфакторный вход (2FA)</h2>
+        <p class="field-hint mb-4">Код из приложения-аутентификатора (Google Authenticator, Aegis, 1Password…) при каждом входе.
+          Токены API для бота работают как раньше.</p>
+        <p id="twofa-state" class="text-sm text-fg mb-3">{% if config.totp_enabled %}✅ 2FA включена. Резервных кодов осталось: {{ config.totp_backup_codes|length }}.{% else %}2FA выключена.{% endif %}</p>
+        <div id="twofa-setup" class="hidden flex flex-col gap-3">
+          <p class="text-sm text-soft">1. Отсканируйте QR-код в приложении (или введите ключ вручную).</p>
+          <div id="twofa-qr" class="bg-white rounded-lg p-2 w-fit max-w-full overflow-hidden [&_svg]:max-w-full [&_svg]:h-auto"></div>
+          <p class="text-xs text-muted break-all">Ключ: <code id="twofa-secret"></code></p>
+          <div class="field max-w-xs">
+            <label for="twofa-code" class="field-label">2. Код из приложения</label>
+            <input id="twofa-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="input-field rounded-lg px-4 py-2 w-full min-h-11">
+          </div>
+        </div>
+        <div id="twofa-codes" class="hidden alert alert-warning mb-3">
+          <p class="font-semibold mb-2">Резервные коды — сохраните их сейчас (показываются один раз, каждый работает один раз):</p>
+          <pre id="twofa-codes-list" class="text-sm font-mono whitespace-pre-wrap"></pre>
+        </div>
+        <div id="twofa-off-box" class="field max-w-xs {% if not config.totp_enabled %}hidden{% endif %}">
+          <label for="twofa-disable-code" class="field-label">Код из приложения или резервный код</label>
+          <input id="twofa-disable-code" autocomplete="one-time-code" maxlength="12" class="input-field rounded-lg px-4 py-2 w-full min-h-11">
+        </div>
+        <p id="twofa-msg" class="text-sm mt-2 min-h-5" aria-live="polite"></p>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <button type="button" id="twofa-start" class="btn btn-primary min-h-11 {% if config.totp_enabled %}hidden{% endif %}">Включить 2FA</button>
+          <button type="button" id="twofa-confirm" class="btn btn-primary min-h-11 hidden">Подтвердить код</button>
+          <button type="button" id="twofa-new-codes" class="btn btn-ghost min-h-11 {% if not config.totp_enabled %}hidden{% endif %}">Новые резервные коды</button>
+          <button type="button" id="twofa-disable" class="btn btn-danger min-h-11 {% if not config.totp_enabled %}hidden{% endif %}">Отключить 2FA</button>
+        </div>
+      </section>
     </div>
   </main>
 
   <!-- Collects settings and sends them to the authenticated save endpoint. -->
   <script src="{% static 'js/settings.js' %}"></script>
+  <script src="{% static 'js/api_tokens.js' %}"></script>
+  <script src="{% static 'js/twofa.js' %}"></script>
 {% endblock %}

@@ -1,56 +1,142 @@
-version: '3.8'
+# Second Brain AI — production stack for the home server (Round 3 / G-B1, docs/DEPLOY.md).
+#
+#   docker compose up -d --build        start / update
+#   docker compose ps                   status (healthchecks)
+#
+# Nothing is published to the internet directly: the site is reachable only through
+# the Cloudflare tunnel. The web port is bound to 127.0.0.1 by default (WEB_BIND can
+# open it to the LAN, e.g. WEB_BIND=192.168.1.50:8000). Postgres is never published.
+# The project name defaults to the folder name, so the existing volumes are reused.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-app: &app
+  image: secondbrain-web:${IMAGE_TAG:-latest}
+  build: .
+  env_file:
+    - ${ENV_FILE:-.env}
+  environment:
+    TZ: Europe/Bucharest
+    DB_HOST: db
+    DB_PORT: "5432"
+    LOG_DIR: /app/ai_manager/logs
+    HF_HOME: /data/hf_cache
+    # LlamaIndex caches under ~/.cache by default; HOME (/app) is not writable for the app user (B-74)
+    LLAMA_INDEX_CACHE_DIR: /data/hf_cache/llama_index
+  volumes:
+    - chroma_db:/app/ai_manager/chroma_db
+    - obsidian_data:/app/ai_manager/obsidian_data
+    - hf_cache:/data/hf_cache
+    - app_logs:/app/ai_manager/logs
+    - staticfiles:/app/ai_manager/staticfiles
+  restart: unless-stopped
+  logging: *logging
 
 services:
-  # Сервис 0: База данных PostgreSQL
   db:
-    image: postgres:16-alpine # Используем легкую alpine-версию 16-й постгри
-    container_name: second_brain_db
+    image: postgres:16-alpine
     restart: unless-stopped
     env_file:
-      - .env # Берем пароли из .env файла
-    volumes:
-      - postgres_data:/var/lib/postgresql/data # КРИТИЧНО: сохраняем данные БД на хосте
-    ports:
-      - "5432:5432" # (Опционально) пробрасываем порт, если захочешь подключаться через DBeaver/DataGrip
-
-  # Сервис 1: Ядро твоего приложения (Django)
-  web:
-    build: .
-    container_name: second_brain_web
-    working_dir: /app/ai_manager
-    # Collect versioned assets before serving Django through the production WSGI server.
-    command: bash -c "python manage.py collectstatic --noinput && gunicorn ai_manager.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 300"    
-    ports:
-      - "8000:8000"
-    volumes:
-      # Синхронизируем код: меняешь файл в VS Code -> он сразу меняется в Докере
-      - .:/app
+      - ${ENV_FILE:-.env}
     environment:
-      # ВАЖНО: Указываем Django, как найти Ollama на твоем компьютере Windows
-      # - OLLAMA_HOST=http://host.docker.internal:11434
-      # - OLLAMA_HOST=0.0.0.0:11434
-      - DEBUG=False
-    env_file:
-      - .env
+      TZ: Europe/Bucharest
+      PGTZ: Europe/Bucharest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER:-myuser}\" -d \"$${POSTGRES_DB:-second_brain}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging: *logging
+
+  web:
+    <<: *app
+    command: ["web"]
+    ports:
+      - "${WEB_BIND:-127.0.0.1:8000}:8000"
+    # Shared network with the Link2Note bot (it calls http://secondbrain-web:8000/api/v1).
+    networks:
+      default:
+      secondbrain:
+        aliases: ["${SECOND_BRAIN_CONTAINER:-secondbrain-web}"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz/', timeout=5).status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+  # Pulls every user's tasks note and sends queued offline changes (manage.py sync_tasks).
+  scheduler:
+    <<: *app
+    command: ["scheduler", "sync_tasks", "--all", "--if-stale"]
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
+  # Round 5 (F6): the real Obsidian in a browser tab (linuxserver image, KasmVNC GUI on :3000).
+  # OFF by default — start it explicitly:  docker compose --profile obsidian up -d obsidian
+  # Nothing is published on the host: the tunnel reaches it as http://obsidian:3000 on the
+  # compose network (subdomain obsidian.<domain>), and that subdomain MUST be behind
+  # Cloudflare Access — the desktop inside has passwordless sudo (docs/DEPLOY.md, section 14).
+  # The vault is a separate git clone inside /config, synced by the obsidian-git plugin.
+  obsidian:
+    image: ${OBSIDIAN_IMAGE:-lscr.io/linuxserver/obsidian:latest}
+    profiles: ["obsidian"]
+    restart: unless-stopped
+    shm_size: "1gb"
+    environment:
+      PUID: ${OBSIDIAN_PUID:-1000}
+      PGID: ${OBSIDIAN_PGID:-1000}
+      TZ: Europe/Bucharest
+      TITLE: Obsidian
+      # Second lock in front of the GUI (HTTP basic auth of KasmVNC), in addition to Access.
+      CUSTOM_USER: ${OBSIDIAN_USER:-owner}
+      PASSWORD: ${OBSIDIAN_PASSWORD:-}
+      # git inside the container for obsidian-git.
+      DOCKER_MODS: linuxserver/mods:universal-git
+    volumes:
+      - obsidian_config:/config
+    deploy:
+      resources:
+        limits:
+          memory: ${OBSIDIAN_MEMORY:-2g}
+    logging: *logging
 
   tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflare_tunnel
-    restart: always
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    # Pin a tested version in .env (CLOUDFLARED_IMAGE=cloudflare/cloudflared:<tag>), see DEPLOY.md.
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+      TZ: Europe/Bucharest
     depends_on:
-      - web
+      web:
+        condition: service_healthy
+    logging: *logging
 
-  # Сервис 2: Сборщик стилей (Tailwind)
-  tailwind:
-    build: .
-    container_name: second_brain_css
-    # Команда запуска npm run dev в папке ai_manager
-    command: bash -c "cd ai_manager && npm run dev"
-    volumes:
-      - .:/app
+networks:
+  # Created by this stack; the bot's compose joins it as `external: true` (DOCKER_NETWORK).
+  secondbrain:
+    name: ${DOCKER_NETWORK:-secondbrain}
 
 volumes:
-  postgres_data: # Объявляем именованный том для базы данных
+  postgres_data:
+  chroma_db:
+  obsidian_data:
+  hf_cache:
+  app_logs:
+  staticfiles:
+  obsidian_config:

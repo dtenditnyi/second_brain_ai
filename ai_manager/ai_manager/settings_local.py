@@ -10,6 +10,11 @@ Override the path with the AUDIT_SQLITE_PATH environment variable.
 """
 import os
 
+import os as _os
+
+# Development/test settings may use the insecure default SECRET_KEY (checked in settings.py).
+_os.environ.setdefault('SECONDBRAIN_DEV_SETTINGS', '1')
+
 from .settings import *  # noqa: F401,F403
 from .settings import BASE_DIR
 
@@ -31,3 +36,9 @@ from .settings import LOGGING as _BASE_LOGGING, LOGS_DIR as _LOGS_DIR
 LOGGING = _copy.deepcopy(_BASE_LOGGING)
 LOGGING['handlers']['rag_file']['filename'] = _LOGS_DIR / 'local_rag_engine.log'
 LOGGING['handlers']['system_file']['filename'] = _LOGS_DIR / 'local_system.log'
+
+# Local runserver is plain http.
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_HSTS_SECONDS = 0

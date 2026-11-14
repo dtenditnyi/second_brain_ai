@@ -119,8 +119,15 @@ def test_chat_page_lists_notes_and_history(auth_client, user, note_writer):
     r = auth_client.get("/chat/")
     assert r.context["all_files"] == ["a", "b", "c"]
     html = r.content.decode()
-    assert "question 1" in html and "answer<br>line2" in html
-    assert html.index("question 1") < html.index("answer<br>line2")
+    # AI answers are shipped as raw (escaped) Markdown for the client renderer (Round 3 / G-A1).
+    assert "question 1" in html and "data-markdown>answer\nline2</div>" in html
+    assert html.index("question 1") < html.index("answer\nline2")
+
+
+def test_chat_history_markdown_is_html_escaped(auth_client, user):
+    ChatMessage.objects.create(user=user, role="ai", content="<script>alert(1)</script> **x**")
+    html = auth_client.get("/chat/").content.decode()
+    assert "&lt;script&gt;alert(1)&lt;/script&gt; **x**" in html and "<script>alert(1)" not in html
 
 
 def test_chat_history_limited_to_last_50(auth_client, user):

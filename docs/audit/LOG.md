@@ -44,3 +44,96 @@ Format: `[YYYY-MM-DD HH:MM] Phase N · action · result · next step`
 [2026-11-10 22:50] R2 §4 · Independent responsive verifier: 247 responsive tests passed; PARTIAL on light-theme contrast (Settings accent labels 2.3–3.3:1, badge 3.9:1), touch targets at 1024, admin outside the design system; desktop regression in the Notes explorer (identical truncated names); cramped 667×375 chat. Also improved: a failed first sync is retried on the next message (8bcb359)
 [2026-11-10 23:00] R2 §4 · Fixed R27–R30 (49ee379); new rendered-contrast test (caught a colour-format parsing bug in my own test first — computed `color(srgb …)` values, now normalised via canvas) and a mutation check; touch-tablet tap test. Admin console styling left (documented) · next: final screenshots, final full run via `start.bat -FullTests -NoServer`, final auditor
 [2026-11-10 23:00] Final · Full run via `start.bat -FullTests -NoServer`: 569 passed, 1 skipped (screenshot capture flaked once on a Playwright timeout, rerun OK). Independent final auditor: overall PASS; defects: own-account delete with ids "01"/2.0/" 3" (string comparison), Cyrillic token underestimate, Ollama fallback without re-probe, 500/network errors not falling back, start.ps1 aborts without git, error-only pytest runs recorded 0/0; docs: stale B-14 OPEN section. All fixed test-first in 1afdf64 (a stray backspace char from an escape in my patch script was caught and removed); errors-only launcher path verified with a temporary broken test file · next: final full run, REPORT, push
+
+## Rounds 3–5 (docs/audit/PROMPT_ROUNDS_3-5.md)
+
+### 2026-11-11 14:30 — Round 3 / setup — merge, branch, tools
+- `feature/audit` was not in `main` → merged with `--no-ff` (6ed60c4, owner-approved in the brief) and pushed; branch `feature/round3` from it.
+- Docker CLI present but the daemon is not running; not started on purpose (existing prod containers have restart policies → would violate rule 0.3). G-B4 will use `docker compose config`, `bash -n`, shellcheck.
+- Dev tools into the venv: hypothesis 6.170.15, pytest-cov 7.1.0, shellcheck-py 0.11.0.1 (→ requirements-dev.txt). Front-end libs via npm (marked 15.0.12, dompurify 3.4.17, @highlightjs/cdn-assets 11) copied to `static/vendor/`.
+- Files: requirements-dev.txt, ai_manager/package*.json
+
+### 2026-11-11 15:10 — Round 3 / goals — GOALS.md + acceptance tests
+- `docs/audit/round3/GOALS.md` (15 goals); `tests/acceptance/test_round3.py` (83 tests), `tests/vault_helpers.py` (bare remote + clones, fictional PARA vault), `tests/acceptance/conftest.py`.
+- First run: 4 passed + 79 xfailed (`docs/audit/round3/acceptance-start.txt`). The 4 already true (Auto-Hybrid → Gemini when the LAN PC is off; Core Matrix table at 1280; Core Matrix contrast in both themes) are kept as guards without xfail (GOALS.md). Fixed a test bug: shellcheck-py has no importable module → the test looks for the executable.
+
+### 2026-11-11 15:40 — Round 3 / G-A1 — Markdown in AI answers
+- Client renderer `static/js/markdown.js` (marked + DOMPurify + highlight.js, local), wiki-links, callouts, code "Copy", external links, scroll-wrapped tables; chat history ships raw Markdown (`data-markdown`); status report rendered too; Markdown + highlight styles for both themes in `input.css`.
+- Files: static/js/markdown.js, static/vendor/{marked,purify,highlight}.min.js, templates/ai-chat.html, templates/home.html, static/js/chat.js, static/js/home.js, static/css/input.css (+styles.css), package.json, tests/test_pages.py, tests/acceptance/test_round3.py
+- Checks: acceptance `-k a1` 13 passed; old e2e (errors/flows/round2) 38 passed; fast suite 269 passed, 57 xfailed.
+- Deviation: sanitize test refined (D20); `test_chat_page_lists_notes_and_history` updated to the raw-Markdown contract + new escaping test.
+
+### 2026-11-11 16:05 — Round 3 / G-A2, G-A3 — Core Matrix on tablets and in both themes
+- Cards below 1280 px (2 columns from 768), fluid table from 1280; console follows the operator theme/accent via tokens; admin.js uses classes instead of hard-coded purple colours.
+- Files: templates/admin_dashboard.html, static/css/input.css (+styles.css), static/js/admin.js, core/views/admin.py, tests/e2e/test_responsive_round2.py, tests/acceptance/test_round3.py
+- Checks: acceptance `-k "a2 or a3"` 8 passed; admin + e2e admin/matrix 88 passed (2 Round-2 scroll-hint tests replaced, D21); fast suite 270 passed, 56 xfailed.
+
+### 2026-11-11 16:15 — Round 3 / G-A4 — logs outside git, size rotation
+- `git rm --cached` for `ai_manager/logs/{rag_engine,system}.log` (the files stay on disk, ignored; old history unchanged — no rewriting), `logs/.gitkeep`, `.gitignore` rules; `RotatingFileHandler` (`LOG_MAX_BYTES` 5 MB × `LOG_BACKUP_COUNT` 5); `LOG_DIR` env, folder created at start.
+- Files: .gitignore, ai_manager/logs/.gitkeep, ai_manager/ai_manager/settings.py, tests/acceptance/test_round3.py
+- Checks: acceptance `-k a4` 2 passed; fast suite 272 passed, 54 xfailed.
+
+### 2026-11-11 16:25 — Round 3 / part A — full run
+- `start.bat -FullTests -NoServer` → 616 passed, 1 skipped, 59 xfailed (log `logs/runs/run_2026-11-11_15-08-30.log`). Part A (G-A1…A4) complete; branch pushed.
+
+### 2026-11-11 17:40 — Round 3 / G-C1…C6 — tasks note, single vault writer, cache, outbox
+- Pure parser `core/tasks_md.py`, writer `core/vault_writer.py` (lock → fetch/reset → op → commit → push, re-apply on rejection), `core/tasks_service.py` (cache, interval, outbox, legacy mode), commands `sync_tasks` / `export_tasks_to_note`, migration 0010, API (update fields, delete, sync), `/healthz/`; `docs/TASKS_FORMAT.md`. Modules first written in the scratchpad while the part-A full run was going (a new module mid-run would have made strict-xfail tests pass early).
+- Files: ai_manager/core/{tasks_md,vault_writer,tasks_service,git_sync,models}.py, core/management/commands/*, core/migrations/0010_round3_tasks_in_vault.py, core/views/{api,pages,health,__init__}.py, core/urls.py, tests/{test_tasks_md,test_vault_writer,test_tasks_service,test_git_sync,conftest}.py, docs/TASKS_FORMAT.md
+- Checks: acceptance C1–C7 39 passed; unit tests 162 passed; coverage tasks_md 99 %, tasks_service 99 %, vault_writer 96 %, sync_tasks 100 %, export command 93 %, health 100 %; fast suite 414 passed.
+- Problems: (1) bug in my design found by unit tests — IDs were added before applying ops, so ops addressing ID-less lines by text failed → IDs now after ops (D22); (2) unknown op raised TaskNotFound → ValueError; (3) B-32 (Windows read-only git objects); (4) `two_writers_in_parallel` hit an SQLite-in-memory threading limitation → threads run only the git path (D22); (5) old API contracts kept (list tags still 400, update response unchanged).
+- Commit: 1c9083f
+
+### 2026-11-11 17:50 — Round 3 / G-C7 — tasks UI
+- Edit/delete (confirm) buttons, shared create/edit dialog, sync status bar + Refresh, "не синхронизировано" badge, allowed-tags hint, Settings field "Tasks note" with the sync/permission error.
+- Files: templates/tasks.html, templates/partials/priority_badge.html, templates/settings.html, static/js/{tasks,settings}.js
+- Checks: e2e `test_c7_e2e_add_edit_delete_with_confirm` + responsive `test_c7_tasks_page_responsive[*]` passed.
+- Commit: f8b5900
+
+### 2026-11-11 18:05 — Round 3 / G-B1…B4 — production config, deploy scripts, DEPLOY.md
+- Multi-stage Dockerfile, entrypoint, compose (db/web/scheduler/tunnel), prod settings, `.env.example`/`.env.test.example`, requirements UTF-8 without CUDA; `deploy/*.sh` + systemd units; `docs/DEPLOY.md` (Russian); `.gitattributes` keeps scripts LF.
+- Checks: `docker compose --env-file .env.test.example config --quiet` OK (4 services); `bash -n` + shellcheck `-S warning` clean for all scripts; B acceptance tests 21 passed.
+- Not checked live: Docker daemon deliberately not started (rule 0.3) → no image build, no `up`, no backup/restore run (D23; owner runs `deploy/install.sh` on the VM).
+- Commits: 6a47a34, 45fbe10
+
+### 2026-11-11 18:40 — Round 3 / verification 1 — findings fixed
+- Independent verifier (`docs/audit/round3/VERIFY-1.md`): 2 high (restore across schema versions, duplicate 🆔), 6 medium, 3 low; 3 mutations not caught (M1 `..` layer, M8 healthz query, M11 raw HTML as text).
+- Fixed B-33…B-43 + tests for M1/M8/M11 (mutation re-check: removing the raw-HTML escape now fails `test_m11_raw_html_from_the_model_is_shown_as_text`); spec gaps closed (C1 unknown-fields acceptance test, coverage + C8 rows in GOALS, DEPLOY §11).
+- Files: core/{tasks_md,tasks_service,vault_writer,paths,rag_engine}.py, core/management/commands/sync_tasks.py, core/views/{api,pages}.py, static/js/markdown.js, tests/{conftest,test_round3_regressions}.py, tests/e2e/test_e2e_round3.py, tests/acceptance/test_round3.py, deploy/{restore,update,install}.sh, docker/entrypoint.sh, Dockerfile, docker-compose.yml, .dockerignore, .env.example, docs/{BUGS,DEPLOY}.md, docs/audit/{DECISIONS,round3/GOALS}.md
+- Checks: regressions 51 passed + e2e 2 passed; fast suite 466 passed; shellcheck/bash -n clean; compose config OK.
+- Problem: during the M11 mutation check a `git checkout --` restored markdown.js to the last commit (losing the uncommitted B-40 hook); the file was restored from the pre-mutation backup and re-verified (hook present, tests green). Lesson: mutate committed files only.
+
+### 2026-11-11 19:20 — Round 3 / verification 2 follow-up
+- VERIFY-2 (`docs/audit/round3/VERIFY-2.md`): all VERIFY-1 defects fixed incl. both highs; M1/M8/M11 caught; regressions R1 (read-only token + duplicate IDs → empty list), R2 (unclosed `---` hides tasks); R3 (ERR trap needs `set -E`); R4 test gaps (N2+N16, N3, N13 survived); R5 (sub-items after blank line).
+- Fixed as B-44…B-48 with tests; re-ran the surviving mutations myself (backup-copy restore, not `git checkout`): N2+N16 → `test_b34_duplicates_are_kept_apart…` fails, N3 → `test_n3_…` fails, N13 → `test_n13_…` fails (real Windows junction). Spec allows 2 verifier rounds → no third agent round; Round 4's verifier re-checks shared modules.
+- Checks: regressions 58 passed; fast suite 474 passed.
+
+### 2026-11-11 19:50 — Round 3 / G-final — DONE
+- Final run `logs/runs/run_2026-11-11_16-48-00.log`: 825 passed, 1 skipped (`docs/audit/round3/test-run.txt`); REPORT "Round 3" (R3.1–R3.5), STATUS; branch pushed. Next: Round 4 on `feature/round4`.
+
+### 2026-11-11 20:10 — Round 4 / goals — GOALS.md + acceptance tests
+- Branch `feature/round4` from `feature/round3` (0885f78). `docs/audit/round4/GOALS.md` (D1–D6, E1–E6, API1–API6), `tests/acceptance/test_round4.py` (77 tests, scripted fake AI provider, local git repos).
+- First run: 77 xfailed (`docs/audit/round4/acceptance-start.txt`). Modules were drafted in the session scratchpad during the Round 3 verification (notes_service, ai_providers, agent, api_v1, weekly) — not yet in the repo.
+
+### 2026-11-11 — Round 4 / part D — notes editor
+- Editor (CM6 bundle, preview, `[[` autocomplete, Ctrl+S/Esc, phone tabs), create from template, save with conflicts + offline outbox, rename with link update (one commit), delete, per-note re-index. B-49 (autocrlf), B-50 (e2e serial requests).
+- Tests: D acceptance 26 + e2e/responsive 10 passed; fast suite green.
+
+### 2026-11-11 — Round 4 / part E — providers, agent, agent UI
+- `core/ai_providers.py` (Gemini chain / Ollama / Claude, one `chat()`), Claude in RAG chat + Settings (provider, model, auto-apply option); `core/agent.py` (8 tools, overlay → batch, apply/reject/revert, rules note, injection-safe results, limits, content-free logs); chat "Агент" toggle + diff card (`agent_chat.js`).
+- Tests: E acceptance 26 passed (incl. e2e/responsive), `test_agent_providers.py` 7 passed; fast suite 530 passed; chat e2e 69 passed.
+
+### 2026-11-11 — Round 4 / part API — REST API v1 + Link2Note contract
+- `core/api_v1.py` (token auth, rights by path segments, rate limit, call log, Idempotency-Key, contract errors), `url_normalize.py` (port of the bot's normalize), `frontmatter.py` (byte-exact PATCH), tokens in Settings, `/ask` sources + provider, docker network `secondbrain`, `docs/API.md`, DEPLOY §12, contract files in `docs/link2note/`. B-51 (longpaths).
+- Tests: `test_api_contract.py` 95 passed with vault_writer; R4 acceptance 63 non-e2e passed, no xfail left; compose config OK.
+
+### 2026-11-11 — Round 4 / end — full run, review, fixes
+- Full run 974 passed / 1 failed (settings e2e, fixed ac13fd4) → `round4/test-run.txt`. Reviewer `round4/VERIFY.md`: 1 HIGH, 5 MEDIUM, 7 LOW, 5/5 mutations caught.
+- Fixed B-52…B-57 (+ /health no global counters); `tests/test_round4_regressions.py` 12 passed; fast suite 622 passed. Round 5 GOALS + 36 xfail tests ready.
+
+### 2026-11-12 — Round 5 / continuation — goals check, R4.5 LOWs, live bot check
+- Full run 1056 passed / 1 failed (settings e2e race, B-64). Goals check: symlink leak out of the vault (B-58, HIGH-ish, fixed with tests). R4.5 data LOWs B-59…B-63 fixed (tests first).
+- Live Link2Note check: 18/18 ✅ on copy DB + local temp repo (`round5/LINK2NOTE_CHECK.md`); Docker step skipped (daemon off). Fast suite 685 passed.
+
+### 2026-11-12 — Round 5 / end — review + fixes
+- Reviewer `round5/VERIFY.md`: 1 HIGH (admin login skipped 2FA, B-65), 2 MEDIUM (B-66 unsafe link schemes, B-67 stuck outbox), 7 LOW; 4/5 mutations caught.
+- Fixed B-65…B-69 with regression tests; re-check of the HIGH by the same brief; final full run → `round5/test-run.txt`. Screenshots `round5/responsive/`.
