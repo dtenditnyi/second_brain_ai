@@ -20,7 +20,7 @@ read -r -p "  Type RESTORE to continue: " answer
 [ "$answer" = "RESTORE" ] || fail "cancelled"
 
 step "safety backup"
-"$DEPLOY_DIR/backup.sh"
+bash "$DEPLOY_DIR/backup.sh"
 
 step "stop the application (database keeps running)"
 compose stop web scheduler || true

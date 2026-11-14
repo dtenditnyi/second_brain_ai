@@ -27,7 +27,7 @@ case "$mode" in
     --restore)
         dump="${2:-}"
         [ -n "$dump" ] || fail "usage: deploy/migrate-from-old-pc.sh --restore <file.sql.gz>"
-        "$DEPLOY_DIR/restore.sh" "$dump"
+        bash "$DEPLOY_DIR/restore.sh" "$dump"
         step "next: move the old tasks into the Obsidian tasks note"
         ok "1) preview:  docker compose exec web python manage.py export_tasks_to_note --user <name> --dry-run"
         ok "2) export:   docker compose exec web python manage.py export_tasks_to_note --user <name>"

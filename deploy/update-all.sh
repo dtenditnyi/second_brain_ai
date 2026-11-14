@@ -11,12 +11,12 @@ l2n_dir="${LINK2NOTE_DIR:-$HOME/link2note}"
 status=0
 
 echo "=== Second Brain: $sb_dir ==="
-"$sb_dir/deploy/update.sh" "$@" || status=1
+bash "$sb_dir/deploy/update.sh" "$@" || status=1
 
-if [ -x "$l2n_dir/deploy/update.sh" ]; then
+if [ -f "$l2n_dir/deploy/update.sh" ]; then
     echo
     echo "=== Link2Note: $l2n_dir ==="
-    (cd "$l2n_dir" && ./deploy/update.sh) || status=1
+    (cd "$l2n_dir" && bash ./deploy/update.sh) || status=1
 else
     echo "Link2Note not found in $l2n_dir (set LINK2NOTE_DIR=...) — skipped"
 fi

@@ -8,4 +8,4 @@ After=docker.service secondbrain.service
 Type=oneshot
 User=__USER__
 WorkingDirectory=__REPO_DIR__
-ExecStart=__REPO_DIR__/deploy/backup.sh
+ExecStart=/bin/bash __REPO_DIR__/deploy/backup.sh

@@ -29,7 +29,7 @@ trap 'warn "update failed — checkout reset to $(git rev-parse --short "$previo
 ok "$(git rev-parse --short "$previous") → $(git rev-parse --short "$current")"
 
 step "2/5 backup before the update"
-"$DEPLOY_DIR/backup.sh"
+bash "$DEPLOY_DIR/backup.sh"
 
 step "3/5 build the new image (old one kept for rollback)"
 if docker_cmd image inspect secondbrain-web:latest >/dev/null 2>&1; then
