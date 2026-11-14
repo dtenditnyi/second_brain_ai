@@ -249,6 +249,9 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 WHITENOISE_MANIFEST_STRICT = False
+# Static file names are not hashed, so browsers and the Cloudflare edge must not keep them for
+# hours: after a deploy the old JS/CSS was served for up to 4 h (B-77). 60 s is enough.
+WHITENOISE_MAX_AGE = int(os.getenv('WHITENOISE_MAX_AGE') or 60)
 
 
 # --- AI configuration (Round 2) ---------------------------------------------

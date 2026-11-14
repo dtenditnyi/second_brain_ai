@@ -51,10 +51,15 @@
         }
         // Fit the drawing into the box (padding leaves room for node circles).
         const pad = 14;
-        const xs = pos.map(p => p.x), ys = pos.map(p => p.y);
-        const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+        // B-76: a few unlinked notes far away made the main cluster tiny. Fit the 3rd–97th
+        // percentile box and clamp the outliers to its edge instead.
+        const xs = pos.map(p => p.x).sort((a, b) => a - b), ys = pos.map(p => p.y).sort((a, b) => a - b);
+        const q = (arr, f) => arr[Math.min(arr.length - 1, Math.max(0, Math.round((arr.length - 1) * f)))];
+        const cut = n > 30 ? 0.03 : 0;
+        const minX = q(xs, cut), maxX = q(xs, 1 - cut), minY = q(ys, cut), maxY = q(ys, 1 - cut);
+        pos.forEach(p => { p.x = Math.min(Math.max(p.x, minX), maxX); p.y = Math.min(Math.max(p.y, minY), maxY); });
         const sx = (w - 2 * pad) / Math.max(maxX - minX, 1), sy = (h - 2 * pad) / Math.max(maxY - minY, 1);
-        const s = Math.min(sx, sy, 3);
+        const s = Math.min(sx, sy, 6);
         const ox = (w - (maxX - minX) * s) / 2, oy = (h - (maxY - minY) * s) / 2;
         pos.forEach(p => { p.x = ox + (p.x - minX) * s; p.y = oy + (p.y - minY) * s; });
         return { pos, links };
