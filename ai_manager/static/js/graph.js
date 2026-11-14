@@ -17,7 +17,7 @@
             return { x: w / 2 + Math.cos(a) * r, y: h / 2 + Math.sin(a) * r };
         });
         const links = edges.map(e => [index.get(e.source), index.get(e.target)]).filter(l => l[0] !== undefined && l[1] !== undefined);
-        const k = Math.sqrt((w * h) / Math.max(n, 1)) * 0.75;
+        const k = Math.sqrt((w * h) / Math.max(n, 1)) * 1.1;
         let t = Math.min(w, h) / 8;
         const iterations = n > 250 ? 120 : 220;
         for (let it = 0; it < iterations; it++) {
@@ -98,6 +98,11 @@
             g.appendChild(line);
         });
         const maxDeg = Math.max(1, ...nodes.map(d => degree.get(d.id) || 0));
+        // B-76: labels of every node covered the whole graph. Only the current note and the
+        // best-connected notes are always labelled; the rest show on hover/focus or when zoomed in.
+        const hubCount = simple ? 8 : 15;
+        const hubMin = nodes.map(d => degree.get(d.id) || 0).sort((a, b) => b - a)[Math.min(hubCount, nodes.length) - 1] || 0;
+        const labels = [];
         nodes.forEach((d, i) => {
             const deg = degree.get(d.id) || 0;
             const node = document.createElementNS(SVGNS, 'g');
@@ -115,16 +120,24 @@
             title.textContent = d.name;
             c.appendChild(title);
             node.appendChild(c);
-            if (!simple || d.current || deg >= Math.max(3, maxDeg * 0.5) || nodes.length <= 12) {
-                const label = document.createElementNS(SVGNS, 'text');
-                const right = pos[i].x > w / 2;           // labels grow towards the centre, never out of the box
-                label.setAttribute('x', pos[i].x + (right ? -8 : 8)); label.setAttribute('y', pos[i].y + 4);
-                label.setAttribute('text-anchor', right ? 'end' : 'start');
-                label.setAttribute('font-size', simple ? '10' : '11');
-                label.setAttribute('fill', 'currentColor');
-                label.textContent = d.name.length > 28 ? d.name.slice(0, 27) + '…' : d.name;
-                node.appendChild(label);
-            }
+            const hub = !!d.current || nodes.length <= 12 || (deg > 0 && deg >= Math.max(2, hubMin));
+            const label = document.createElementNS(SVGNS, 'text');
+            const right = pos[i].x > w / 2;           // labels grow towards the centre, never out of the box
+            label.setAttribute('x', pos[i].x + (right ? -8 : 8)); label.setAttribute('y', pos[i].y + 4);
+            label.setAttribute('text-anchor', right ? 'end' : 'start');
+            label.setAttribute('font-size', simple ? '10' : '11');
+            label.setAttribute('fill', 'currentColor');
+            label.setAttribute('paint-order', 'stroke');
+            label.setAttribute('stroke', 'var(--color-bg, #0b0b10)');
+            label.setAttribute('stroke-width', '3');
+            label.setAttribute('visibility', hub ? 'visible' : 'hidden');
+            label.textContent = d.name.length > 28 ? d.name.slice(0, 27) + '…' : d.name;
+            node.appendChild(label);
+            labels.push({ el: label, hub });
+            const show = () => { label.setAttribute('visibility', 'visible'); node.parentNode && node.parentNode.appendChild(node); };
+            const hide = () => { if (!hub && !zoomedIn()) label.setAttribute('visibility', 'hidden'); };
+            node.addEventListener('mouseenter', show); node.addEventListener('focus', show);
+            node.addEventListener('mouseleave', hide); node.addEventListener('blur', hide);
             const open = () => opts.onOpen && opts.onOpen(d);
             node.addEventListener('click', open);
             node.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
@@ -134,7 +147,16 @@
 
         // Pan + zoom (viewBox).
         let vb = { x: 0, y: 0, w, h }, drag = null;
-        const apply = () => svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+        function zoomedIn() { return vb.w < w * 0.45; }
+        const apply = () => {
+            svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+            const scale = vb.w / w, all = zoomedIn();          // labels keep their size on screen
+            labels.forEach(l => {
+                l.el.setAttribute('font-size', String(((simple ? 10 : 11) * scale).toFixed(2)));
+                l.el.setAttribute('stroke-width', String((3 * scale).toFixed(2)));
+                l.el.setAttribute('visibility', l.hub || all ? 'visible' : 'hidden');
+            });
+        };
         const zoom = (factor, cx = vb.x + vb.w / 2, cy = vb.y + vb.h / 2) => {
             const nw = Math.min(Math.max(vb.w * factor, w / 6), w * 4), nh = nw * (h / w);
             vb = { x: cx - (cx - vb.x) * (nw / vb.w), y: cy - (cy - vb.y) * (nh / vb.h), w: nw, h: nh };

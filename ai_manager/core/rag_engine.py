@@ -43,9 +43,11 @@ _user_indexes = {}
 # Settings.llm is shared by every user of the process and must not be used.
 _user_llms = {}
 
-# Use the same 384-dimensional embedding model for indexing and query vectors.
-# The model is loaded lazily on the first chat request (B-15).
-EMBED_MODEL_NAME = "BAAI/bge-small-en-v1.5"
+# Use the same embedding model for indexing and query vectors; loaded lazily (B-15).
+# B-75: the notes are mostly Russian — the old English-only bge-small model made retrieval
+# almost random. multilingual-e5-small (384 dims, 512 tokens) needs "query:"/"passage:" prefixes.
+EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME") or "intfloat/multilingual-e5-small"
+EMBED_CHUNK_SIZE = int(os.getenv("EMBED_CHUNK_SIZE") or 512)
 _embed_model_loaded = False
 
 # Retrieval sizes: Gemma has only 16K tokens/minute, so it gets fewer chunks.
@@ -85,8 +87,60 @@ def ensure_embed_model():
     """Install the shared embedding model into LlamaIndex Settings once per process."""
     global _embed_model_loaded
     if not _embed_model_loaded:
-        Settings.embed_model = HuggingFaceEmbedding(model_name=EMBED_MODEL_NAME)
+        extra = ({"query_instruction": "query: ", "text_instruction": "passage: "}
+                 if "e5" in EMBED_MODEL_NAME.lower() else {})
+        try:
+            Settings.embed_model = HuggingFaceEmbedding(model_name=EMBED_MODEL_NAME, **extra)
+        except TypeError:                    # older llama-index without instruction arguments
+            Settings.embed_model = HuggingFaceEmbedding(model_name=EMBED_MODEL_NAME)
+        Settings.chunk_size = EMBED_CHUNK_SIZE
+        Settings.chunk_overlap = 64
         _embed_model_loaded = True
+
+
+def _collection(db, name):
+    """The user's Chroma collection for the CURRENT embedding model. Vectors made by another
+    model are useless for search, so such a collection is dropped and rebuilt (B-75)."""
+    try:
+        col = db.get_collection(name)
+    except Exception:
+        col = None
+    if col is not None and (col.metadata or {}).get("embed_model") != EMBED_MODEL_NAME:
+        logger.info("Embedding model changed (%s); rebuilding the vector collection.", EMBED_MODEL_NAME)
+        db.delete_collection(name)
+        col = None
+    if col is None:
+        col = db.create_collection(name, metadata={"embed_model": EMBED_MODEL_NAME})
+    return col
+
+
+def _note_title(path):
+    from pathlib import PurePath
+    return PurePath(str(path or "note")).stem
+
+
+def _selected_notes(notes_dir, selected_files, sources=None):
+    """Notes the user picked go to the model WHOLE (the token budget trims them), not as the
+    top-5 similar chunks: asking about one chosen note must see all of it (B-75)."""
+    import unicodedata
+    from pathlib import Path
+    from .notes_service import _walk_md
+    norm = lambda s: unicodedata.normalize("NFC", _note_title(s)).strip().lower()
+    wanted = {norm(name) for name in selected_files if name}
+    found = []
+    if not wanted or not os.path.isdir(notes_dir):
+        return found
+    for rel, full in _walk_md(Path(notes_dir)):
+        if norm(rel) not in wanted or full.is_symlink():
+            continue
+        try:
+            text = full.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        found.append(f"Заметка «{_note_title(rel)}»:\n{text}")
+        if sources is not None and str(full) not in sources:
+            sources.append(str(full))
+    return found
 
 
 # Probe the configured local Ollama endpoint with a short timeout so offline
@@ -274,7 +328,7 @@ def _record_model(user_settings, label):
 def _open_index(paths, sync_success):
     """Open (or build) the user's Chroma-backed index. Returns (index, vector_count)."""
     db = chromadb.PersistentClient(path=DB_DIR)
-    chroma_collection = db.get_or_create_collection(paths["collection_name"])
+    chroma_collection = _collection(db, paths["collection_name"])
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
@@ -317,7 +371,9 @@ def _retrieve_chunks(index, query, selected_files, top_k, sources=None):
             path = str((node.metadata or {}).get("file_path") or "")
             if path and path not in sources:
                 sources.append(path)
-    return [node.get_content() for node in nodes]
+    # The note title goes with every chunk: the model can name its sources (B-75).
+    return [f"Заметка «{_note_title((node.metadata or {}).get('file_name'))}»:\n{node.get_content()}"
+            for node in nodes]
 
 
 def _budget_for(provider, model):
@@ -400,13 +456,19 @@ def ask_second_brain(user_query, user, selected_files=None, history=None, smart=
             from . import ai_providers
             if cloud_choice == 'claude' and ai_providers.claude_available():
                 candidates.insert(0, ('claude', ai_providers.ClaudeProvider(user_settings.claude_model).model))
-        chunks = _retrieve_chunks(_user_indexes[user.id], user_query, selected_files, SIMILARITY_TOP_K, sources)
+        chunks = _selected_notes(paths["notes_dir"], selected_files, sources) if selected_files else []
+        if not chunks:
+            chunks = _retrieve_chunks(_user_indexes[user.id], user_query, selected_files, SIMILARITY_TOP_K, sources)
 
         display_name = user_settings.display_name or user.username
         system_prompt = (
-            f"You are the secure personal AI Assistant of {display_name}. "
+            f"You are the secure personal AI Assistant of {display_name}, working with their Obsidian notes. "
             "Answer questions ONLY based on the provided personal notes context "
-            "and the previous messages of this conversation."
+            "and the previous messages of this conversation. "
+            "The context below IS the user's notes: never say that you have no access to them. "
+            "If the notes answer the question only partly, say what they do contain and name the notes "
+            "(titles in «»). If nothing relevant is there, say so in one sentence. "
+            "Always answer in the language of the user's question (usually Russian)."
         )
 
         def attempt(provider, model):
@@ -484,7 +546,7 @@ def reindex_notes(user, changed=(), removed=()):
         return 0
     ensure_embed_model()
     db = chromadb.PersistentClient(path=DB_DIR)
-    collection = db.get_or_create_collection(paths["collection_name"])
+    collection = _collection(db, paths["collection_name"])
     for rel in targets:
         full = (root / rel)
         for candidate in {str(full), str(full.resolve()), os.path.abspath(str(full))}:
