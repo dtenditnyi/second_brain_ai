@@ -25,6 +25,8 @@ x-app: &app
     DB_PORT: "5432"
     LOG_DIR: /app/ai_manager/logs
     HF_HOME: /data/hf_cache
+    # LlamaIndex caches under ~/.cache by default; HOME (/app) is not writable for the app user (B-74)
+    LLAMA_INDEX_CACHE_DIR: /data/hf_cache/llama_index
   volumes:
     - chroma_db:/app/ai_manager/chroma_db
     - obsidian_data:/app/ai_manager/obsidian_data

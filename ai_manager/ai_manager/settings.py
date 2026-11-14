@@ -262,7 +262,23 @@ def _env_int(name, default):
         return default
 
 # Local Ollama endpoint (Q9): env only, never a hard-coded LAN address.
-OLLAMA_HOST = os.getenv('OLLAMA_HOST') or 'http://localhost:11434'
+def normalize_ollama_url(raw):
+    """OLLAMA_HOST is shared with the Ollama server itself, which accepts a bind address such as
+    ``0.0.0.0`` or ``127.0.0.1:11434`` (no scheme). Turn any of those into a client URL (B-73)."""
+    from urllib.parse import urlsplit
+    raw = (raw or '').strip().rstrip('/') or 'http://localhost:11434'
+    if '://' not in raw:
+        raw = 'http://' + raw
+    parts = urlsplit(raw)
+    host = parts.hostname or 'localhost'
+    if host in ('0.0.0.0', '::'):
+        host = '127.0.0.1'
+    if ':' in host:
+        host = f'[{host}]'
+    return f"{parts.scheme}://{host}:{parts.port or 11434}"
+
+
+OLLAMA_HOST = normalize_ollama_url(os.getenv('OLLAMA_HOST'))
 OLLAMA_MODEL = os.getenv('OLLAMA_MODEL') or 'llama3:latest'
 
 # Gemini model chain. IDs follow the official Gemini API docs; run

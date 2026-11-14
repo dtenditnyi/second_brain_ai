@@ -37,6 +37,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PATH=/opt/venv/bin:$PATH \
     TZ=Europe/Bucharest \
     HF_HOME=/data/hf_cache \
+    LLAMA_INDEX_CACHE_DIR=/data/hf_cache/llama_index \
     DJANGO_SETTINGS_MODULE=ai_manager.settings
 RUN apt-get update \
  && apt-get install -y --no-install-recommends git tzdata ca-certificates \
